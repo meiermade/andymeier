@@ -1,15 +1,11 @@
-ARG RUNTIME_IMAGE_TAG=6.0-bullseye-slim
-FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim as builder
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble-amd64 AS builder
 
 WORKDIR /app
 
-# prevent sending metrics to microsoft
-ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
-
-# install tailwindcss CLI
-RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.3.2/tailwindcss-linux-x64 \
-    && chmod +x tailwindcss-linux-x64 \
-    && mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss
+# install tailwindcss v4 CLI
+RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v4.1.18/tailwindcss-linux-x64 \
+    && mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss \
+    && chmod +x /usr/local/bin/tailwindcss
 
 # restore tools
 COPY .config .config
@@ -23,18 +19,16 @@ RUN dotnet paket install && dotnet paket restore
 COPY src src
 COPY fake.sh .
 
-# set the runtime identifier
-ARG RUNTIME_ID=linux-x64
-ENV RUNTIME_ID ${RUNTIME_ID}
-
 # publish the server 
 RUN ./fake.sh Publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:${RUNTIME_IMAGE_TAG} as runner
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra AS runner
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 WORKDIR /app
 
 # copy compiled code from build image
-COPY --from=builder /app/src/Server/out .
+COPY --from=builder /app/src/App/out .
 
-ENTRYPOINT ["dotnet", "Server.dll"]
+ENTRYPOINT ["dotnet", "App.dll"]

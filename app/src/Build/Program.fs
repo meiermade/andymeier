@@ -2,13 +2,21 @@ open Fake.Core
 open Fake.Core.TargetOperators
 open Fake.IO
 open Fake.IO.FileSystemOperators
+open System
 open System.Threading.Tasks
 
-let src = Path.getDirectory __SOURCE_DIRECTORY__
-let root = Path.getDirectory src
-let sln = root </> "andrewmeier.dev.sln"
-let serverDir = src </> "Server"
-let testsDir = src </> "Tests"
+Environment.GetCommandLineArgs()
+|> Array.tail
+|> Array.toList
+|> Context.FakeExecutionContext.Create false "build.fsx"
+|> Context.Fake
+|> Context.setExecutionContext
+
+let srcDir = Path.getDirectory __SOURCE_DIRECTORY__
+let rootDir = Path.getDirectory srcDir
+let appDir = srcDir </> "App"
+
+let inline (==>!) x y = x ==> y |> ignore
 
 let tailwindcss workDir args =
     CreateProcess.fromRawCommand "tailwindcss" args
@@ -22,45 +30,25 @@ let dotnet workDir args =
     |> CreateProcess.ensureExitCode
     |> Proc.start
 
-let inline (==>!) x y = x ==> y |> ignore
+Target.create "Watch" <| fun _ ->
+    let watchCss = tailwindcss appDir ["--input"; "./input.css"; "--output"; "./wwwroot/css/compiled.css"; "--watch"]
+    let watchServer = dotnet appDir ["watch"; "run"; "--no-restore"]
+    Task.WaitAny(watchCss, watchServer) |> ignore
 
-let registerTargets() =
-    
-    Target.create "Watch" <| fun _ ->
-        let watchCss = tailwindcss serverDir [ "--input"; "./input.css"; "--output"; "./wwwroot/css/compiled.css"; "--watch" ]
-        let watchServer = dotnet serverDir ["watch"; "--project"; serverDir; "run"]
-        Task.WaitAny(watchCss, watchServer) |> ignore
-        
-    Target.create "Test" <| fun _ ->
-        let test = dotnet testsDir ["test"]
-        test.Wait()
-        
-    Target.create "BuildCss" <| fun _ ->
-        let buildCss = tailwindcss serverDir [ "--input"; "./input.css"; "--output"; "./wwwroot/css/compiled.css"; "--minify" ]
-        buildCss.Wait()
-        
-    Target.create "Publish" <| fun _ ->
-        let runtime = Environment.environVarOrDefault "RUNTIME_ID" "linux-x64"
-        let publish = dotnet serverDir [
-            "publish"
-            "--output"; $"{serverDir}/out"
-            "--runtime"; runtime
-            "--self-contained"; "false"
-            "--configuration"; "Release"
-        ]
-        publish.Wait()
-            
-    Target.create "Default" (fun _ -> Target.listAvailable())
-        
-    "BuildCss" ==>! "Publish"
-    
-[<EntryPoint>]
-let main argv =
-    argv
-    |> Array.toList
-    |> Context.FakeExecutionContext.Create false "build.fsx"
-    |> Context.RuntimeContext.Fake
-    |> Context.setExecutionContext
-    registerTargets()
-    Target.runOrDefaultWithArguments "Default"
-    0
+Target.create "BuildCss" <| fun _ ->
+    let buildCss = tailwindcss appDir ["--input"; "./input.css"; "--output"; "./wwwroot/css/compiled.css"; "--minify"]
+    buildCss.Wait()
+
+Target.create "Publish" <| fun _ ->
+    let publish = dotnet appDir [
+        "publish"
+        "--output"; "./out"
+        "--self-contained"; "false"
+    ]
+    publish.Wait()
+
+Target.create "Default" (fun _ -> Target.listAvailable())
+
+"BuildCss" ==>! "Publish"
+
+Target.runOrDefaultWithArguments "Default"

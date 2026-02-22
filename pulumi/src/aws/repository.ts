@@ -1,41 +1,48 @@
 import * as aws from '@pulumi/aws'
-import * as awsx from '@pulumi/awsx'
-import * as pulumi from '@pulumi/pulumi'
-import * as path from 'path'
+import { provider } from './provider'
 import * as config from '../config'
 
-const blog = new awsx.ecr.Repository('blog', {
-    lifecyclePolicy: {
+export const repo = new aws.ecr.Repository(config.identifier, {
+    name: config.identifier
+}, { provider })
+
+export const credentials = aws.ecr.getCredentialsOutput({
+    registryId: repo.registryId
+}, { provider })
+
+new aws.ecr.RepositoryPolicy(config.identifier, {
+    repository: repo.name,
+    policy: {
+        Version: '2012-10-17',
+        Statement: [
+            {
+                Effect: 'Allow',
+                Principal: {
+                    AWS: config.eksNodeManagerArn
+                },
+                Action: [
+                    'ecr:GetDownloadUrlForLayer',
+                    'ecr:BatchGetImage',
+                    'ecr:BatchCheckLayerAvailability'
+                ]
+            }
+        ]
+    }
+}, { provider: provider })
+
+new aws.ecr.LifecyclePolicy(config.identifier, {
+    repository: repo.name,
+    policy: {
         rules: [{
-            tagStatus: 'any',
-            maximumNumberOfImages: 1
+            rulePriority: 1,
+            selection: {
+                tagStatus: 'any',
+                countType: 'imageCountMoreThan',
+                countNumber: 1
+            },
+            action: {
+                type: 'expire'
+            },
         }]
     }
-})
-
-const blogImage = new awsx.ecr.Image('blog', {
-    repositoryUrl: blog.url,
-    path: path.join(config.rootDir, 'app'),
-    args: {
-        RUNTIME_IMAGE_TAG: '6.0-alpine-arm64v8',
-        RUNTIME_ID: 'linux-arm64'
-    },
-    extraOptions: ['--quiet']
-})
-
-export const blogImageUri = blogImage.imageUri
-
-const blogCredentials = aws.ecr.getCredentialsOutput({ registryId: blog.repository.registryId })
-
-export const blogDockerconfigjson =
-    pulumi
-        .all([blogCredentials, blog.repository.repositoryUrl])
-        .apply(([creds, repoUrl]) => {
-            return JSON.stringify({
-                auths: {
-                    [repoUrl]: {
-                        auth: creds.authorizationToken
-                    }
-                }
-            })
-        })
+}, { provider })
