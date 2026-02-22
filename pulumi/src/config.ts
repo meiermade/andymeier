@@ -1,17 +1,48 @@
 import * as pulumi from '@pulumi/pulumi'
+import * as random from '@pulumi/random'
 import * as path from 'path'
 
-export const pulumiRootDir = path.dirname(__dirname)
-export const rootDir = path.dirname(pulumiRootDir)
+const randomProvider = new random.Provider('default')
 
-const clusterServicesStack = new pulumi.StackReference('ameier38/cluster-services/prod')
-const appServicesStack = new pulumi.StackReference('ameier38/app-services/prod')
+export const env = pulumi.getStack()
 
-export const andrewmeierNamespace = clusterServicesStack.requireOutput('andrewmeierNamespace')
-export const blogHost = appServicesStack.requireOutput('blogHost')
+export const rootDir = path.dirname(path.dirname(__dirname))
 
-const rawNotionConfig = new pulumi.Config('notion')
-export const notionConfig = {
-    databaseId: rawNotionConfig.requireSecret('databaseId'),
-    token: rawNotionConfig.requireSecret('token')
+const identityStack = new pulumi.StackReference('meiermade/identity/prod')
+export const eksNodeManagerArn = identityStack.requireOutput('eksNodeManagerArn')
+
+const infrastructureStack = new pulumi.StackReference('meiermade/infrastructure/prod')
+export const andrewmeierProdNamespace = infrastructureStack.requireOutput('andrewmeierProdNamespace')
+export const kubeconfig = infrastructureStack.requireOutput('kubeconfig')
+
+const andrewmeierIdentityStack = new pulumi.StackReference('meiermade/andrewmeier-identity/prod')
+export const awsRegion = andrewmeierIdentityStack.requireOutput('awsRegion')
+export const awsAccountId = andrewmeierIdentityStack.requireOutput('awsAccountId')
+
+export const domain = env === 'prod' ? 'andrewmeier.dev' : 'andrewmeier.net'
+
+export const identifier = `andrewmeier-${env}`
+
+export const awsConfig = {
+    accountId: awsAccountId,
+    region: awsRegion
+}
+
+const rawSeqConfig = new pulumi.Config('seq')
+export const seqConfig = {
+    endpoint: rawSeqConfig.require('endpoint'),
+    apiKey: rawSeqConfig.requireSecret('apiKey')
+}
+
+const tunnelRandomPassword = new random.RandomPassword(`${identifier}-tunnel`, {
+    length: 32,
+    special: false
+}, { provider: randomProvider })
+
+const rawCloudflareConfig = new pulumi.Config('cloudflare')
+export const cloudflareConfig = {
+    accountId: rawCloudflareConfig.require('accountId'),
+    apiToken: rawCloudflareConfig.require('apiToken'),
+    tunnelSecret: pulumi.secret(tunnelRandomPassword.result),
+    cloudflaredVersion: '2024.9.1'
 }

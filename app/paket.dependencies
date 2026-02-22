@@ -1,28 +1,30 @@
-storage: none
 source https://api.nuget.org/v3/index.json
+storage: none
 
-nuget FSharp.Core
+nuget FSharp.SystemTextJson
 nuget FSharp.ViewEngine
-nuget FSharp.ViewEngine.Html
-nuget FSharp.ViewEngine.Htmx
-nuget FSharp.ViewEngine.Alpine
 nuget Giraffe
-nuget Notion.Net
-nuget prometheus-net.AspNetCore
+nuget Markdig
+nuget Serilog
 nuget Serilog.AspNetCore
+nuget Serilog.Sinks.Seq
 nuget Serilog.Sinks.Console
+nuget Serilog.Sinks.OpenTelemetry
+nuget Starfederation.Datastar
+nuget OpenTelemetry
+nuget OpenTelemetry.Extensions.Hosting
+nuget OpenTelemetry.Instrumentation.AspNetCore
+nuget OpenTelemetry.Instrumentation.Http
+nuget OpenTelemetry.Exporter.OpenTelemetryProtocol
+nuget OpenTelemetry.Exporter.Console
 
-group Tests
-    storage none
+group Test
     source https://api.nuget.org/v3/index.json
-    nuget canopy
-    nuget Microsoft.NET.Test.Sdk
-    nuget Selenium.WebDriver.ChromeDriver 112.0.5615.4900
-    nuget xunit
-    nuget xunit.runner.visualstudio
+    storage: none
+    nuget Expecto
 
 group Build
-    storage none
     source https://api.nuget.org/v3/index.json
-    nuget Fake.IO.FileSystem
+    storage: none
     nuget Fake.Core.Target
+    nuget Fake.IO.FileSystem

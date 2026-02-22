@@ -1,6 +1,2 @@
-﻿group Tests
-    canopy
-    Microsoft.NET.Test.Sdk
-    Selenium.WebDriver.ChromeDriver
-    xunit
-    xunit.runner.visualstudio
+group Test
+Expecto

@@ -1,15 +1,50 @@
-[![Merge](https://github.com/ameier38/andrewmeier.dev/actions/workflows/merge.yml/badge.svg)](https://github.com/ameier38/andrewmeier.dev/actions/workflows/merge.yml)
-
 # andrewmeier.dev
-Repo for [Andrew's blog](https://andrewmeier.dev).
 
-Consists of a single server built using F#. Server generates plain HTML so there
-is no need for a front-end framework like React which greatly simplifies things.
+Personal website built with F#, Giraffe, Datastar, and Tailwind CSS.
 
-Built using:
-- [F#](https://fsharp.org/), [Giraffe](https://github.com/giraffe-fsharp/Giraffe): Web server that generates HTML using F#. 
-- [Notion .NET](https://github.com/notion-dotnet/notion-sdk-net): Blog posts are written using Notion and then fetched by the server using the Notion API.
-- [htmx](https://htmx.org/): Client framework which allows you to make requests directly from HTML instead of JavaScript.
-- [Alpine.js](https://alpinejs.dev/): Lightweight JavaScript framework that can be added directly in HTML.
-- [Tailwind CSS](https://tailwindcss.com/): CSS styles.
-- [Pulumi](https://www.pulumi.com/): Deployment. Currently running on a Raspberry Pi in my apartment.
+## Structure
+
+- `app/` - F# web application
+  - `src/App/` - Main application (Giraffe + Datastar)
+  - `src/App/articles/` - Articles (markdown + assets)
+  - `src/Build/` - FAKE build script
+  - `src/Tests/` - Expecto tests
+- `pulumi/` - Infrastructure as code (AWS ECR, Cloudflare, Kubernetes)
+
+## Articles
+
+Articles are stored as subdirectories under `app/src/App/articles/`. Each article directory contains:
+- `index.md` - Article content with YAML frontmatter
+- Any image/asset files referenced in the markdown
+
+### Directory naming
+
+Directories use the format `yyyy-mm-dd-<permalink>`. The date prefix determines the article's created date.
+
+### Frontmatter format
+
+```yaml
+---
+title: My Article Title
+summary: A brief description
+thumbnail: thumb.jpg
+cover: cover.jpg
+tags: tag1, tag2
+---
+```
+
+## Development
+
+```bash
+cd app
+dotnet tool restore
+dotnet paket restore
+./fake.sh Watch
+```
+
+## Testing
+
+```bash
+cd app
+dotnet run --project src/Tests/Tests.fsproj
+```

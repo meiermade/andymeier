@@ -1,11 +1,10 @@
-.vscode
-.fake
-.ionide
+.idea
 .paket
-.screenshots
-*DotSettings.user
-compiled.css
+.vscode
+.ionide
 paket-files
-bin
 obj
+bin
 out
+compiled.css
+node_modules

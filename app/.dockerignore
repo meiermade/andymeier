@@ -3,7 +3,6 @@
 .ionide
 .fake
 .paket
-.screenshots
 paket-files
 **/obj
 **/bin
