@@ -1,0 +1,12 @@
+services:
+  seq:
+    image: datalust/seq:2024.3
+    environment:
+      ACCEPT_EULA: Y
+    ports:
+      - "5341:80"
+  redis:
+    image: redis:8.4.0
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"

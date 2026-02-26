@@ -1,4 +1,4 @@
-module App.Telemetry
+module Domain.Telemetry
 
 open OpenTelemetry.Trace
 
