@@ -3,7 +3,6 @@ open App.ServiceRegistry
 open Domain
 open Giraffe
 open Microsoft.AspNetCore.Builder
-open Microsoft.AspNetCore.Localization
 open Microsoft.Extensions.DependencyInjection
 open OpenTelemetry
 open OpenTelemetry.Exporter
@@ -14,8 +13,6 @@ open Serilog.Core
 open Serilog.Events
 open StarFederation.Datastar.DependencyInjection
 open System
-open System.Collections.Generic
-open System.Globalization
 
 let configureTracerProvider (config: Config) =
     Sdk
@@ -55,19 +52,9 @@ let configureServices (services: IServiceCollection) =
     |> ignore
 
 let configureApp (services: Services) (app: WebApplication) =
-    let enUSCultureInfo = CultureInfo("en-US")
-    let supportedCultures = List([ enUSCultureInfo ])
-
-    let requestLocalizationOptions =
-        RequestLocalizationOptions(
-            SupportedCultures = supportedCultures,
-            DefaultRequestCulture = RequestCulture(enUSCultureInfo)
-        )
-
-    app.UseStaticFiles().UseRequestLocalization(requestLocalizationOptions)
-    |> ignore
-
-    app.UseGiraffe(Index.Handler.handler services)
+    app
+        .UseStaticFiles()
+        .UseGiraffe(Index.Handler.handler services)
 
 [<EntryPoint>]
 let main _args =

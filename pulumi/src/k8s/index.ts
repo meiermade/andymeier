@@ -1,2 +1,2 @@
-import './cloudflared'
+import './redis'
 import './deployment'
