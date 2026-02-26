@@ -1,32 +1,32 @@
 [<AutoOpen>]
 module App.Infrastructure
 
+open FSharp.ViewEngine
 open Giraffe
+open type Html
+open JetBrains.Annotations
+open Markdig
 open Microsoft.AspNetCore.Http
-open System
-open System.Text.Json
-open System.Text.Json.Serialization
 
-module Env =
-    let variable (key:string) =
-        match Environment.GetEnvironmentVariable(key) with
-        | value when String.IsNullOrEmpty(value) -> failwith $"Environment variable '{key}' is required"
-        | value -> value
-    let variableOrDefault (key:string) (defaultValue:string) =
-        match Environment.GetEnvironmentVariable(key) with
-        | value when String.IsNullOrEmpty(value) -> defaultValue
-        | value -> value
+[<AutoOpen>]
+module HtmlExtensions =
+    let private markdownPipeline =
+        MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .Build()
 
-module Json =
-    let private options =
-        JsonFSharpOptions.Default()
-            .ToJsonSerializerOptions()
+    type Html with
+        static member markdown([<LanguageInjection("markdown")>] markdown:string) =
+            let markdown' =
+                if isNull markdown then ""
+                else markdown
 
-    let serialize<'T> (value: 'T) =
-        JsonSerializer.Serialize(value, options)
+            let html = Markdown.ToHtml(markdown', markdownPipeline)
 
-    let deserialize<'T> (json: string) =
-        JsonSerializer.Deserialize<'T>(json, options)
+            div {
+                _class "prose prose-lg dark:prose-invert"
+                raw html
+            }
 
 [<AutoOpen>]
 module HttpContextExtensions =

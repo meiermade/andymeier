@@ -3,6 +3,9 @@ storage: none
 
 nuget FSharp.SystemTextJson
 nuget FSharp.ViewEngine
+nuget FSharp.UMX
+nuget FsToolkit.ErrorHandling
+nuget FsToolkit.ErrorHandling.TaskResult
 nuget Giraffe
 nuget Markdig
 nuget Serilog
@@ -11,6 +14,7 @@ nuget Serilog.Sinks.Seq
 nuget Serilog.Sinks.Console
 nuget Serilog.Sinks.OpenTelemetry
 nuget Starfederation.Datastar
+nuget StackExchange.Redis
 nuget OpenTelemetry
 nuget OpenTelemetry.Extensions.Hosting
 nuget OpenTelemetry.Instrumentation.AspNetCore

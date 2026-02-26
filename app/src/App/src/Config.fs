@@ -1,5 +1,6 @@
 namespace App
 
+open Domain
 open System
 
 type SeqConfig =
@@ -16,17 +17,21 @@ type ServerConfig =
 
 module ServerConfig =
     let load () =
-        { url = Env.variableOrDefault "SERVER_URL" "http://localhost:5000" }
+        { url = Env.variableOrDefault "SERVER_URL" "https://localhost:5000" }
 
 type Config =
     { debug:bool
       appName:string
       server:ServerConfig
-      seq:SeqConfig }
+      seq:SeqConfig
+      redis:Redis.Config
+      notion:Notion.Config }
 
 module Config =
     let load () =
         { debug = Env.variableOrDefault "DEBUG" "false" |> Boolean.Parse
           appName = "AndrewMeier"
           server = ServerConfig.load ()
-          seq = SeqConfig.load () }
+          seq = SeqConfig.load ()
+          redis = Redis.Config.load ()
+          notion = Notion.Config.load () }

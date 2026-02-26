@@ -1,0 +1,6 @@
+FSharp.SystemTextJson
+FSharp.UMX
+StackExchange.Redis
+OpenTelemetry
+Serilog
+Microsoft.Extensions.Hosting.Abstractions

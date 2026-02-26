@@ -1,12 +1,14 @@
 open App
+open App.ServiceRegistry
+open Domain
 open Giraffe
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Localization
 open Microsoft.Extensions.DependencyInjection
 open OpenTelemetry
-open OpenTelemetry.Trace
-open OpenTelemetry.Resources
 open OpenTelemetry.Exporter
+open OpenTelemetry.Resources
+open OpenTelemetry.Trace
 open Serilog
 open Serilog.Core
 open Serilog.Events
@@ -14,7 +16,6 @@ open StarFederation.Datastar.DependencyInjection
 open System
 open System.Collections.Generic
 open System.Globalization
-open System.IO
 
 let configureTracerProvider (config: Config) =
     Sdk
@@ -32,10 +33,8 @@ let configureTracerProvider (config: Config) =
 
 let configureLogger (config: Config) =
     let initialLogLevel =
-        if config.debug then
-            LogEventLevel.Debug
-        else
-            LogEventLevel.Information
+        if config.debug then LogEventLevel.Debug
+        else LogEventLevel.Information
 
     let levelSwitch = LoggingLevelSwitch(initialLogLevel)
 
@@ -52,11 +51,10 @@ let configureServices (services: IServiceCollection) =
     services
         .AddSerilog()
         .AddDatastar()
-        .AddHealthChecks()
-        .Services.AddGiraffe()
+        .AddGiraffe()
     |> ignore
 
-let configureApp (articleService: Article.Service) (articlesDir: string) (app: WebApplication) =
+let configureApp (services: Services) (app: WebApplication) =
     let enUSCultureInfo = CultureInfo("en-US")
     let supportedCultures = List([ enUSCultureInfo ])
 
@@ -69,8 +67,7 @@ let configureApp (articleService: Article.Service) (articlesDir: string) (app: W
     app.UseStaticFiles().UseRequestLocalization(requestLocalizationOptions)
     |> ignore
 
-    app.MapHealthChecks("/healthz") |> ignore
-    app.UseGiraffe(Handler.Index.handler articleService articlesDir)
+    app.UseGiraffe(Index.Handler.handler services)
 
 [<EntryPoint>]
 let main _args =
@@ -80,17 +77,17 @@ let main _args =
     try
         try
             let tracerProvider = configureTracerProvider config
-
-            let articlesDir = Path.Combine(AppContext.BaseDirectory, "articles")
-            let articleService = Article.Service.create articlesDir
+            let tracer = tracerProvider.GetTracer(config.appName)
+            let services = Services.create config tracer
 
             let builder = WebApplication.CreateBuilder()
             builder.Services.AddSerilog() |> ignore
             builder.Services.AddSingleton(tracerProvider) |> ignore
+            builder.Services.AddHostedService(fun _ -> Article.SyncBackgroundService(services.article)) |> ignore
             configureServices builder.Services
             let app = builder.Build()
 
-            configureApp articleService articlesDir app
+            configureApp services app
             Log.Information("Starting {AppName}", config.appName)
             app.Run(config.server.url)
             0
