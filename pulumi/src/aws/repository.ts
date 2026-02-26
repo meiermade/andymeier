@@ -18,7 +18,7 @@ new aws.ecr.RepositoryPolicy(config.identifier, {
             {
                 Effect: 'Allow',
                 Principal: {
-                    AWS: config.eksNodeManagerArn
+                    AWS: config.awsConfig.eksNodeManagerArn
                 },
                 Action: [
                     'ecr:GetDownloadUrlForLayer',

@@ -4,5 +4,5 @@ import * as config from '../config'
 
 export const zone = cloudflare.getZoneOutput({
     accountId: config.cloudflareConfig.accountId,
-    name: config.domain
+    name: config.cloudflareConfig.zoneName
 }, { provider })
