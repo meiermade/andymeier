@@ -34,6 +34,20 @@ const cloudflaredSecret = new k8s.core.v1.Secret('cloudflared', {
 
 const labels = { 'app.kubernetes.io/name': 'app' }
 
+const podSecurityContext: k8s.types.input.core.v1.PodSecurityContext = {
+    runAsNonRoot: true,
+    seccompProfile: {
+        type: 'RuntimeDefault'
+    }
+}
+
+const containerSecurityContext: k8s.types.input.core.v1.SecurityContext = {
+    allowPrivilegeEscalation: false,
+    capabilities: {
+        drop: ['ALL']
+    }
+}
+
 const deployment = new k8s.apps.v1.Deployment('app', {
     metadata: {
         name: 'app',
@@ -45,10 +59,12 @@ const deployment = new k8s.apps.v1.Deployment('app', {
         template: {
             metadata: { labels: labels },
             spec: {
+                securityContext: podSecurityContext,
                 containers: [
                     {
                         name: 'app',
                         image: image.imageName,
+                        securityContext: containerSecurityContext,
                         imagePullPolicy: 'IfNotPresent',
                         envFrom: [{ secretRef: { name: appSecret.metadata.name } }],
                         volumeMounts: [{ name: 'app-data', mountPath: '/data' }],
@@ -70,6 +86,7 @@ const deployment = new k8s.apps.v1.Deployment('app', {
                     {
                         name: 'cloudflared',
                         image: `cloudflare/cloudflared:${config.cloudflareConfig.cloudflaredVersion}`,
+                        securityContext: containerSecurityContext,
                         args: [
                             'tunnel',
                             '--no-autoupdate',
