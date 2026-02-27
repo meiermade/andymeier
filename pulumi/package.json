@@ -1,8 +1,12 @@
 {
     "name": "andrewmeier.dev",
     "main": "index.ts",
+    "scripts": {
+        "check": "tsc -p tsconfig.json --noEmit"
+    },
     "devDependencies": {
-        "@types/node": "^24"
+        "@types/node": "^24",
+        "typescript": "^5.9.3"
     },
     "dependencies": {
         "@pulumi/aws": "^7.20.0",

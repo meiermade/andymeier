@@ -9,9 +9,10 @@ const rawAwsConfig = new pulumi.Config('aws')
 const rawCloudflareConfig = new pulumi.Config('cloudflare')
 const rawK8sConfig = new pulumi.Config('k8s')
 const rawSeqConfig = new pulumi.Config('seq')
+const rawNotionConfig = new pulumi.Config('notion')
 
 export const awsConfig = {
-    accountId: rawAwsConfig.require('accountId'),
+    platformAccountId: rawAwsConfig.require('platformAccountId'),
     region: rawAwsConfig.require('region'),
     eksNodeManagerArn: rawAwsConfig.require('eksNodeManagerArn')
 }
@@ -30,4 +31,9 @@ export const k8sConfig = {
 export const seqConfig = {
     endpoint: rawSeqConfig.require('endpoint'),
     apiKey: rawSeqConfig.requireSecret('apiKey')
+}
+
+export const notionConfig = {
+    articlesDatabaseId: rawNotionConfig.require('articlesDatabaseId'),
+    token: rawNotionConfig.requireSecret('token')
 }

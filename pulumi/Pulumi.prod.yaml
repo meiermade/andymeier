@@ -1,0 +1,4 @@
+﻿environment:
+  - andrewmeier/prod
+config:
+  pulumi:disable-default-providers: ['*']

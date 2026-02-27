@@ -17,6 +17,8 @@ let appSecret = new k8s.core.v1.Secret('app', {
         SEQ_ENDPOINT: config.seqConfig.endpoint,
         SEQ_API_KEY: config.seqConfig.apiKey,
         REDIS_CONNECTION_STRING: pulumi.interpolate`${redis.host}:${redis.port}`,
+        NOTION_ARTICLES_DATABASE_ID: config.notionConfig.articlesDatabaseId,
+        NOTION_TOKEN: config.notionConfig.token,
     }
 }, { provider })
 
