@@ -1,13 +1,22 @@
 import * as cloudflare from '@pulumi/cloudflare'
 import { tunnelHostname } from './tunnel'
-import { zone } from './zone'
 import { provider } from './provider'
 import * as config from '../config'
 
-export const andrewmeier = new cloudflare.Record(config.identifier, {
+const zone = cloudflare.getZoneOutput({
+    filter: {
+        account: {
+            id: config.cloudflareConfig.accountId
+        },
+        name: config.cloudflareConfig.zoneName
+    }
+}, { provider })
+
+export const andrewmeier = new cloudflare.DnsRecord(config.identifier, {
     name: '@',
     zoneId: zone.id,
     type: 'CNAME',
     content: tunnelHostname,
-    proxied: true
+    proxied: true,
+    ttl: 1
 }, { provider })

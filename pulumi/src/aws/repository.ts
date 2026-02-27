@@ -6,7 +6,7 @@ export const repo = new aws.ecr.Repository(config.identifier, {
     name: config.identifier
 }, { provider })
 
-export const credentials = aws.ecr.getCredentialsOutput({
+export const credentials = aws.ecr.getAuthorizationTokenOutput({
     registryId: repo.registryId
 }, { provider })
 

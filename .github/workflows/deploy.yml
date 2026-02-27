@@ -18,6 +18,9 @@ jobs:
       - name: Install Packages
         working-directory: ./pulumi
         run: npm install
+      - name: TypeScript Check
+        working-directory: ./pulumi
+        run: npm run check
       - name: Update
         uses: pulumi/actions@v6
         with:
