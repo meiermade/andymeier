@@ -50,7 +50,7 @@ Target.create "EnsureDevCert" <| fun _ ->
     exec "dotnet" rootDir ["dev-certs"; "https"; "--trust"] |> Task.WaitAll
 
 Target.create "Watch" <| fun _ ->
-    let sqlitePath = appDir </> ".data" </> "app.db"
+    let sqlitePath = rootDir </> ".data" </> "app.db"
 
     let env =
         getEnvMap()
