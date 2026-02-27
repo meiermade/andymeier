@@ -24,14 +24,14 @@ type Config =
       appName:string
       server:ServerConfig
       seq:SeqConfig
-      redis:Redis.Config
+      sqlite:Sqlite.Config
       notion:Notion.Config }
 
 module Config =
     let load () =
         { debug = Env.variableOrDefault "DEBUG" "false" |> Boolean.Parse
-          appName = "AndrewMeier"
+          appName = "andrewmeier"
           server = ServerConfig.load ()
           seq = SeqConfig.load ()
-          redis = Redis.Config.load ()
+          sqlite = Sqlite.Config.load ()
           notion = Notion.Config.load () }

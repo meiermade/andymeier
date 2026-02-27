@@ -30,7 +30,7 @@ let private getArticlePage (services:Services) (id:string) : HttpHandler =
         match! services.article.tryGetArticle id with
         | Some article ->
             let page = articlePage article
-            let url = $"/articles/{article.properties.permalink}"
+            let url = $"/articles/{article.permalink}"
 
             if ctx.IsDatastar then
                 let ds = ctx.GetService<IDatastarService>()

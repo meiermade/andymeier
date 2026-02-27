@@ -2,5 +2,5 @@
 .vscode
 .idea
 node_modules
-*~
 .pi/
+app/.data/

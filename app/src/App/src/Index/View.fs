@@ -8,12 +8,12 @@ open type Html
 open type Datastar
     
 let aboutMe = markdown """
-Engineer building systems for finance, accounting, and capital markets.
+Engineer working in finance, accounting, and capital markets.
 
 Currently working at [Aplazo](https://aplazo.mx/).
 """
 
-let homePage (recentArticles:ArticleProperties list) =
+let homePage (recentArticles:Article list) =
     let content =
         div {
             _class "pt-20 pb-16 mx-auto max-w-4xl px-4"
@@ -25,13 +25,13 @@ let homePage (recentArticles:ArticleProperties list) =
                     div {
                         _class "flex justify-center space-x-2"
                         a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://github.com/meiermade"; MiniIcon.github }
-                        a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://x.com/andrewmeierdev"; MiniIcon.twitter }
+                        a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://x.com/andrewmeierdev"; MiniIcon.xdotcom }
                         a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://www.linkedin.com/in/andrew-meier/"; MiniIcon.linkedIn }
                     }
                 }
                 div {
                     _class "px-2 md:order-first"
-                    h1 { _class "text-2xl text-gray-900 dark:text-gray-100 font-medium"; "Andrew Meier" }
+                    h1 { _class "text-3xl text-gray-900 dark:text-gray-100 font-medium mb-4"; "Andrew Meier" }
                     aboutMe
                 }
             }

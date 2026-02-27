@@ -6,7 +6,7 @@ open App.Common.View
 open type Datastar
 open type Html
 
-let articlesPage (articles:ArticleProperties list) =
+let articlesPage (articles:Article list) =
     let content =
         div {
             _class "mx-auto max-w-5xl py-10 px-4"
@@ -161,17 +161,17 @@ let articlePage (article':Article) =
         div {
             div {
                 _class "bg-cover bg-no-repeat bg-center bg-blend-overlay bg-gray-800"
-                _style $"background-image: url('{article'.properties.cover}')"
+                _style $"background-image: url('{article'.cover}')"
                 div {
                     _class "pt-28 pb-20 px-4 mx-auto max-w-5xl flex flex-col justify-end items-start text-gray-50"
                     time {
                         _class "text-base text-gray-50 border-l border-gray-300 pl-2"
-                        _datetime (article'.properties.createdAt.ToString("yyyy-MM-dd"))
-                        article'.properties.createdAt.ToString("MMMM d, yyyy")
+                        _datetime (article'.createdAt.ToString("yyyy-MM-dd"))
+                        article'.createdAt.ToString("MMMM d, yyyy")
                     }
                     h1 {
                         _class "mt-4 text-4xl font-bold tracking-tight text-gray-50"
-                        article'.properties.title
+                        article'.title
                     }
                 }
             }

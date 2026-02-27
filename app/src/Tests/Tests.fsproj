@@ -3,10 +3,15 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
+    <NoWarn>$(NoWarn);NU1510</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="paket.references" />
     <Compile Include="ArticleTests.fs" />
+    <Compile Include="ArticleServiceTests.fs" />
+    <Compile Include="NotionParseTests.fs" />
+    <Compile Include="NotionPageTests.fs" />
+    <Compile Include="NotionServiceTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

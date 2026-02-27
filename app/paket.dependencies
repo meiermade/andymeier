@@ -14,7 +14,7 @@ nuget Serilog.Sinks.Seq
 nuget Serilog.Sinks.Console
 nuget Serilog.Sinks.OpenTelemetry
 nuget Starfederation.Datastar
-nuget StackExchange.Redis
+nuget Microsoft.Data.Sqlite
 nuget OpenTelemetry
 nuget OpenTelemetry.Extensions.Hosting
 nuget OpenTelemetry.Instrumentation.AspNetCore

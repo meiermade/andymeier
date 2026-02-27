@@ -53,8 +53,8 @@ let private serviceCard (icon: HtmlElement) (title: string) (description: string
             _class "text-emerald-600 dark:text-emerald-400"
             icon
         }
-        h2 { _class "mt-3 font-semibold text-gray-900 dark:text-gray-100"; title }
-        p { _class "mt-2 text-sm text-gray-600 dark:text-gray-400"; description }
+        h2 { _class "mt-3 text-xl font-semibold text-gray-900 dark:text-gray-100"; title }
+        p { _class "mt-2 text-base text-gray-600 dark:text-gray-400"; description }
     }
 
 let page =
@@ -63,17 +63,15 @@ let page =
             _class "mx-auto max-w-5xl py-10 px-4"
             h1 { _class "text-4xl text-gray-900 dark:text-gray-100 font-medium"; "Services" }
             p {
-                _class "mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-4xl"
+                _class "mt-4 text-lg text-gray-600 dark:text-gray-400"
                 "I help businesses build and scale their finance, accounting, and capital markets infrastructure"
             }
             div {
-                _class "mt-10 grid grid-cols-2 gap-4 lg:grid-cols-3"
-                serviceCard iconSecureInfrastructure "Secure infrastructure" "Design and deploy secure, cost-efficent infrasturure with Kubernetes and Pulumi."
-                serviceCard iconPrivateNetwork "Private network operations" "Run internal tools and pipelines in private networks with Cloudflare Zero Trust and strong access controls."
-                serviceCard iconIngestion "Data ingestion pipelines" "Set up reliable ingestion and orchestration so financial data lands consistently and accurately, with hands-on experience in Airflow, Airbyte, and Dagster."
-                serviceCard iconWarehouse "Warehouse modeling" "Build robust, permissioned data models with dbt across BigQuery, Redshift, and Snowflake."
-                serviceCard iconFinancialModels "Financial reporting models" "Develop operating models, borrowing base reports, and investor reporting in Excel and Google Sheets, with F# models for complex scenarios."
-                serviceCard iconInternalAppsAi "Internal apps and AI tooling" "Build secure internal web apps in F# or Python, plus MCP servers and agent skills to automate workflows."
+                _class "mt-10 grid grid-cols-1 gap-4 md:grid-cols-2"
+                serviceCard iconSecureInfrastructure "Secure private infrastructure" "Design and deploy secure, cost-efficient infrastructure with Kubernetes and Pulumi. Enable private networking and access controls with Cloudflare Zero Trust."
+                serviceCard iconWarehouse "Data engineering and analytics" "Build reliable ingestion and orchestration pipelines with tools like Airbyte and Dagster. Model analytics layers with dbt in BigQuery, Redshift, Snowflake or other warehouses."
+                serviceCard iconFinancialModels "Financial reporting models" "Develop operating models, borrowing base reports, investor reporting, and more in Excel and Google Sheets. Create bespoke F# and Python models for complex scenarios."
+                serviceCard iconInternalAppsAi "Internal apps and AI tooling" "Build secure internal web apps and MCP servers in F# or Python. Help set up AI coding agents and skills to automate workflows."
             }
             section {
                 _class "mt-10 max-w-3xl mx-auto rounded-xl border border-gray-200 dark:border-gray-800 p-6"
