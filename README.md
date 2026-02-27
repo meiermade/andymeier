@@ -1,6 +1,6 @@
-# andrewmeier.dev
+# Andrew Meier
 
-Personal website built with F#, Giraffe, Datastar, and Tailwind CSS.
+Personal website for Andrew Meier built with F#, Giraffe, Datastar, and Tailwind CSS.
 
 ## Structure
 

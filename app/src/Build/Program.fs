@@ -43,7 +43,7 @@ let getEnvMap () =
 
 Target.create "StartDeps" <| fun _ ->
     Trace.trace "Starting dependencies (seq)"
-    exec "docker" rootDir ["compose"; "up"; "-d"; "seq"] |> Task.WaitAll
+    exec "docker-compose" rootDir ["up"; "-d"; "seq"] |> Task.WaitAll
 
 Target.create "EnsureDevCert" <| fun _ ->
     Trace.trace "Ensuring trusted ASP.NET Core HTTPS development certificate"
