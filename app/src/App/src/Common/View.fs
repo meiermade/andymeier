@@ -112,15 +112,19 @@ module Footer =
 
 module TopNav =
     let private item (id:string, el:HtmlElement, href:string) =
-        let className =
+        let baseClass, inactiveLightClass, inactiveDarkClass =
             if id = "nav-home" then
-                "p-2 text-base font-bold tracking-tight text-gray-900 cursor-pointer hover:text-emerald-600 dark:text-gray-100 dark:hover:text-emerald-400"
+                "p-2 text-base font-bold tracking-tight cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400", "text-gray-900", "dark:text-gray-100"
             else
-                "p-2 text-sm font-semibold text-gray-800 cursor-pointer hover:text-emerald-600 dark:text-gray-200 dark:hover:text-emerald-400"
+                "p-2 text-sm font-semibold cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400", "text-gray-800", "dark:text-gray-200"
 
         a {
             _id id
-            _class className
+            _class baseClass
+            { Name = $"data-class:text-emerald-600"; Value = ValueSome $"$selectedNav == '{id}'" }
+            { Name = $"data-class:dark:text-emerald-400"; Value = ValueSome $"$selectedNav == '{id}'" }
+            { Name = $"data-class:{inactiveLightClass}"; Value = ValueSome $"$selectedNav != '{id}'" }
+            { Name = $"data-class:{inactiveDarkClass}"; Value = ValueSome $"$selectedNav != '{id}'" }
             _dsOn ("click", $"@get('{href}')")
             el
         }
@@ -141,6 +145,7 @@ module TopNav =
 
     let primary =
         nav {
+            _id "top-nav"
             _class "bg-gray-100 py-2 px-4 flex items-center gap-4 border-b border-gray-300 dark:bg-gray-900 dark:border-gray-700"
             item("nav-home", div { _class "w-8 h-8 text-emerald-600 dark:text-emerald-400"; MiniIcon.logo }, "/")
             div { _class "grow" }
@@ -166,7 +171,7 @@ type Document =
                 script { js "let t=localStorage.getItem('theme');if(t==='dark'||(!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.classList.add('dark')}" }
                 link { _href "/css/compiled.css"; _rel "stylesheet" }
                 link { _href "/css/prism.css"; _rel "stylesheet" }
-                script { _type "module"; _src "https://cdn.jsdelivr.net/gh/starfederation/datastar@1.0.0-RC.6/bundles/datastar.js" }
+                script { _type "module"; _src "/scripts/datastar.1.0.0-RC.6.js" }
             }
             body {
                 _dsSignals ("selectedNav", $"'{selectedNav}'")
