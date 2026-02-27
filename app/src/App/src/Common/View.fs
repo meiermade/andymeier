@@ -184,7 +184,7 @@ module TopNav =
     let primary =
         nav {
             _id "top-nav"
-            _class "bg-gray-100 py-2 px-4 border-b border-gray-300 dark:bg-gray-900 dark:border-gray-700"
+            _class "relative bg-gray-100 py-2 px-4 border-b border-gray-300 dark:bg-gray-900 dark:border-gray-700"
             _dsSignals ("menuOpen", "false")
             div {
                 _class "flex items-center gap-4"
@@ -201,7 +201,7 @@ module TopNav =
             }
             div {
                 _id "mobile-menu"
-                _class "md:hidden pt-2 pb-1"
+                _class "md:hidden absolute left-0 right-0 top-full z-50 bg-gray-100 border-b border-gray-300 dark:bg-gray-900 dark:border-gray-700 px-4 pt-2 pb-1 shadow-lg"
                 { Name = "data-show"; Value = ValueSome "$menuOpen" }
                 mobileItem("nav-articles", "Articles", "/articles")
                 mobileItem("nav-projects", "Projects", "/projects")
