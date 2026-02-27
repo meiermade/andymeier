@@ -52,6 +52,12 @@ module MiniIcon =
     let moon =
         raw """<svg class="hidden h-5 w-5 dark:block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>"""
 
+    let hamburger =
+        raw """<svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>"""
+
+    let close =
+        raw """<svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>"""
+
 module ArticleCard =
     let private tag (text:string) =
         span {
@@ -129,6 +135,18 @@ module TopNav =
             el
         }
 
+    let private mobileItem (id:string, label:string, href:string) =
+        a {
+            _id $"{id}-mobile"
+            _class "block p-3 text-base font-semibold cursor-pointer hover:text-emerald-600 hover:bg-gray-200 dark:hover:text-emerald-400 dark:hover:bg-gray-800 rounded-md"
+            { Name = $"data-class:text-emerald-600"; Value = ValueSome $"$selectedNav == '{id}'" }
+            { Name = $"data-class:dark:text-emerald-400"; Value = ValueSome $"$selectedNav == '{id}'" }
+            { Name = "data-class:text-gray-800"; Value = ValueSome $"$selectedNav != '{id}'" }
+            { Name = "data-class:dark:text-gray-200"; Value = ValueSome $"$selectedNav != '{id}'" }
+            _dsOn ("click", $"$menuOpen = false; @get('{href}')")
+            text label
+        }
+
     let private themeToggle =
         button {
             _id "theme-toggle"
@@ -143,16 +161,52 @@ module TopNav =
             MiniIcon.moon
         }
 
+    let private hamburgerButton =
+        button {
+            _id "menu-toggle"
+            _type "button"
+            _class [
+                "md:hidden p-2 rounded-md text-gray-600 hover:text-emerald-600 hover:bg-gray-100"
+                "dark:text-gray-400 dark:hover:text-emerald-400 dark:hover:bg-gray-800"
+                "hover:cursor-pointer"
+            ]
+            _dsOn ("click", "$menuOpen = !$menuOpen")
+            div {
+                { Name = "data-show"; Value = ValueSome "!$menuOpen" }
+                MiniIcon.hamburger
+            }
+            div {
+                { Name = "data-show"; Value = ValueSome "$menuOpen" }
+                MiniIcon.close
+            }
+        }
+
     let primary =
         nav {
             _id "top-nav"
-            _class "bg-gray-100 py-2 px-4 flex items-center gap-4 border-b border-gray-300 dark:bg-gray-900 dark:border-gray-700"
-            item("nav-home", div { _class "w-8 h-8 text-emerald-600 dark:text-emerald-400"; MiniIcon.logo }, "/")
-            div { _class "grow" }
-            item("nav-articles", text "Articles", "/articles")
-            item("nav-projects", text "Projects", "/projects")
-            item("nav-services", text "Services", "/services")
-            themeToggle
+            _class "bg-gray-100 py-2 px-4 border-b border-gray-300 dark:bg-gray-900 dark:border-gray-700"
+            _dsSignals ("menuOpen", "false")
+            div {
+                _class "flex items-center gap-4"
+                item("nav-home", div { _class "w-8 h-8 text-emerald-600 dark:text-emerald-400"; MiniIcon.logo }, "/")
+                div { _class "grow" }
+                div {
+                    _class "hidden md:flex items-center gap-4"
+                    item("nav-articles", text "Articles", "/articles")
+                    item("nav-projects", text "Projects", "/projects")
+                    item("nav-services", text "Services", "/services")
+                }
+                themeToggle
+                hamburgerButton
+            }
+            div {
+                _id "mobile-menu"
+                _class "md:hidden pt-2 pb-1"
+                { Name = "data-show"; Value = ValueSome "$menuOpen" }
+                mobileItem("nav-articles", "Articles", "/articles")
+                mobileItem("nav-projects", "Projects", "/projects")
+                mobileItem("nav-services", "Services", "/services")
+            }
         }
 
 module Page =
