@@ -44,9 +44,11 @@ let configureLogger (config: Config) =
 
     Log.Logger <- logger
 
-let configureServices (services: IServiceCollection) =
-    services
+let configureServices (serviceCollection: IServiceCollection) (tracerProvider: TracerProvider) (services: Services) =
+    serviceCollection
         .AddSerilog()
+        .AddSingleton(tracerProvider)
+        .AddHostedService(fun _ -> Article.SyncBackgroundService(services.article))
         .AddDatastar()
         .AddGiraffe()
     |> ignore
@@ -68,10 +70,7 @@ let main _args =
             let services = Services.create config tracer
 
             let builder = WebApplication.CreateBuilder()
-            builder.Services.AddSerilog() |> ignore
-            builder.Services.AddSingleton(tracerProvider) |> ignore
-            builder.Services.AddHostedService(fun _ -> Article.SyncBackgroundService(services.article)) |> ignore
-            configureServices builder.Services
+            configureServices builder.Services tracerProvider services
             let app = builder.Build()
 
             configureApp services app

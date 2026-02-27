@@ -24,8 +24,6 @@ RUN ./fake.sh Publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra AS runner
 
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
-
 WORKDIR /app
 
 # copy compiled code from build image

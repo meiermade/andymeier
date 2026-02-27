@@ -7,16 +7,25 @@ open App.Common.View
 open type Html
 open type Datastar
     
-let aboutMe = markdown """
-Engineer working in finance, accounting, and capital markets.
-
-Currently working at [Aplazo](https://aplazo.mx/).
-"""
+let aboutMe =
+    p {
+        _class "mt-4 text-lg text-gray-600 dark:text-gray-400"
+        "Engineer working in finance, accounting, and capital markets."
+        br
+        br
+        "Currently working at "
+        a {
+            _href "https://aplazo.mx/"
+            _class "underline hover:text-emerald-600 dark:hover:text-emerald-400"
+            "Aplazo"
+        }
+        "."
+    }
 
 let homePage (recentArticles:Article list) =
     let content =
         div {
-            _class "pt-20 pb-16 mx-auto max-w-4xl px-4"
+            _class "py-10 mx-auto max-w-5xl px-4"
             div {
                 _class "grid gap-4 grid-cols-1 md:grid-cols-2"
                 div {
@@ -30,8 +39,8 @@ let homePage (recentArticles:Article list) =
                     }
                 }
                 div {
-                    _class "px-2 md:order-first"
-                    h1 { _class "text-3xl text-gray-900 dark:text-gray-100 font-medium mb-4"; "Andrew Meier" }
+                    _class "md:order-first"
+                    h1 { _class "text-4xl text-gray-900 dark:text-gray-100 font-medium"; "Andrew Meier" }
                     aboutMe
                 }
             }

@@ -70,7 +70,7 @@ let page =
                 _class "mt-10 grid grid-cols-1 gap-4 md:grid-cols-2"
                 serviceCard iconSecureInfrastructure "Secure private infrastructure" "Design and deploy secure, cost-efficient infrastructure with Kubernetes and Pulumi. Enable private networking and access controls with Cloudflare Zero Trust."
                 serviceCard iconWarehouse "Data engineering and analytics" "Build reliable ingestion and orchestration pipelines with tools like Airbyte and Dagster. Model analytics layers with dbt in BigQuery, Redshift, Snowflake or other warehouses."
-                serviceCard iconFinancialModels "Financial reporting models" "Develop operating models, borrowing base reports, investor reporting, and more in Excel and Google Sheets. Create bespoke F# and Python models for complex scenarios."
+                serviceCard iconFinancialModels "Financial models" "Develop operating models, borrowing base reports, investor reporting, and more in Excel and Google Sheets. Create bespoke F# and Python models for complex scenarios."
                 serviceCard iconInternalAppsAi "Internal apps and AI tooling" "Build secure internal web apps and MCP servers in F# or Python. Help set up AI coding agents and skills to automate workflows."
             }
             section {
