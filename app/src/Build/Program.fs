@@ -27,7 +27,10 @@ let execEnv command workDir env args =
     |> Proc.start
 
 let exec command workDir args =
-    execEnv command workDir EnvMap.empty args
+    CreateProcess.fromRawCommand command args
+    |> CreateProcess.withWorkingDirectory workDir
+    |> CreateProcess.ensureExitCode
+    |> Proc.start
     
 let getEnvMap () =
     let env = "andrewmeier/local"

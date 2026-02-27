@@ -20,7 +20,6 @@ export const awsConfig = {
 export const cloudflareConfig = {
     accountId: rawCloudflareConfig.require('accountId'),
     apiToken: rawCloudflareConfig.requireSecret('apiToken'),
-    zoneName: rawCloudflareConfig.require('zoneName'),
     cloudflaredVersion: '2026.2.0'
 }
 

@@ -15,7 +15,7 @@ new cloudflare.ZeroTrustTunnelCloudflaredConfig(config.identifier, {
     config: {
         ingresses: [
             {
-                hostname: config.cloudflareConfig.zoneName,
+                hostname: 'andrewmeier.dev',
                 service: `http://app.${config.k8sConfig.namespace}.svc.cluster.local:80`
             },
             {

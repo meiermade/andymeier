@@ -8,7 +8,7 @@ const zone = cloudflare.getZoneOutput({
         account: {
             id: config.cloudflareConfig.accountId
         },
-        name: config.cloudflareConfig.zoneName
+        name: 'andrewmeier.dev'
     }
 }, { provider })
 
