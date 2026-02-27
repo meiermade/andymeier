@@ -7,18 +7,18 @@ open type Html
 let private projectCard (title:string, description:string, logoSrc:string, logoAlt:string, href:string, label:string) =
     a {
         _href href
-        _class "group block p-6 rounded-2xl bg-gray-900/50 border border-slate-400/20 hover:bg-gray-800/70 transition-colors"
+        _class "group block p-6 rounded-2xl border border-slate-400/20 transition-colors hover:bg-white dark:hover:bg-gray-800"
         div {
             _class "flex items-center gap-4"
             img {
-                _class "h-12 w-12 rounded-xl object-cover bg-gray-900 p-1"
+                _class "h-12 w-12 rounded-xl object-cover bg-gray-100 dark:bg-gray-900 p-1"
                 _src logoSrc
                 _alt logoAlt
             }
-            h2 { _class "text-2xl font-semibold tracking-tight text-gray-100"; title }
+            h2 { _class "text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100"; title }
         }
-        p { _class "mt-4 text-base text-gray-300"; description }
-        p { _class "mt-5 text-sm text-gray-200 group-hover:text-emerald-300"; label }
+        p { _class "mt-4 text-base text-gray-700 dark:text-gray-300"; description }
+        p { _class "mt-5 text-sm text-gray-600 dark:text-gray-200 transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400"; label }
     }
 
 let page =

@@ -132,6 +132,7 @@ module TopNav =
             _class [
                 "p-2 rounded-md text-gray-600 hover:text-emerald-600 hover:bg-gray-100"
                 "dark:text-gray-400 dark:hover:text-emerald-400 dark:hover:bg-gray-800"
+                "hover:cursor-pointer"
             ]
             { Name = "onclick"; Value = ValueSome "toggleTheme()" }
             MiniIcon.sun
@@ -140,7 +141,7 @@ module TopNav =
 
     let primary =
         nav {
-            _class "bg-gray-50 py-2 px-4 flex items-center gap-4 border-b border-gray-300 dark:bg-gray-900 dark:border-gray-700"
+            _class "bg-gray-100 py-2 px-4 flex items-center gap-4 border-b border-gray-300 dark:bg-gray-900 dark:border-gray-700"
             item("nav-home", div { _class "w-8 h-8 text-emerald-600 dark:text-emerald-400"; MiniIcon.logo }, "/")
             div { _class "grow" }
             item("nav-articles", text "Articles", "/articles")
@@ -151,7 +152,7 @@ module TopNav =
 
 module Page =
     let primary (page:HtmlElement) =
-        div { _id "page"; _class "min-h-screen bg-gray-50 dark:bg-gray-900"; page }
+        div { _id "page"; _class "min-h-screen bg-gray-100 dark:bg-gray-900"; page }
 
 type Document =
     static member primary (page:HtmlElement, ?selectedNav:string) =
@@ -169,7 +170,7 @@ type Document =
             }
             body {
                 _dsSignals ("selectedNav", $"'{selectedNav}'")
-                _class "bg-gray-100 dark:bg-gray-950"
+                _class "bg-gray-200 dark:bg-gray-950"
                 div {
                     _class "mx-auto max-w-7xl"
                     TopNav.primary
