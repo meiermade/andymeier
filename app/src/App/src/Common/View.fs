@@ -13,10 +13,10 @@ module MiniIcon =
         </svg>
         """
 
-    let twitter =
+    let xdotcom =
         raw """
-        <svg viewBox="0 0 24 24" aria-hidden="true" class="h-5 w-5" fill="currentColor">
-            <path d="M18.9 2H22l-6.77 7.74L23.2 22h-6.25l-4.9-6.44L6.4 22H3.3l7.24-8.27L1 2h6.4l4.43 5.85L18.9 2Zm-1.1 18h1.73L6.46 3.9H4.6L17.8 20Z"></path>
+        <svg viewBox="0 0 1200 1227" aria-hidden="true" class="h-5 w-5" fill="currentColor">
+            <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z"></path>
         </svg>
         """
 
@@ -59,10 +59,10 @@ module ArticleCard =
             text
         }
 
-    let summary (properties:ArticleProperties) =
-        let url = $"/articles/{properties.permalink}"
+    let summary (article':Article) =
+        let url = $"/articles/{article'.permalink}"
         article {
-            _id properties.permalink
+            _id article'.permalink
             _class "py-6 border-b border-gray-200 dark:border-gray-800"
             div {
                 _class "flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400 dark:text-gray-500"
@@ -70,8 +70,8 @@ module ArticleCard =
                     _class "inline-flex items-center whitespace-nowrap"
                     span { _class "mr-1.5"; MiniIcon.calendar }
                     time {
-                        _datetime (properties.createdAt.ToString("yyyy-MM-dd"))
-                        properties.createdAt.ToString("MMMM d, yyyy")
+                        _datetime (article'.createdAt.ToString("yyyy-MM-dd"))
+                        article'.createdAt.ToString("MMMM d, yyyy")
                     }
                 }
             }
@@ -81,14 +81,13 @@ module ArticleCard =
                     _href url
                     _dsOn ("click", $"@get('{url}')")
                     _class "hover:text-emerald-600 dark:hover:text-emerald-400"
-                    properties.title
+                    article'.title
                 }
             }
-            if not (System.String.IsNullOrEmpty(properties.summary)) then
-                p { _class "mt-2 text-base text-gray-600 dark:text-gray-400"; properties.summary }
+            p { _class "mt-2 text-base text-gray-600 dark:text-gray-400"; article'.summary }
             div {
                 _class "mt-4 flex flex-wrap gap-2"
-                for t in properties.tags do tag t
+                for t in article'.tags do tag t
             }
         }
 

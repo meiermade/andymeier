@@ -26,6 +26,7 @@ let page =
         div {
             _class "mx-auto max-w-5xl py-10 px-4"
             h1 { _class "text-4xl text-gray-900 dark:text-gray-100 font-medium"; "Projects" }
+            p { _class "mt-4 text-lg text-gray-600 dark:text-gray-400"; "Things I am working on." }
             div {
                 _class "mt-10 grid gap-8 md:grid-cols-2"
                 projectCard(

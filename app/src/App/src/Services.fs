@@ -13,11 +13,10 @@ type Services =
 module Services =
     let create (config: Config) (tracer: Tracer) =
         let telemetry = Telemetry.Service.create tracer
-        let redis = Redis.Service.create config.redis telemetry
         let socketsHandler = new SocketsHttpHandler(PooledConnectionLifetime = TimeSpan.FromHours(1.))
         let httpClient = new HttpClient(socketsHandler)
         let notion = Notion.Service.create config.notion telemetry httpClient
-        let article = Article.Service.create config.notion telemetry redis notion
+        let article = Article.Service.create config.notion telemetry config.sqlite notion
 
         { config = config
           telemetry = telemetry

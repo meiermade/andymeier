@@ -1,2 +1,1 @@
-import './redis'
 import './deployment'

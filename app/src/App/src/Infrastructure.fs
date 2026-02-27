@@ -24,7 +24,7 @@ module HtmlExtensions =
             let html = Markdown.ToHtml(markdown', markdownPipeline)
 
             div {
-                _class "prose prose-lg dark:prose-invert"
+                _class "prose prose-lg dark:prose-invert max-w-none"
                 raw html
             }
 
