@@ -16,9 +16,9 @@ let private getArticlesPage (services:Services) : HttpHandler =
 
         if ctx.IsDatastar then
             let ds = ctx.GetService<IDatastarService>()
+            do! patchSignals ds {| selectedNav = "nav-articles" |}
             do! patchElement ds page
             do! pushUrl ds "/articles"
-            do! patchSignals ds {| selectedNav = "nav-articles" |}
             return Some ctx
         else
             return! renderPage page "nav-articles" next ctx
@@ -34,9 +34,9 @@ let private getArticlePage (services:Services) (id:string) : HttpHandler =
 
             if ctx.IsDatastar then
                 let ds = ctx.GetService<IDatastarService>()
+                do! patchSignals ds {| selectedNav = "nav-articles" |}
                 do! patchElement ds page
                 do! pushUrl ds url
-                do! patchSignals ds {| selectedNav = "nav-articles" |}
                 return Some ctx
             else
                 return! renderPage page "nav-articles" next ctx
