@@ -56,7 +56,7 @@ let homePage (recentArticles:Article list) =
                     _class "mt-4"
                     a {
                         _class "text-sm text-emerald-600 hover:underline hover:cursor-pointer dark:text-emerald-400"
-                        _dsOn ("click", "@get('/articles')")
+                        _dataOn ("click", "@get('/articles')")
                         "View all"
                     }
                 }

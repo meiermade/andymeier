@@ -15,7 +15,7 @@ type ProjectCardProps =
 let private projectCard (props: ProjectCardProps) =
     a {
         _href props.href
-        _class "group block p-6 rounded-2xl border border-slate-400/20 transition-colors hover:bg-white dark:hover:bg-gray-800"
+        _class "group block p-6 rounded-2xl border border-gray-300/60 dark:border-gray-700/60 transition-colors hover:bg-white dark:hover:bg-gray-800"
         div {
             _class "flex items-center gap-4"
             img {

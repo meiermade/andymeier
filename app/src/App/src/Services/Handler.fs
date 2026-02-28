@@ -14,9 +14,9 @@ let private getPage (services:Services) : HttpHandler =
 
         if ctx.IsDatastar then
             let ds = ctx.GetService<IDatastarService>()
+            do! patchSignals ds {| selectedNav = "nav-services" |}
             do! patchElement ds page
             do! pushUrl ds "/services"
-            do! patchSignals ds {| selectedNav = "nav-services" |}
             return Some ctx
         else
             return! renderPage page "nav-services" next ctx

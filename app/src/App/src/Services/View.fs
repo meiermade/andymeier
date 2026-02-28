@@ -48,7 +48,7 @@ let private iconInternalAppsAi =
 
 let private serviceCard (icon: HtmlElement) (title: string) (description: string) : HtmlElement =
     div {
-        _class "rounded-xl border border-gray-200 dark:border-gray-800 p-4"
+        _class "rounded-xl border border-gray-300/60 dark:border-gray-700/60 p-4"
         div {
             _class "text-emerald-600 dark:text-emerald-400"
             icon
@@ -74,7 +74,7 @@ let page =
                 serviceCard iconInternalAppsAi "Internal apps and AI tooling" "Build secure internal web apps and MCP servers in F# or Python. Help set up AI coding agents and skills to automate workflows."
             }
             section {
-                _class "mt-10 max-w-3xl mx-auto rounded-xl border border-gray-200 dark:border-gray-800 p-6"
+                _class "mt-10 max-w-3xl mx-auto rounded-xl border border-gray-300/60 dark:border-gray-700/60 p-6"
                 div {
                     _class "flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
                     div {

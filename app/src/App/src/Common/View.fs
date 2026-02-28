@@ -4,6 +4,7 @@ open FSharp.ViewEngine
 open Domain.Article
 open type Html
 open type Datastar
+open type Tailwind
 
 module MiniIcon =
     let github =
@@ -52,6 +53,15 @@ module MiniIcon =
     let moon =
         raw """<svg class="hidden h-5 w-5 dark:block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>"""
 
+    let sunSmall =
+        raw """<svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>"""
+
+    let moonSmall =
+        raw """<svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>"""
+
+    let monitor =
+        raw """<svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25"/></svg>"""
+
     let hamburger =
         raw """<svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>"""
 
@@ -69,7 +79,7 @@ module ArticleCard =
         let url = $"/articles/{article'.permalink}"
         article {
             _id article'.permalink
-            _class "py-6 border-b border-gray-200 dark:border-gray-800"
+            _class "py-6 border-b border-gray-300/60 dark:border-gray-700/60"
             div {
                 _class "flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400 dark:text-gray-500"
                 div {
@@ -85,7 +95,7 @@ module ArticleCard =
                 _class "mt-2 text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100"
                 a {
                     _href url
-                    _dsOn ("click", $"@get('{url}')")
+                    _dataOn ("click", $"@get('{url}')")
                     _class "hover:text-emerald-600 dark:hover:text-emerald-400"
                     article'.title
                 }
@@ -100,7 +110,7 @@ module ArticleCard =
 module Footer =
     let primary =
         div {
-            _class "flex p-10 bg-gray-50 border-t border-gray-300 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300"
+            _class "flex p-10 bg-gray-100 border-t border-gray-300 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300"
             div {
                 _class "text-sm space-y-1"
                 div { _class "w-12 h-12 text-emerald-600 dark:text-emerald-400"; MiniIcon.logo }
@@ -110,74 +120,123 @@ module Footer =
             div { _class "grow" }
             div {
                 _class "text-sm flex flex-col space-y-1"
-                a { _class "underline cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"; _dsOn ("click", "@get('/articles')"); "Articles" }
-                a { _class "underline cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"; _dsOn ("click", "@get('/services')"); "Services" }
-                a { _class "underline cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"; _dsOn ("click", "@get('/projects')"); "Projects" }
+                a { _class "underline cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"; _dataOn ("click", "@get('/articles')"); "Articles" }
+                a { _class "underline cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"; _dataOn ("click", "@get('/services')"); "Services" }
+                a { _class "underline cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"; _dataOn ("click", "@get('/projects')"); "Projects" }
             }
         }
 
 module TopNav =
     let private item (id:string, el:HtmlElement, href:string) =
-        let baseClass, inactiveLightClass, inactiveDarkClass =
+        let baseClass =
             if id = "nav-home" then
-                "p-2 text-base font-bold tracking-tight cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400", "text-gray-900", "dark:text-gray-100"
+                "p-2 text-base font-bold tracking-tight cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"
             else
-                "p-2 text-sm font-semibold cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400", "text-gray-800", "dark:text-gray-200"
+                "p-2 text-sm font-semibold cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400"
 
         a {
             _id id
             _class baseClass
-            _dsClass ("text-emerald-600", $"$selectedNav == '{id}'")
-            _dsClass ("dark:text-emerald-400", $"$selectedNav == '{id}'")
-            _dsClass (inactiveLightClass, $"$selectedNav != '{id}'")
-            _dsClass (inactiveDarkClass, $"$selectedNav != '{id}'")
-            _dsOn ("click", $"@get('{href}')")
+            _dataClass ("text-emerald-600", $"$selectedNav == '{id}'")
+            _dataClass ("dark:text-emerald-400", $"$selectedNav == '{id}'")
+            _dataClass ("text-gray-800", $"$selectedNav != '{id}'")
+            _dataClass ("dark:text-gray-200", $"$selectedNav != '{id}'")
+            _dataOn ("click", $"@get('{href}')")
             el
         }
 
     let private mobileItem (id:string, label:string, href:string) =
-        a {
+        button {
             _id $"{id}-mobile"
-            _class "block p-3 text-base font-semibold cursor-pointer hover:text-emerald-600 hover:bg-gray-200 dark:hover:text-emerald-400 dark:hover:bg-gray-800 rounded-md"
-            _dsClass ("text-emerald-600", $"$selectedNav == '{id}'")
-            _dsClass ("dark:text-emerald-400", $"$selectedNav == '{id}'")
-            _dsClass ("text-gray-800", $"$selectedNav != '{id}'")
-            _dsClass ("dark:text-gray-200", $"$selectedNav != '{id}'")
-            _dsOn ("click", $"$menuOpen = false; @get('{href}')")
+            _type "button"
+            _class "block w-full text-left px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 hover:text-emerald-600 dark:hover:bg-gray-700/50 dark:hover:text-emerald-400"
+            _dataClass ("text-emerald-600", $"$selectedNav == '{id}'")
+            _dataClass ("dark:text-emerald-400", $"$selectedNav == '{id}'")
+            _dataClass ("font-semibold", $"$selectedNav == '{id}'")
+            _dataClass ("text-gray-700", $"$selectedNav != '{id}'")
+            _dataClass ("dark:text-gray-300", $"$selectedNav != '{id}'")
+            _dataOn ("click", $"@get('{href}')")
             text label
         }
 
     let private themeToggle =
-        button {
-            _id "theme-toggle"
-            _type "button"
-            _class [
-                "p-2 rounded-md text-gray-600 hover:text-emerald-600 hover:bg-gray-100"
-                "dark:text-gray-400 dark:hover:text-emerald-400 dark:hover:bg-gray-800"
-                "hover:cursor-pointer"
-            ]
-            _onclick "toggleTheme()"
-            MiniIcon.sun
-            MiniIcon.moon
+        elDropdown {
+            _class "relative inline-block text-left"
+            button {
+                _id "theme-toggle"
+                _type "button"
+                _class [
+                    "inline-flex w-full items-center justify-center rounded-md p-2 text-gray-600 hover:text-emerald-600 hover:bg-gray-100"
+                    "dark:text-gray-400 dark:hover:text-emerald-400 dark:hover:bg-gray-800"
+                    "hover:cursor-pointer"
+                ]
+                MiniIcon.sun
+                MiniIcon.moon
+            }
+            elMenu {
+                _popover
+                _anchor "bottom end"
+                _class "mt-2 w-36 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:ring-white/10"
+                button {
+                    _type "button"
+                    _class "flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                    _dataClass ("text-emerald-600", "$theme == 'light'")
+                    _dataClass ("dark:text-emerald-400", "$theme == 'light'")
+                    _dataClass ("font-semibold", "$theme == 'light'")
+                    _dataClass ("text-gray-700", "$theme != 'light'")
+                    _dataClass ("dark:text-gray-300", "$theme != 'light'")
+                    _dataOn ("click", "$theme = 'light'; setTheme('light')")
+                    MiniIcon.sunSmall
+                    text "Light"
+                }
+                button {
+                    _type "button"
+                    _class "flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                    _dataClass ("text-emerald-600", "$theme == 'dark'")
+                    _dataClass ("dark:text-emerald-400", "$theme == 'dark'")
+                    _dataClass ("font-semibold", "$theme == 'dark'")
+                    _dataClass ("text-gray-700", "$theme != 'dark'")
+                    _dataClass ("dark:text-gray-300", "$theme != 'dark'")
+                    _dataOn ("click", "$theme = 'dark'; setTheme('dark')")
+                    MiniIcon.moonSmall
+                    text "Dark"
+                }
+                button {
+                    _type "button"
+                    _class "flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                    _dataClass ("text-emerald-600", "$theme == 'system'")
+                    _dataClass ("dark:text-emerald-400", "$theme == 'system'")
+                    _dataClass ("font-semibold", "$theme == 'system'")
+                    _dataClass ("text-gray-700", "$theme != 'system'")
+                    _dataClass ("dark:text-gray-300", "$theme != 'system'")
+                    _dataOn ("click", "$theme = 'system'; setTheme('system')")
+                    MiniIcon.monitor
+                    text "System"
+                }
+            }
         }
 
-    let private hamburgerButton =
-        button {
-            _id "menu-toggle"
-            _type "button"
-            _class [
-                "md:hidden p-2 rounded-md text-gray-600 hover:text-emerald-600 hover:bg-gray-100"
-                "dark:text-gray-400 dark:hover:text-emerald-400 dark:hover:bg-gray-800"
-                "hover:cursor-pointer"
-            ]
-            _dsOn ("click", "$menuOpen = !$menuOpen")
-            div {
-                _dsShow "!$menuOpen"
+    let private mobileDropdown =
+        elDropdown {
+            _class "relative inline-block text-left md:hidden"
+            button {
+                _id "menu-toggle"
+                _type "button"
+                _class [
+                    "inline-flex w-full items-center justify-center rounded-md p-2 text-gray-600 hover:text-emerald-600 hover:bg-gray-100"
+                    "dark:text-gray-400 dark:hover:text-emerald-400 dark:hover:bg-gray-800"
+                    "hover:cursor-pointer"
+                ]
                 MiniIcon.hamburger
             }
-            div {
-                _dsShow "$menuOpen"
-                MiniIcon.close
+            elMenu {
+                _id "mobile-menu"
+                _popover
+                _anchor "bottom end"
+                _class "mt-2 w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 dark:bg-gray-800 dark:ring-white/10"
+                mobileItem("nav-articles", "Articles", "/articles")
+                mobileItem("nav-projects", "Projects", "/projects")
+                mobileItem("nav-services", "Services", "/services")
             }
         }
 
@@ -185,7 +244,8 @@ module TopNav =
         nav {
             _id "top-nav"
             _class "relative bg-gray-100 py-2 px-4 border-b border-gray-300 dark:bg-gray-900 dark:border-gray-700"
-            _dsSignals ("menuOpen", "false")
+            _dataSignals "{theme: 'system'}"
+            _dataInit "$theme = getInitialTheme(); applyTheme($theme)"
             div {
                 _class "flex items-center gap-4"
                 item("nav-home", div { _class "w-8 h-8 text-emerald-600 dark:text-emerald-400"; MiniIcon.logo }, "/")
@@ -197,15 +257,7 @@ module TopNav =
                     item("nav-services", text "Services", "/services")
                 }
                 themeToggle
-                hamburgerButton
-            }
-            div {
-                _id "mobile-menu"
-                _class "md:hidden absolute left-0 right-0 top-full z-50 bg-gray-100 border-b border-gray-300 dark:bg-gray-900 dark:border-gray-700 px-4 pt-2 pb-1 shadow-lg"
-                _dsShow "$menuOpen"
-                mobileItem("nav-articles", "Articles", "/articles")
-                mobileItem("nav-projects", "Projects", "/projects")
-                mobileItem("nav-services", "Services", "/services")
+                mobileDropdown
             }
         }
 
@@ -225,10 +277,11 @@ type Document =
                 script { js "let t=localStorage.getItem('theme');if(t==='dark'||(!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.classList.add('dark')}" }
                 link { _href "/css/compiled.css"; _rel "stylesheet" }
                 link { _href "/css/prism.css"; _rel "stylesheet" }
+                script { _type "module"; _src "/scripts/tailwindplus-elements.1.js" }
                 script { _type "module"; _src "/scripts/datastar.1.0.0-RC.6.js" }
             }
             body {
-                _dsSignals ("selectedNav", $"'{selectedNav}'")
+                _dataSignals $"{{selectedNav: '{selectedNav}'}}"
                 _class "bg-gray-200 dark:bg-gray-950"
                 div {
                     _class "mx-auto max-w-7xl"
@@ -236,7 +289,6 @@ type Document =
                     page
                     Footer.primary
                 }
-                script { _src "/scripts/prism.1.29.0.js" }
-                script { js "function toggleTheme(){var d=document.documentElement,t=d.classList.contains('dark')?'light':'dark';localStorage.setItem('theme',t);d.classList.toggle('dark',t==='dark')}" }
+                script { js "function getInitialTheme(){return localStorage.getItem('theme')||'system'};function applyTheme(t){var d=document.documentElement,isDark=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);d.classList.toggle('dark',isDark)};function setTheme(t){localStorage.setItem('theme',t);applyTheme(t)}" }
             }
         }

@@ -111,7 +111,7 @@ module Block =
         | Domain.Notion.BlockType.Image url ->
             img { _class "drop-shadow-xl rounded"; _src url }
         | Domain.Notion.BlockType.Divider ->
-            div { _class "border-b-2 border-gray-300 dark:border-gray-600" }
+            div { _class "border-b-2 border-gray-300/60 dark:border-gray-700/60" }
         | Domain.Notion.BlockType.Quote richText ->
             blockquote { for t in richText do RichTextView.toHtml t }
         | Domain.Notion.BlockType.Callout richText ->
@@ -179,10 +179,12 @@ let articlePage (article':Article) =
                 _class "mx-auto max-w-5xl px-4"
                 div {
                     _class "mt-8 prose prose-lg dark:prose-invert prose-code:before:hidden prose-code:after:hidden max-w-none"
-                    _dsInit "Prism.highlightAllUnder($el)"
+                    _dataInit "highlightCode($el)"
                     for el in Content.toHtml article'.blocks do el
                 }
             }
+            script { _src "/scripts/prism.1.29.0.js" }
+            script { js "function highlightCode(el){if(el?.querySelectorAll)Prism.highlightAllUnder(el)}" }
         }
     Page.primary content
 
