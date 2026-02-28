@@ -127,10 +127,10 @@ module TopNav =
         a {
             _id id
             _class baseClass
-            { Name = $"data-class:text-emerald-600"; Value = ValueSome $"$selectedNav == '{id}'" }
-            { Name = $"data-class:dark:text-emerald-400"; Value = ValueSome $"$selectedNav == '{id}'" }
-            { Name = $"data-class:{inactiveLightClass}"; Value = ValueSome $"$selectedNav != '{id}'" }
-            { Name = $"data-class:{inactiveDarkClass}"; Value = ValueSome $"$selectedNav != '{id}'" }
+            _dsClass ("text-emerald-600", $"$selectedNav == '{id}'")
+            _dsClass ("dark:text-emerald-400", $"$selectedNav == '{id}'")
+            _dsClass (inactiveLightClass, $"$selectedNav != '{id}'")
+            _dsClass (inactiveDarkClass, $"$selectedNav != '{id}'")
             _dsOn ("click", $"@get('{href}')")
             el
         }
@@ -139,10 +139,10 @@ module TopNav =
         a {
             _id $"{id}-mobile"
             _class "block p-3 text-base font-semibold cursor-pointer hover:text-emerald-600 hover:bg-gray-200 dark:hover:text-emerald-400 dark:hover:bg-gray-800 rounded-md"
-            { Name = $"data-class:text-emerald-600"; Value = ValueSome $"$selectedNav == '{id}'" }
-            { Name = $"data-class:dark:text-emerald-400"; Value = ValueSome $"$selectedNav == '{id}'" }
-            { Name = "data-class:text-gray-800"; Value = ValueSome $"$selectedNav != '{id}'" }
-            { Name = "data-class:dark:text-gray-200"; Value = ValueSome $"$selectedNav != '{id}'" }
+            _dsClass ("text-emerald-600", $"$selectedNav == '{id}'")
+            _dsClass ("dark:text-emerald-400", $"$selectedNav == '{id}'")
+            _dsClass ("text-gray-800", $"$selectedNav != '{id}'")
+            _dsClass ("dark:text-gray-200", $"$selectedNav != '{id}'")
             _dsOn ("click", $"$menuOpen = false; @get('{href}')")
             text label
         }
@@ -156,7 +156,7 @@ module TopNav =
                 "dark:text-gray-400 dark:hover:text-emerald-400 dark:hover:bg-gray-800"
                 "hover:cursor-pointer"
             ]
-            { Name = "onclick"; Value = ValueSome "toggleTheme()" }
+            _onclick "toggleTheme()"
             MiniIcon.sun
             MiniIcon.moon
         }
@@ -172,11 +172,11 @@ module TopNav =
             ]
             _dsOn ("click", "$menuOpen = !$menuOpen")
             div {
-                { Name = "data-show"; Value = ValueSome "!$menuOpen" }
+                _dsShow "!$menuOpen"
                 MiniIcon.hamburger
             }
             div {
-                { Name = "data-show"; Value = ValueSome "$menuOpen" }
+                _dsShow "$menuOpen"
                 MiniIcon.close
             }
         }
@@ -202,7 +202,7 @@ module TopNav =
             div {
                 _id "mobile-menu"
                 _class "md:hidden absolute left-0 right-0 top-full z-50 bg-gray-100 border-b border-gray-300 dark:bg-gray-900 dark:border-gray-700 px-4 pt-2 pb-1 shadow-lg"
-                { Name = "data-show"; Value = ValueSome "$menuOpen" }
+                _dsShow "$menuOpen"
                 mobileItem("nav-articles", "Articles", "/articles")
                 mobileItem("nav-projects", "Projects", "/projects")
                 mobileItem("nav-services", "Services", "/services")
