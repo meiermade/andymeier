@@ -1,5 +1,5 @@
 {
-    "name": "andrewmeier.dev",
+    "name": "andymeier.dev",
     "main": "index.ts",
     "scripts": {
         "check": "tsc -p tsconfig.json --noEmit"

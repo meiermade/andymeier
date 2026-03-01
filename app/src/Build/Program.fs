@@ -33,7 +33,7 @@ let exec command workDir args =
     |> Proc.start
     
 let getEnvMap () =
-    let env = "andrewmeier/local"
+    let env = "andymeier/local"
     let pulumiEnv =
         CreateProcess.fromRawCommand "pulumi" ["env"; "open"; env]
         |> CreateProcess.withWorkingDirectory rootDir

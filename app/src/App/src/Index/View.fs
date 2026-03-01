@@ -34,13 +34,13 @@ let homePage (recentArticles:Article list) =
                     div {
                         _class "flex justify-center space-x-2"
                         a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://github.com/meiermade"; MiniIcon.github }
-                        a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://x.com/andrewmeierdev"; MiniIcon.xdotcom }
+                        a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://x.com/andymeierdev"; MiniIcon.xdotcom }
                         a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://www.linkedin.com/in/andrew-meier/"; MiniIcon.linkedIn }
                     }
                 }
                 div {
                     _class "md:order-first"
-                    h1 { _class "text-4xl text-gray-900 dark:text-gray-100 font-medium"; "Andrew Meier" }
+                    h1 { _class "text-4xl text-gray-900 dark:text-gray-100 font-medium"; "Andy Meier" }
                     aboutMe
                 }
             }

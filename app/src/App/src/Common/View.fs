@@ -114,7 +114,7 @@ module Footer =
             div {
                 _class "text-sm space-y-1"
                 div { _class "w-12 h-12 text-emerald-600 dark:text-emerald-400"; MiniIcon.logo }
-                p { "Andrew Meier" }
+                p { "Andy Meier" }
                 p { $"Copyright © {System.DateTime.Now.Year} - All right reserved" }
             }
             div { _class "grow" }
@@ -271,7 +271,7 @@ type Document =
         html {
             _lang "en"
             head {
-                title "Andrew Meier"
+                title "Andy Meier"
                 meta { _charset "UTF-8" }
                 meta { _name "viewport"; _content "width=device-width, initial-scale=1.0" }
                 script { js "let t=localStorage.getItem('theme');if(t==='dark'||(!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.classList.add('dark')}" }

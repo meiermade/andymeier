@@ -8,11 +8,11 @@ const zone = cloudflare.getZoneOutput({
         account: {
             id: config.cloudflareConfig.accountId
         },
-        name: 'andrewmeier.dev'
+        name: 'andymeier.dev'
     }
 }, { provider })
 
-export const andrewmeier = new cloudflare.DnsRecord(config.identifier, {
+export const andymeier = new cloudflare.DnsRecord(config.identifier, {
     name: '@',
     zoneId: zone.id,
     type: 'CNAME',
