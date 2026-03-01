@@ -1,5 +1,7 @@
 # Andy Meier
 
+[![Deploy](https://github.com/meiermade/andymeier/actions/workflows/deploy.yml/badge.svg)](https://github.com/meiermade/andymeier/actions/workflows/deploy.yml)
+
 Personal website for Andy Meier built with F#, Giraffe, Datastar, and Tailwind CSS.
 
 ## Structure
