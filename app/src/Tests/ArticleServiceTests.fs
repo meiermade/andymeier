@@ -11,7 +11,7 @@ open System.Threading.Tasks
 
 let private withTempDb (run: Sqlite.Config -> Task<'a>) =
     task {
-        let path = Path.Combine(Path.GetTempPath(), $"andrewmeier-tests-{Guid.NewGuid():N}.db")
+        let path = Path.Combine(Path.GetTempPath(), $"andymeier-tests-{Guid.NewGuid():N}.db")
 
         try
             return! run { path = path }
