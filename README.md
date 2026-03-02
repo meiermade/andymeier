@@ -2,385 +2,210 @@
 
 [![Deploy](https://github.com/meiermade/andymeier/actions/workflows/deploy.yml/badge.svg)](https://github.com/meiermade/andymeier/actions/workflows/deploy.yml)
 
-> Personal website and portfolio for Andy Meier - showcasing projects, services, and technical articles built with functional programming principles.
+> Personal website and portfolio for Andy Meier - showcasing projects, services, and technical articles with a focus on functional programming and modern software architecture.
+
+## 🎯 What Conversation Are We Having?
+
+This website is designed to start meaningful conversations about:
+
+- **Building Better Software** - Through functional programming principles and modern architectural patterns
+- **Solving Real Problems** - With practical projects and professional services that deliver value
+- **Learning Together** - Sharing insights, lessons learned, and technical knowledge with the community
+- **Collaboration Opportunities** - Connecting with others who are passionate about quality software development
+
+Whether you're a fellow developer exploring functional programming, a business looking for technical expertise, or someone curious about modern software development practices, this site aims to provide value through clear explanations, practical examples, and genuine insights.
+
+## ✨ Visitor Experience
+
+### What You'll Find Here
+
+- **Portfolio Showcase** - Featured projects with detailed technical discussions and lessons learned
+- **Professional Services** - Clear information about expertise and how we can work together
+- **Technical Articles** - Deep dives into functional programming, architecture patterns, and development practices
+- **Interactive Reading** - Enhanced navigation and reading experience designed for technical content
+
+### Enhanced Reading Experience
+
+The site is designed with modern content consumption in mind:
+
+- **📑 Smart Navigation** - Table of contents sidebar for easy article navigation (inspired by [a16z's technical articles](https://a16z.com/emerging-architectures-for-modern-data-infrastructure/))
+- **📊 Reading Progress** - Visual progress indicators and intuitive back/forward navigation (similar to [Avanscoperta's blog experience](https://blog.avanscoperta.it/2020/08/04/domain-driven-design-in-2020/))
+- **🚀 Fast & Responsive** - Server-side rendered for instant loading across all devices
+- **🎨 Clean Design** - Focused on content with minimal distractions
 
 ## 🌐 About
 
-This is Andy Meier's personal website built as a modern, performant web application using F# and functional programming principles. The site serves as both a portfolio showcase and a technical demonstration of modern web development practices, featuring clean architecture, responsive design, and interactive elements powered by Datastar.
-
-**Visit:** [andymeier.dev](https://andymeier.dev) | **Previous:** andrewmeier.dev (redirects automatically)
-
-## ✨ Features
-
-- **📂 Portfolio Showcase** - Featured projects with detailed descriptions and technical insights  
-- **🛠 Service Offerings** - Professional services and technical expertise areas
-- **📝 Technical Blog** - In-depth articles covering software development, functional programming, and architecture
-- **📱 Responsive Design** - Mobile-first approach with adaptive layouts for all devices
-- **⚡ Fast Performance** - Server-side rendered with minimal JavaScript and optimized loading
-- **🎨 Modern UI/UX** - Clean design with dark/light theme toggle and smooth interactions
-- **🔄 Interactive Elements** - Enhanced user experience with Datastar reactive framework
-- **📊 Observability** - Comprehensive telemetry and monitoring with OpenTelemetry
-- **🔍 SEO Optimized** - Semantic HTML and meta tags for search engine visibility
-
-### Recent Feature Updates
-- **🍔 Mobile Navigation** - Responsive hamburger menu with smooth overlay transitions  
-- **🌙 Theme Toggle** - Dark/light mode switching with user preference persistence
-- **📐 Enhanced Layout** - Updated navigation dropdowns and improved spacing
-- **💨 Performance** - Lazy loading for syntax highlighting and optimized Tailwind usage
+This is Andy Meier's personal website built as a modern, performant web application using functional programming principles. The site serves as both a portfolio and a platform for sharing knowledge about software development, with particular emphasis on functional programming approaches and modern architectural patterns.
 
 ## 🛠 Tech Stack
 
 ### Frontend
-- **F#** - Primary language leveraging functional programming paradigms
-- **Giraffe** - F# web framework built on ASP.NET Core for fast, composable web apps  
-- **Datastar** - Modern reactive web framework for enhanced UX without heavy JavaScript
-- **Tailwind CSS v4** - Utility-first CSS framework with custom design system
-- **FSharp.ViewEngine** - Type-safe server-side HTML generation
-- **Markdig** - Powerful Markdown processing with syntax highlighting
+- **F#** - Primary language using functional programming
+- **Giraffe** - F# web framework built on ASP.NET Core
+- **Datastar** - Reactive web framework for enhanced UX
+- **Tailwind CSS** - Utility-first CSS framework
+- **FSharp.ViewEngine** - Server-side HTML generation
 
 ### Backend & Data
-- **SQLite** - Embedded database for fast local data storage
-- **Notion API** - Integrated content management for dynamic content updates
-- **ASP.NET Core** - High-performance web server and API framework
+- **SQLite** - Local database
+- **Notion API** - Content management integration
+- **Markdig** - Markdown processing
 
-### Infrastructure & Deployment  
-- **Docker** - Multi-stage containerization with optimized images
-- **Kubernetes** - Container orchestration for scalable deployments
-- **AWS ECR** - Private container registry for secure image storage
-- **Cloudflare** - Global CDN, DNS management, and DDoS protection
-- **Pulumi** - Infrastructure as Code with TypeScript for reproducible deployments
-- **GitHub Actions** - Automated CI/CD pipeline with preview and production workflows
+### Infrastructure & Deployment
+- **Docker** - Containerization
+- **Kubernetes** - Container orchestration
+- **AWS ECR** - Container registry
+- **Cloudflare** - CDN and DNS
+- **Pulumi** - Infrastructure as Code
+- **GitHub Actions** - CI/CD pipeline
 
 ### Development & Testing
-- **FAKE** - F# build automation and task runner
-- **Expecto** - F# testing framework for unit and integration tests  
-- **Paket** - Dependency management with precise version control
-- **OpenTelemetry** - Distributed tracing and application monitoring
+- **FAKE** - F# build automation
+- **Expecto** - F# testing framework
+- **Paket** - F# dependency management
 
 ## 🚀 Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
-- [Node.js 24.x LTS](https://nodejs.org/) (required for Pulumi infrastructure)
-- [Docker Desktop](https://docker.com/) (for containerization and local testing)
-- [Git](https://git-scm.com/) (for version control)
-
-**Optional but recommended:**
-- [Visual Studio Code](https://code.visualstudio.com/) with [Ionide](https://ionide.io/) extension for F# development
-- [Pulumi CLI](https://www.pulumi.com/docs/install/) (for infrastructure management)
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [Node.js 24.x](https://nodejs.org/) (for Pulumi infrastructure)
+- [Docker](https://docker.com/) (for containerization)
 
 ## 💻 Development Setup
 
-### Quick Start
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/meiermade/andymeier.git
-   cd andymeier/app
-   ```
-
-2. **Restore Tools and Dependencies**
-   ```bash
-   dotnet tool restore          # Install FAKE and other tools
-   dotnet paket install         # Install F# packages
-   dotnet paket restore         # Restore dependencies
-   ```
-
-3. **Start Development Server**
-   ```bash
-   ./fake.sh Watch              # Starts with hot reload
-   ```
-   
-   The application will be available at `https://localhost:5001` (HTTPS) or `http://localhost:5000` (HTTP) with automatic browser opening and hot reload enabled.
-
-### Development Workflow
-
-The `fake.sh` script provides several development commands:
-
+### 1. Clone the Repository
 ```bash
-./fake.sh Watch          # Start with hot reload (recommended)
-./fake.sh Build          # Build the application  
-./fake.sh Test           # Run all tests
-./fake.sh Publish        # Create production build
-./fake.sh Clean          # Clean build artifacts
+git clone https://github.com/meiermade/andymeier.git
+cd andymeier
 ```
 
-### Environment Configuration
-
-The application supports multiple environments through configuration:
-
-- **Development** - Local development with hot reload
-- **Production** - Optimized build for deployment
-- **Testing** - Isolated environment for running tests
-
-Configuration is handled through:
-- `appsettings.json` - Base configuration
-- `appsettings.Development.json` - Development overrides
-- Environment variables for sensitive data
-
-### Docker Development
-
-For a containerized development experience:
-
+### 2. Install .NET Tools and Dependencies
 ```bash
 cd app
-docker-compose up --build    # Build and run with docker-compose
+dotnet tool restore
+dotnet paket restore
+```
+
+### 3. Start Development Server
+```bash
+./fake.sh Watch
+```
+
+The application will start with hot reloading enabled. Open your browser and navigate to the displayed local URL.
+
+### 4. Install Infrastructure Dependencies (Optional)
+```bash
+cd ../pulumi
+npm install
 ```
 
 ## 🧪 Testing
 
-### Running Tests
+Run the complete test suite:
 
 ```bash
 cd app
-./fake.sh Test               # Run all tests with coverage
+./fake.sh Test
 ```
-
-### Test Structure
-
-The test suite includes:
-- **Unit Tests** - Domain logic and pure functions
-- **Integration Tests** - Database operations and external APIs  
-- **Web Tests** - HTTP endpoints and routing
-- **Property Tests** - Fuzz testing with Expecto's property-based testing
-
-Tests are located in `src/Tests/` and use the Expecto framework for a functional testing approach.
 
 ## 📁 Project Structure
 
 ```
 andymeier/
-├── 📁 app/                          # F# Web Application Root
-│   ├── 📁 src/
-│   │   ├── 📁 App/                  # Main Web Application
-│   │   │   ├── 📁 src/
-│   │   │   │   ├── 📁 Index/        # Homepage handlers & views
-│   │   │   │   ├── 📁 Projects/     # Project portfolio showcase
-│   │   │   │   ├── 📁 Services/     # Professional services pages
-│   │   │   │   ├── 📁 Articles/     # Technical blog & content
-│   │   │   │   └── 📁 Common/       # Shared components & layouts
-│   │   │   ├── 📄 Config.fs         # Application configuration
-│   │   │   ├── 📄 Program.fs        # Application entry point & setup
-│   │   │   ├── 📄 Infrastructure.fs # Dependency injection & services
-│   │   │   └── 📄 Services.fs       # Business logic services
-│   │   ├── 📁 Domain/               # Core Domain Logic
-│   │   │   ├── 📄 Article.fs        # Article domain models
-│   │   │   ├── 📄 Notion.fs         # Notion API integration
-│   │   │   ├── 📄 Sqlite.fs         # Database operations
-│   │   │   ├── 📄 Telemetry.fs      # Observability & monitoring
-│   │   │   └── 📄 Infrastructure.fs # Domain infrastructure
-│   │   ├── 📁 Build/                # FAKE Build Scripts
-│   │   │   └── 📄 Program.fs        # Build automation logic
-│   │   └── 📁 Tests/                # Test Suite
-│   │       └── 📄 *.fs              # Expecto test modules
-│   ├── 📄 paket.dependencies        # Package dependencies
-│   ├── 📄 paket.lock                # Locked dependency versions
-│   ├── 📄 fake.sh                   # Build script runner (Unix)
-│   ├── 📄 Dockerfile                # Multi-stage container build
-│   └── 📄 docker-compose.yml        # Local containerized development
-├── 📁 pulumi/                       # Infrastructure as Code
-│   ├── 📁 src/                      # Pulumi TypeScript modules  
-│   ├── 📄 index.ts                  # Main infrastructure definition
-│   ├── 📄 package.json              # Node.js dependencies
-│   ├── 📄 Pulumi.yaml               # Pulumi project configuration
-│   └── 📄 Pulumi.prod.yaml          # Production stack configuration
-├── 📁 .github/
-│   └── 📁 workflows/                # CI/CD Automation
-│       ├── 📄 deploy.yml            # Production deployment pipeline
-│       └── 📄 preview.yml           # Preview/staging deployment
-└── 📄 README.md                     # This documentation
+├── app/                          # F# Web Application
+│   ├── src/
+│   │   ├── App/                  # Main web application
+│   │   │   ├── src/
+│   │   │   │   ├── Index/        # Homepage handlers & views
+│   │   │   │   ├── Projects/     # Project showcase
+│   │   │   │   ├── Services/     # Service offerings
+│   │   │   │   ├── Articles/     # Blog/articles
+│   │   │   │   └── Common/       # Shared components
+│   │   │   ├── Config.fs         # Application configuration
+│   │   │   ├── Program.fs        # Application entry point
+│   │   │   └── ...
+│   │   ├── Domain/               # Domain logic & data access
+│   │   │   ├── Notion.fs         # Notion API integration
+│   │   │   ├── Sqlite.fs         # Database operations
+│   │   │   └── ...
+│   │   ├── Build/                # FAKE build scripts
+│   │   └── Tests/                # Expecto tests
+│   ├── paket.dependencies        # Package dependencies
+│   └── fake.sh                   # Build script runner
+├── pulumi/                       # Infrastructure as Code
+│   ├── src/                      # Pulumi TypeScript modules  
+│   ├── index.ts                  # Main infrastructure definition
+│   └── package.json              # Node.js dependencies
+├── .github/workflows/            # GitHub Actions CI/CD
+└── README.md                     # This file
 ```
-
-### Key Architecture Patterns
-
-- **Functional-First Design** - Immutable data structures and pure functions where possible
-- **Handler-View Pattern** - Clean separation between request handling and view rendering  
-- **Domain-Driven Design** - Clear domain boundaries with the `Domain` project
-- **Dependency Injection** - Services registered and injected through ASP.NET Core DI
-- **Configuration-Based** - Environment-specific settings through configuration files
 
 ## 🚢 Deployment
 
-### Automated Deployment
+The application uses automated deployment via GitHub Actions:
 
-The application uses a sophisticated CI/CD pipeline with GitHub Actions:
+1. **Automatic Deployment**: Every push to the `main` branch triggers a deployment
+2. **Infrastructure Management**: Pulumi handles all infrastructure provisioning and updates
+3. **Container Registry**: Docker images are stored in AWS ECR
+4. **Kubernetes Deployment**: Application runs on Kubernetes cluster
+5. **CDN**: Cloudflare provides global content delivery
 
-1. **🔍 Pull Request Workflow** (`preview.yml`)
-   - Runs on every PR to validate changes
-   - Executes full test suite
-   - Validates infrastructure changes with `pulumi preview`
-   - Provides deployment preview without actual deployment
-
-2. **🚀 Production Deployment** (`deploy.yml`)
-   - Triggers on pushes to `main` branch
-   - Builds optimized Docker image
-   - Pushes to AWS ECR private registry
-   - Updates Kubernetes deployment via Pulumi
-   - Manages Cloudflare DNS and CDN settings
-
-### Infrastructure Overview
-
-The production infrastructure includes:
-- **Kubernetes Cluster** - Scalable container orchestration
-- **Load Balancer** - Traffic distribution and SSL termination  
-- **CDN Integration** - Global content delivery via Cloudflare
-- **Container Registry** - Secure private registry on AWS ECR
-- **DNS Management** - Automated DNS updates through Pulumi
-
-### Manual Infrastructure Management
-
-For infrastructure inspection and debugging:
-
+### Manual Infrastructure Preview
 ```bash
 cd pulumi
-npm install                    # Install Pulumi dependencies
-pulumi preview                 # Show planned infrastructure changes
-pulumi stack output           # View current stack outputs
+pulumi preview  # Shows planned infrastructure changes
 ```
 
-> **⚠️ Important**: Never run `pulumi up` manually in production. The CI/CD pipeline handles all deployments automatically upon merge to `main`.
+> **⚠️ Important**: Never run `pulumi up` manually - the CI/CD pipeline handles this automatically on merge to main.
 
-### Environment Variables
+## 🎯 Planned User Experience Enhancements
 
-The application requires the following environment variables in production:
+### Reading & Navigation Features
+- **📑 Sidebar Table of Contents** - Auto-generated TOC for articles with smooth scrolling navigation
+  - Inspired by [a16z's technical article layout](https://a16z.com/emerging-architectures-for-modern-data-infrastructure/)
+  - Sticky positioning for long-form content
+  - Progress indicators showing reading completion
 
-- `ASPNETCORE_ENVIRONMENT` - Set to "Production"
-- `ConnectionStrings__DefaultConnection` - Database connection string
-- `NOTION_API_KEY` - Notion integration API key (if using Notion CMS)
-- `OTEL_EXPORTER_OTLP_ENDPOINT` - OpenTelemetry collector endpoint
+- **📊 Reading Progress & Controls** - Enhanced article reading experience
+  - Reading progress bar (similar to [Avanscoperta's blog](https://blog.avanscoperta.it/2020/08/04/domain-driven-design-in-2020/))
+  - "Back to top" floating button for easy navigation
+  - Previous/next article navigation
+  - Estimated reading time display
+
+### Interactive Elements
+- **🔍 Enhanced Search** - Full-text search across projects and articles
+- **🏷️ Smart Tagging** - Category-based filtering and related content suggestions
+- **💬 Engagement Features** - Comment integration for technical discussions
+- **📱 Mobile-First** - Optimized touch interactions and responsive design
+
+### Performance & Accessibility
+- **⚡ Progressive Enhancement** - Core functionality works without JavaScript
+- **♿ Accessibility First** - WCAG 2.1 AA compliance
+- **🌙 Theme Support** - Dark/light mode preferences
+- **📊 Analytics & Insights** - Understanding visitor engagement patterns
 
 ## 🤝 Contributing
 
-We welcome contributions! Here's how to get started:
-
 ### Pre-Pull Request Checklist
 
-Before creating a pull request, ensure all checks pass:
+Before creating a pull request, ensure:
 
-1. **✅ Code Quality**
-   ```bash
-   cd app
-   ./fake.sh Build              # Verify clean build
-   ```
-
-2. **✅ Tests Pass**
-   ```bash
-   ./fake.sh Test               # Run full test suite
-   ```
-
-3. **✅ Infrastructure Valid**
-   ```bash
-   cd ../pulumi
-   pulumi preview               # Validate infrastructure changes
-   ```
+1. **Tests Pass**: `cd app && ./fake.sh Test`
+2. **Infrastructure Valid**: `cd pulumi && pulumi preview` (no errors)
+3. **Code Quality**: Follow F# formatting conventions
 
 ### Development Workflow
 
-1. **🔀 Create Feature Branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **💻 Make Changes**
-   - Follow F# coding conventions
-   - Write tests for new functionality
-   - Update documentation if needed
-
-3. **🧪 Test Locally**
-   ```bash
-   ./fake.sh Watch              # Test in development mode
-   ./fake.sh Test               # Run test suite
-   ```
-
-4. **📝 Create Pull Request**
-   - Provide clear description of changes
-   - Reference any related issues
-   - Ensure CI checks pass
-
-### Code Style Guidelines
-
-- **F# Conventions** - Follow standard F# formatting and naming conventions
-- **Functional Principles** - Prefer immutability and pure functions
-- **Type Safety** - Leverage F#'s type system for compile-time safety
-- **Documentation** - Use XML documentation comments for public APIs
-- **Testing** - Maintain high test coverage, especially for domain logic
-
-## 🎯 Future Enhancements
-
-### Planned Features
-- **📑 Enhanced Navigation** - Table of contents sidebar for articles with jump-to-section functionality
-- **📊 Reading Progress** - Progress indicators and back/forward navigation for long-form content  
-- **🎨 Interactive Elements** - Additional Datastar-powered interactions and animations
-- **⚡ Performance Optimization** - Further improvements to Core Web Vitals and loading times
-- **📱 PWA Support** - Progressive Web App capabilities for offline reading
-- **🔍 Search Functionality** - Full-text search across articles and projects
-- **💬 Comments System** - Integration with external comment providers
-- **📈 Analytics** - Privacy-focused analytics and visitor insights
-
-### Technical Improvements
-- **🏗 Build Optimization** - Incremental builds and caching improvements
-- **📦 Bundle Optimization** - Code splitting and lazy loading for JavaScript
-- **🔐 Security Enhancements** - Content Security Policy and additional security headers
-- **♿ Accessibility** - Enhanced keyboard navigation and screen reader support
-- **🌐 Internationalization** - Multi-language support infrastructure
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-**Build Failures**
-```bash
-# Clean and restore if build fails
-./fake.sh Clean
-dotnet paket restore
-./fake.sh Build
-```
-
-**Port Conflicts**
-```bash
-# Check for processes using ports 5000/5001
-lsof -i :5000
-lsof -i :5001
-```
-
-**Docker Issues**
-```bash
-# Reset Docker state
-docker system prune -f
-docker-compose down -v
-docker-compose up --build
-```
-
-**Tool Restoration Issues**
-```bash
-# Reset .NET tools
-rm -rf .config
-dotnet tool restore
-```
-
-### Getting Help
-
-- **Issues** - Report bugs or request features via [GitHub Issues](https://github.com/meiermade/andymeier/issues)
-- **Discussions** - Ask questions in [GitHub Discussions](https://github.com/meiermade/andymeier/discussions)  
-- **Contact** - Reach out through the website's contact section
+1. Create a feature branch from `main`
+2. Make your changes
+3. Run tests and infrastructure preview
+4. Create a pull request with a clear description
+5. Wait for automated checks to pass
 
 ## 📧 Contact
 
-For questions, suggestions, collaboration opportunities, or technical discussions:
-
-- **Website** - [andymeier.dev](https://andymeier.dev)
-- **GitHub** - [@meiermade](https://github.com/meiermade)
-- **Email** - Contact form available on the website
-
-## 🙏 Acknowledgments
-
-Built with these fantastic open-source technologies:
-- **F# Community** - For the amazing functional programming ecosystem
-- **Giraffe** - Elegant F# web framework
-- **Datastar** - Modern reactive web framework  
-- **Tailwind CSS** - Utility-first CSS framework
-- **Pulumi** - Infrastructure as Code platform
+For questions, suggestions, or collaboration opportunities, feel free to reach out through the website's contact section.
 
 ## 📜 License
 
@@ -388,4 +213,4 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
-Built with ❤️ using F# and functional programming principles by [Andy Meier](https://andymeier.dev)
+Built with ❤️ using F# and functional programming principles - because elegant code leads to elegant solutions.
