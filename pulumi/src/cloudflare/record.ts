@@ -42,6 +42,15 @@ new cloudflare.DnsRecord(`${config.identifier}-andrewmeier-root`, {
     ttl: 1
 }, { provider })
 
+new cloudflare.DnsRecord(`${config.identifier}-andrewmeier-www`, {
+    name: 'www',
+    zoneId: andrewmeierZone.id,
+    type: 'A',
+    content: '192.0.2.1',
+    proxied: true,
+    ttl: 1
+}, { provider })
+
 const meiermadeZone = cloudflare.getZoneOutput({
     filter: {
         account: {

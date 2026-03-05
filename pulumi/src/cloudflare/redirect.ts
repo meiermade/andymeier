@@ -19,9 +19,9 @@ new cloudflare.Ruleset(`${config.identifier}-andrewmeier-redirect`, {
     phase: 'http_request_dynamic_redirect',
     rules: [{
         ref: 'andrewmeier_to_andymeier',
-        description: 'Redirect andrewmeier.dev to andymeier.dev preserving path',
+        description: 'Redirect andrewmeier.dev and www.andrewmeier.dev to andymeier.dev preserving path',
         enabled: true,
-        expression: '(http.host eq "andrewmeier.dev")',
+        expression: '(http.host eq "andrewmeier.dev") or (http.host eq "www.andrewmeier.dev")',
         action: 'redirect',
         actionParameters: {
             fromValue: {
