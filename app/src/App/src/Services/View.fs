@@ -82,15 +82,15 @@ let page =
                         h2 { _class "text-2xl text-gray-900 dark:text-gray-100 font-medium"; "Get in touch" }
                         p {
                             _class "mt-2 text-gray-600 dark:text-gray-400"
-                            "Schedule a quick 15-minute call to see if I can help."
+                            "Schedule a quick 30-minute call to see if I can help."
                         }
                     }
                     a {
-                        _href "https://calendly.com/meiermade/15min"
+                        _href "https://calendar.app.google/wQPWAYBda4r2S7o48"
                         _target "_blank"
                         _rel "noopener noreferrer"
                         _class "inline-flex shrink-0 justify-center rounded-md bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 font-medium"
-                        "Schedule 15 minutes"
+                        "Schedule 30 minutes"
                     }
                 }
             }
