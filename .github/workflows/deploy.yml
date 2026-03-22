@@ -9,6 +9,10 @@ jobs:
   update:
     name: Update
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v6
       - name: Setup Node
