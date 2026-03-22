@@ -55,7 +55,7 @@ let private mockHttpClient (responses: (string * string) list) =
 
 let private testConfig: Config =
     { articlesDatabaseId = DatabaseId.ofString "articles-db"
-      token = "test-token" }
+      apiKey = "test-token" }
 
 let private noopTelemetry: Telemetry.Service =
     { startActiveSpan =

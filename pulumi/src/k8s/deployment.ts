@@ -14,10 +14,9 @@ let appSecret = new k8s.core.v1.Secret('app', {
         ASPNETCORE_ENVIRONMENT: 'Production',
         SERVER_URL: 'http://0.0.0.0:5000',
         SEQ_ENDPOINT: config.seqConfig.endpoint,
-        SEQ_API_KEY: config.seqConfig.apiKey,
         SQLITE_PATH: '/data/app.db',
         NOTION_ARTICLES_DATABASE_ID: config.notionConfig.articlesDatabaseId,
-        NOTION_TOKEN: config.notionConfig.token,
+        NOTION_API_KEY: config.notionConfig.apiKey,
     }
 }, { provider })
 
@@ -63,7 +62,7 @@ const deployment = new k8s.apps.v1.Deployment('app', {
                 containers: [
                     {
                         name: 'app',
-                        image: image.imageName,
+                        image: image.imageRef,
                         securityContext: containerSecurityContext,
                         imagePullPolicy: 'IfNotPresent',
                         envFrom: [{ secretRef: { name: appSecret.metadata.name } }],
