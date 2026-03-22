@@ -4,13 +4,11 @@ open Domain
 open System
 
 type SeqConfig =
-    { endpoint:string
-      apiKey:string }
+    { endpoint:string }
 
 module SeqConfig =
     let load () =
-        { endpoint = Env.variableOrDefault "SEQ_ENDPOINT" "http://localhost:5341"
-          apiKey = Env.variableOrDefault "SEQ_API_KEY" "" }
+        { endpoint = Env.variableOrDefault "SEQ_ENDPOINT" "http://localhost:5341" }
 
 type ServerConfig =
     { url:string }

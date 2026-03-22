@@ -24,8 +24,7 @@ let configureTracerProvider (config: Config) =
         .AddHttpClientInstrumentation()
         .AddOtlpExporter(fun opts ->
             opts.Endpoint <- Uri(config.seq.endpoint + "/ingest/otlp/v1/traces")
-            opts.Protocol <- OtlpExportProtocol.HttpProtobuf
-            opts.Headers <- $"X-Seq-ApiKey={config.seq.apiKey}")
+            opts.Protocol <- OtlpExportProtocol.HttpProtobuf)
         .Build()
 
 let configureLogger (config: Config) =
@@ -39,7 +38,7 @@ let configureLogger (config: Config) =
         LoggerConfiguration()
             .MinimumLevel.ControlledBy(levelSwitch)
             .WriteTo.Console()
-            .WriteTo.Seq(serverUrl = config.seq.endpoint, apiKey = config.seq.apiKey, controlLevelSwitch = levelSwitch)
+            .WriteTo.Seq(serverUrl = config.seq.endpoint, controlLevelSwitch = levelSwitch)
             .CreateLogger()
 
     Log.Logger <- logger

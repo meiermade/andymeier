@@ -46,12 +46,12 @@ module Cursor =
 
 type Config =
     { articlesDatabaseId:DatabaseId
-      token:string }
+      apiKey:string }
 
 module Config =
     let load () =
         { articlesDatabaseId = Env.variable "NOTION_ARTICLES_DATABASE_ID" |> DatabaseId.ofString
-          token = Env.variable "NOTION_TOKEN" }
+          apiKey = Env.variable "NOTION_API_KEY" }
 
 // ============================================================
 // Types
@@ -359,7 +359,7 @@ let private BaseUrl = "https://api.notion.com/v1"
 
 let private createRequest (config: Config) (method: HttpMethod) (url: string) =
     let req = new HttpRequestMessage(method, url)
-    req.Headers.Authorization <- AuthenticationHeaderValue("Bearer", config.token)
+    req.Headers.Authorization <- AuthenticationHeaderValue("Bearer", config.apiKey)
     req.Headers.Add("Notion-Version", NotionApiVersion)
     req
 

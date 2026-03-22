@@ -5,17 +5,13 @@ export const rootDir = path.dirname(path.dirname(__dirname))
 
 export const identifier = 'andymeier'
 
-const rawAwsConfig = new pulumi.Config('aws')
-const rawCloudflareConfig = new pulumi.Config('cloudflare')
-const rawK8sConfig = new pulumi.Config('k8s')
-const rawSeqConfig = new pulumi.Config('seq')
-const rawNotionConfig = new pulumi.Config('notion')
+export const rawDockerConfig = new pulumi.Config('docker')
 
-export const awsConfig = {
-    platformAccountId: rawAwsConfig.require('platformAccountId'),
-    region: rawAwsConfig.require('region'),
-    eksNodeManagerArn: rawAwsConfig.require('eksNodeManagerArn')
+export const dockerConfig = {
+    registryUri: rawDockerConfig.require('registryUri'),
 }
+
+const rawCloudflareConfig = new pulumi.Config('cloudflare')
 
 export const cloudflareConfig = {
     accountId: rawCloudflareConfig.require('accountId'),
@@ -23,16 +19,21 @@ export const cloudflareConfig = {
     cloudflaredVersion: '2026.2.0'
 }
 
+const rawK8sConfig = new pulumi.Config('k8s')
+
 export const k8sConfig = {
     namespace: rawK8sConfig.require('namespace')
 }
 
+const rawSeqConfig = new pulumi.Config('seq')
+
 export const seqConfig = {
-    endpoint: rawSeqConfig.require('endpoint'),
-    apiKey: rawSeqConfig.requireSecret('apiKey')
+    endpoint: rawSeqConfig.require('endpoint')
 }
+
+const rawNotionConfig = new pulumi.Config('notion')
 
 export const notionConfig = {
     articlesDatabaseId: rawNotionConfig.require('articlesDatabaseId'),
-    token: rawNotionConfig.requireSecret('token')
+    apiKey: rawNotionConfig.requireSecret('apiKey')
 }
