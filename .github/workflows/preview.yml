@@ -36,12 +36,22 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: gke-gcloud-auth-plugin
       - name: Install Packages
         working-directory: ./pulumi
         run: npm install
       - name: TypeScript Check
         working-directory: ./pulumi
         run: npm run check
+      - name: Authenticate Pulumi
+        uses: pulumi/auth-actions@v1
+        with:
+          organization: meiermade
+          requested-token-type: urn:pulumi:token-type:access_token:personal
+          scope: user:meiermade
       - name: Preview
         uses: pulumi/actions@v6
         with:
@@ -50,5 +60,3 @@ jobs:
           stack-name: prod
           diff: true
           comment-on-pr: true
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

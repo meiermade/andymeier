@@ -9,6 +9,7 @@ export const rawDockerConfig = new pulumi.Config('docker')
 
 export const dockerConfig = {
     registryUri: rawDockerConfig.require('registryUri'),
+    registryAccessToken: rawDockerConfig.requireSecret('registryAccessToken'),
 }
 
 const rawCloudflareConfig = new pulumi.Config('cloudflare')
