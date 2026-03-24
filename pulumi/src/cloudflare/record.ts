@@ -1,20 +1,12 @@
 import * as cloudflare from '@pulumi/cloudflare'
 import { tunnelHostname } from './tunnel'
 import { provider } from './provider'
+import { andymeierZone, andrewmeierZone, meiermadeZone } from './zone'
 import * as config from '../config'
-
-const zone = cloudflare.getZoneOutput({
-    filter: {
-        account: {
-            id: config.cloudflareConfig.accountId
-        },
-        name: 'andymeier.dev'
-    }
-}, { provider })
 
 export const andymeier = new cloudflare.DnsRecord(config.identifier, {
     name: '@',
-    zoneId: zone.id,
+    zoneId: andymeierZone.id,
     type: 'CNAME',
     content: tunnelHostname,
     proxied: true,
@@ -23,15 +15,6 @@ export const andymeier = new cloudflare.DnsRecord(config.identifier, {
 
 // DNS records for redirect domains — proxied A records pointing to a dummy IP
 // so Cloudflare can intercept requests and apply redirect rulesets.
-
-const andrewmeierZone = cloudflare.getZoneOutput({
-    filter: {
-        account: {
-            id: config.cloudflareConfig.accountId
-        },
-        name: 'andrewmeier.dev'
-    }
-}, { provider })
 
 new cloudflare.DnsRecord(`${config.identifier}-andrewmeier-root`, {
     name: '@',
@@ -49,15 +32,6 @@ new cloudflare.DnsRecord(`${config.identifier}-andrewmeier-www`, {
     content: '192.0.2.1',
     proxied: true,
     ttl: 1
-}, { provider })
-
-const meiermadeZone = cloudflare.getZoneOutput({
-    filter: {
-        account: {
-            id: config.cloudflareConfig.accountId
-        },
-        name: 'meiermade.com'
-    }
 }, { provider })
 
 new cloudflare.DnsRecord(`${config.identifier}-meiermade-root`, {

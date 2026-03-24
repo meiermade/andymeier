@@ -1,17 +1,9 @@
 import * as cloudflare from '@pulumi/cloudflare'
 import { provider } from './provider'
+import { andrewmeierZone, meiermadeZone } from './zone'
 import * as config from '../config'
 
 // andrewmeier.dev -> andymeier.dev
-const andrewmeierZone = cloudflare.getZoneOutput({
-    filter: {
-        account: {
-            id: config.cloudflareConfig.accountId
-        },
-        name: 'andrewmeier.dev'
-    }
-}, { provider })
-
 new cloudflare.Ruleset(`${config.identifier}-andrewmeier-redirect`, {
     zoneId: andrewmeierZone.id,
     name: 'Redirect andrewmeier.dev to andymeier.dev',
@@ -36,15 +28,6 @@ new cloudflare.Ruleset(`${config.identifier}-andrewmeier-redirect`, {
 }, { provider })
 
 // meiermade.com -> andymeier.dev/services
-const meiermadeZone = cloudflare.getZoneOutput({
-    filter: {
-        account: {
-            id: config.cloudflareConfig.accountId
-        },
-        name: 'meiermade.com'
-    }
-}, { provider })
-
 new cloudflare.Ruleset(`${config.identifier}-meiermade-redirect`, {
     zoneId: meiermadeZone.id,
     name: 'Redirect meiermade.com to andymeier.dev/services',

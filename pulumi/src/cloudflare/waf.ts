@@ -1,15 +1,7 @@
 import * as cloudflare from '@pulumi/cloudflare'
 import { provider } from './provider'
+import { andymeierZone } from './zone'
 import * as config from '../config'
-
-const zone = cloudflare.getZoneOutput({
-    filter: {
-        account: {
-            id: config.cloudflareConfig.accountId
-        },
-        name: 'andymeier.dev'
-    }
-}, { provider })
 
 const expression = [
     '(http.request.uri.path contains "/.env")',
@@ -32,7 +24,7 @@ const expression = [
 ].join(' or ')
 
 new cloudflare.Ruleset(`${config.identifier}-waf`, {
-    zoneId: zone.id,
+    zoneId: andymeierZone.id,
     name: 'Block vulnerability scanners',
     kind: 'zone',
     phase: 'http_request_firewall_custom',
