@@ -1,3 +1,5 @@
+import './zone'
 import './record'
 import './redirect'
 import './tunnel'
+import './waf'
