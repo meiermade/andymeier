@@ -16,7 +16,7 @@ new cloudflare.ZeroTrustTunnelCloudflaredConfig(config.identifier, {
         ingresses: [
             {
                 hostname: 'andymeier.dev',
-                service: `http://app.${config.k8sConfig.namespace}.svc.cluster.local:80`
+                service: 'http://localhost:5000'
             },
             {
                 service: 'http_status:404'
