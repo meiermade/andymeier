@@ -9,8 +9,8 @@ open OpenTelemetry.Exporter
 open OpenTelemetry.Resources
 open OpenTelemetry.Trace
 open Serilog
-open Serilog.Core
 open Serilog.Events
+open Serilog.Sinks.OpenTelemetry
 open StarFederation.Datastar.DependencyInjection
 open System
 
@@ -33,14 +33,15 @@ let configureLogger (config: Config) =
         if config.debug then LogEventLevel.Debug
         else LogEventLevel.Information
 
-    let levelSwitch = LoggingLevelSwitch(initialLogLevel)
-
     let logger =
         LoggerConfiguration()
-            .MinimumLevel.ControlledBy(levelSwitch)
+            .MinimumLevel.Is(initialLogLevel)
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
             .WriteTo.Console()
-            .WriteTo.Seq(serverUrl = config.seq.endpoint, controlLevelSwitch = levelSwitch)
+            .WriteTo.OpenTelemetry(fun opts ->
+                opts.Endpoint <- config.seq.endpoint + "/ingest/otlp/v1/logs"
+                opts.Protocol <- OtlpProtocol.HttpProtobuf
+                opts.ResourceAttributes <- dict [ "service.name", box config.appName ])
             .CreateLogger()
 
     Log.Logger <- logger
