@@ -20,7 +20,8 @@ let configureTracerProvider (config: Config) =
         .AddSource(config.appName)
         .ConfigureResource(fun resourceBuilder ->
             resourceBuilder.AddService(serviceName = config.appName) |> ignore)
-        .AddAspNetCoreInstrumentation()
+        .AddAspNetCoreInstrumentation(fun opts ->
+            opts.Filter <- fun ctx -> ctx.Request.Path.Value <> "/health")
         .AddHttpClientInstrumentation()
         .AddOtlpExporter(fun opts ->
             opts.Endpoint <- Uri(config.seq.endpoint + "/ingest/otlp/v1/traces")
@@ -54,6 +55,10 @@ let configureServices (serviceCollection: IServiceCollection) (tracerProvider: T
 
 let configureApp (services: Services) (app: WebApplication) =
     app
+        .UseSerilogRequestLogging(fun opts ->
+            opts.GetLevel <- fun ctx _ _ ->
+                if ctx.Request.Path.Value = "/health" then LogEventLevel.Verbose
+                else LogEventLevel.Information)
         .UseStaticFiles()
         .UseGiraffe(Index.Handler.handler services)
 
