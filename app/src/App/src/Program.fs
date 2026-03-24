@@ -38,6 +38,7 @@ let configureLogger (config: Config) =
     let logger =
         LoggerConfiguration()
             .MinimumLevel.ControlledBy(levelSwitch)
+            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
             .WriteTo.Console()
             .WriteTo.Seq(serverUrl = config.seq.endpoint, controlLevelSwitch = levelSwitch)
             .CreateLogger()
