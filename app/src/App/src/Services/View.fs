@@ -64,7 +64,7 @@ let page =
             h1 { _class "text-4xl text-gray-900 dark:text-gray-100 font-medium"; "Services" }
             p {
                 _class "mt-4 text-lg text-gray-600 dark:text-gray-400"
-                "I help businesses build and scale their finance, accounting, and capital markets infrastructure"
+                "I help businesses build and scale their finance, accounting, and capital markets infrastructure."
             }
             div {
                 _class "mt-10 grid grid-cols-1 gap-4 md:grid-cols-2"
