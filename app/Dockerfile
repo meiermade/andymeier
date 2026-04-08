@@ -1,10 +1,10 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0-noble-amd64 AS builder
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0-noble AS builder
 
 WORKDIR /app
 
-# install tailwindcss v4 CLI
-RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.1/tailwindcss-linux-x64 \
-    && mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss \
+# install tailwindcss v4 CLI (match builder platform)
+RUN ARCH=$(uname -m | sed 's/aarch64/arm64/' | sed 's/x86_64/x64/') \
+    && curl -fsSLo /usr/local/bin/tailwindcss "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.1/tailwindcss-linux-${ARCH}" \
     && chmod +x /usr/local/bin/tailwindcss
 
 # restore tools

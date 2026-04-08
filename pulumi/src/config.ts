@@ -5,7 +5,7 @@ export const rootDir = path.dirname(path.dirname(__dirname))
 
 export const identifier = 'andymeier'
 
-export const rawDockerConfig = new pulumi.Config('docker')
+const rawDockerConfig = new pulumi.Config('docker')
 
 export const dockerConfig = {
     registryUri: rawDockerConfig.require('registryUri'),
