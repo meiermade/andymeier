@@ -21,7 +21,7 @@ let private getArticlesPage (services:Services) : HttpHandler =
             do! pushUrl ds "/articles"
             return Some ctx
         else
-            return! renderPage page "nav-articles" next ctx
+            return! renderPage services page "nav-articles" next ctx
     }
 
 let private getArticlePage (services:Services) (id:string) : HttpHandler =
@@ -39,7 +39,7 @@ let private getArticlePage (services:Services) (id:string) : HttpHandler =
                 do! pushUrl ds url
                 return Some ctx
             else
-                return! renderPage page "nav-articles" next ctx
+                return! renderPage services page "nav-articles" next ctx
         | None ->
             let page = notFoundPage
             if ctx.IsDatastar then
@@ -47,7 +47,7 @@ let private getArticlePage (services:Services) (id:string) : HttpHandler =
                 do! patchElement ds page
                 return Some ctx
             else
-                return! renderPage page "nav-articles" next ctx
+                return! renderPage services page "nav-articles" next ctx
     }
 
 let handler (services:Services) : HttpHandler =

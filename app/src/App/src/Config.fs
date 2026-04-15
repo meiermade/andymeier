@@ -17,11 +17,19 @@ module ServerConfig =
     let load () =
         { url = Env.variableOrDefault "SERVER_URL" "https://localhost:5000" }
 
+type GoogleAnalyticsConfig =
+    { measurementId:string }
+
+module GoogleAnalyticsConfig =
+    let load () =
+        { measurementId = Env.variable "GOOGLE_ANALYTICS_MEASUREMENT_ID" }
+
 type Config =
     { debug:bool
       appName:string
       server:ServerConfig
       seq:SeqConfig
+      googleAnalytics:GoogleAnalyticsConfig
       sqlite:Sqlite.Config
       notion:Notion.Config }
 
@@ -31,5 +39,6 @@ module Config =
           appName = "andymeier"
           server = ServerConfig.load ()
           seq = SeqConfig.load ()
+          googleAnalytics = GoogleAnalyticsConfig.load ()
           sqlite = Sqlite.Config.load ()
           notion = Notion.Config.load () }

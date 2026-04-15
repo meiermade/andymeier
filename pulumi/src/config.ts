@@ -38,3 +38,9 @@ export const notionConfig = {
     articlesDatabaseId: rawNotionConfig.require('articlesDatabaseId'),
     apiKey: rawNotionConfig.requireSecret('apiKey')
 }
+
+const rawGoogleAnalyticsConfig = new pulumi.Config('googleAnalytics')
+
+export const googleAnalyticsConfig = {
+    measurementId: rawGoogleAnalyticsConfig.require('measurementId')
+}
