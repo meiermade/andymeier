@@ -30,7 +30,7 @@ let homePage (recentArticles:Article list) =
                 _class "grid gap-4 grid-cols-1 md:grid-cols-2"
                 div {
                     _class "flex flex-col items-center"
-                    img { _class "w-72 aspect-square rounded-full mb-4"; _src "/images/profile.jpg" }
+                    img { _class "w-72 aspect-square rounded-full mb-4"; _src (Asset.fingerprinted "/images/profile.jpg") }
                     div {
                         _class "flex justify-center space-x-2"
                         a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://github.com/meiermade"; MiniIcon.github }

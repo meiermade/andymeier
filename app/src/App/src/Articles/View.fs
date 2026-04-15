@@ -183,7 +183,7 @@ let articlePage (article':Article) =
                     for el in Content.toHtml article'.blocks do el
                 }
             }
-            script { _src "/scripts/prism.1.29.0.js" }
+            script { _src (Asset.fingerprinted "/scripts/prism.1.29.0.js") }
             script { js "function highlightCode(el){if(el?.querySelectorAll)Prism.highlightAllUnder(el)}" }
         }
     Page.primary content

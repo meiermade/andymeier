@@ -40,7 +40,7 @@ let page =
                 projectCard {
                     title = "FSharp.ViewEngine"
                     description = "A minimal, fast view engine for F# with a clean computation-expression DSL."
-                    logoSrc = "/images/fsharpviewengine.svg"
+                    logoSrc = Asset.fingerprinted "/images/fsharpviewengine.svg"
                     logoAlt = "FSharp.ViewEngine logo"
                     href = "https://fsharpviewengine.meiermade.com"
                     label = "fsharpviewengine.meiermade.com"
@@ -48,7 +48,7 @@ let page =
                 projectCard {
                     title = "Geldos"
                     description = "A financial operating system for building modern finance and accounting workflows."
-                    logoSrc = "/images/geldos.svg"
+                    logoSrc = Asset.fingerprinted "/images/geldos.svg"
                     logoAlt = "Geldos logo"
                     href = "https://geldos.com"
                     label = "geldos.com"
