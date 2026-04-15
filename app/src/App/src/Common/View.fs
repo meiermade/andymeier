@@ -2,9 +2,34 @@ module App.Common.View
 
 open FSharp.ViewEngine
 open Domain.Article
+open System.Collections.Generic
+open System.IO
+open System.Text.Json
 open type Html
 open type Datastar
 open type Tailwind
+
+module Asset =
+    let resolveWithManifest (manifest:IReadOnlyDictionary<string, string>) (path:string) =
+        match manifest.TryGetValue path with
+        | true, resolvedPath -> resolvedPath
+        | false, _ -> path
+
+    let private manifest =
+        lazy
+            let manifestPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "asset-manifest.json")
+
+            if File.Exists(manifestPath) then
+                try
+                    JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText manifestPath)
+                    :> IReadOnlyDictionary<string, string>
+                with _ ->
+                    Dictionary<string, string>() :> IReadOnlyDictionary<string, string>
+            else
+                Dictionary<string, string>() :> IReadOnlyDictionary<string, string>
+
+    let fingerprinted (path:string) =
+        resolveWithManifest manifest.Value path
 
 module MiniIcon =
     let github =
@@ -278,10 +303,10 @@ type Document =
                 script {
                     js $"window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){{dataLayer.push(arguments);}};gtag('consent','default',{{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'}});window.loadGoogleAnalytics=window.loadGoogleAnalytics||function(){{if(window.__gaLoaded)return;window.__gaLoaded=true;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id={googleAnalyticsMeasurementId}';document.head.appendChild(s);gtag('js',new Date());gtag('config','{googleAnalyticsMeasurementId}');}};window.applyAnalyticsConsent=window.applyAnalyticsConsent||function(v){{if(v==='accepted'){{gtag('consent','update',{{analytics_storage:'granted',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'}});window.loadGoogleAnalytics();}}else{{gtag('consent','update',{{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'}});}}}};window.setAnalyticsConsent=window.setAnalyticsConsent||function(v){{localStorage.setItem('analytics-consent',v);window.applyAnalyticsConsent(v);var b=document.getElementById('cookie-consent-banner');if(b)b.classList.add('hidden');}};document.addEventListener('DOMContentLoaded',function(){{var saved=localStorage.getItem('analytics-consent');var banner=document.getElementById('cookie-consent-banner');if(saved==='accepted'||saved==='declined'){{window.applyAnalyticsConsent(saved);if(banner)banner.classList.add('hidden');}}else if(banner){{banner.classList.remove('hidden');}}}});"
                 }
-                link { _href "/css/compiled.css"; _rel "stylesheet" }
-                link { _href "/css/prism.css"; _rel "stylesheet" }
-                script { _type "module"; _src "/scripts/tailwindplus-elements.1.js" }
-                script { _type "module"; _src "/scripts/datastar.1.0.0-RC.6.js" }
+                link { _href (Asset.fingerprinted "/css/compiled.css"); _rel "stylesheet" }
+                link { _href (Asset.fingerprinted "/css/prism.css"); _rel "stylesheet" }
+                script { _type "module"; _src (Asset.fingerprinted "/scripts/tailwindplus-elements.1.js") }
+                script { _type "module"; _src (Asset.fingerprinted "/scripts/datastar.1.0.0-RC.6.js") }
             }
             body {
                 _dataSignals $"{{selectedNav: '{selectedNav}'}}"
