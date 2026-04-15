@@ -95,7 +95,7 @@ module ArticleCard =
                 _class "mt-2 text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100"
                 a {
                     _href url
-                    _dataOn ("click", $"@get('{url}')")
+                    _dataOn ("click__prevent", $"@get('{url}')")
                     _class "hover:text-emerald-600 dark:hover:text-emerald-400"
                     article'.title
                 }
@@ -266,7 +266,7 @@ module Page =
         div { _id "page"; _class "min-h-screen bg-gray-100 dark:bg-gray-900"; page }
 
 type Document =
-    static member primary (page:HtmlElement, ?selectedNav:string) =
+    static member primary (page:HtmlElement, googleAnalyticsMeasurementId:string, ?selectedNav:string) =
         let selectedNav = defaultArg selectedNav ""
         html {
             _lang "en"
@@ -275,6 +275,9 @@ type Document =
                 meta { _charset "UTF-8" }
                 meta { _name "viewport"; _content "width=device-width, initial-scale=1.0" }
                 script { js "let t=localStorage.getItem('theme');if(t==='dark'||(!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.classList.add('dark')}" }
+                script {
+                    js $"window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){{dataLayer.push(arguments);}};gtag('consent','default',{{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'}});window.loadGoogleAnalytics=window.loadGoogleAnalytics||function(){{if(window.__gaLoaded)return;window.__gaLoaded=true;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id={googleAnalyticsMeasurementId}';document.head.appendChild(s);gtag('js',new Date());gtag('config','{googleAnalyticsMeasurementId}');}};window.applyAnalyticsConsent=window.applyAnalyticsConsent||function(v){{if(v==='accepted'){{gtag('consent','update',{{analytics_storage:'granted',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'}});window.loadGoogleAnalytics();}}else{{gtag('consent','update',{{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'}});}}}};window.setAnalyticsConsent=window.setAnalyticsConsent||function(v){{localStorage.setItem('analytics-consent',v);window.applyAnalyticsConsent(v);var b=document.getElementById('cookie-consent-banner');if(b)b.classList.add('hidden');}};document.addEventListener('DOMContentLoaded',function(){{var saved=localStorage.getItem('analytics-consent');var banner=document.getElementById('cookie-consent-banner');if(saved==='accepted'||saved==='declined'){{window.applyAnalyticsConsent(saved);if(banner)banner.classList.add('hidden');}}else if(banner){{banner.classList.remove('hidden');}}}});"
+                }
                 link { _href "/css/compiled.css"; _rel "stylesheet" }
                 link { _href "/css/prism.css"; _rel "stylesheet" }
                 script { _type "module"; _src "/scripts/tailwindplus-elements.1.js" }
@@ -288,6 +291,41 @@ type Document =
                     TopNav.primary
                     page
                     Footer.primary
+                }
+                div {
+                    _id "cookie-consent-banner"
+                    _class "hidden fixed inset-x-0 bottom-0 z-50 border-t border-gray-300 bg-white/95 p-4 shadow-2xl backdrop-blur dark:border-gray-700 dark:bg-gray-900/95"
+                    _role "dialog"
+                    _ariaLive "polite"
+                    div {
+                        _class "mx-auto flex max-w-5xl flex-col gap-4 md:flex-row md:items-center md:justify-between"
+                        div {
+                            _class "max-w-3xl"
+                            p {
+                                _class "text-sm font-semibold text-gray-900 dark:text-gray-100"
+                                "Analytics cookies"
+                            }
+                            p {
+                                _class "mt-1 text-sm text-gray-600 dark:text-gray-300"
+                                "I use Google Analytics to measure how this site is used. You can accept or reject analytics cookies, and the site will work either way."
+                            }
+                        }
+                        div {
+                            _class "flex flex-col gap-2 sm:flex-row"
+                            button {
+                                _type "button"
+                                _class "inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:cursor-pointer dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+                                _onclick "setAnalyticsConsent('declined')"
+                                "Reject"
+                            }
+                            button {
+                                _type "button"
+                                _class "inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 hover:cursor-pointer dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                                _onclick "setAnalyticsConsent('accepted')"
+                                "Accept"
+                            }
+                        }
+                    }
                 }
                 script { js "function getInitialTheme(){return localStorage.getItem('theme')||'system'};function applyTheme(t){var d=document.documentElement,isDark=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);d.classList.toggle('dark',isDark)};function setTheme(t){localStorage.setItem('theme',t);applyTheme(t)}" }
             }

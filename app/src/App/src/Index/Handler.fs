@@ -21,7 +21,7 @@ let private getHomePage (services:Services) : HttpHandler =
             do! pushUrl ds "/"
             return Some ctx
         else
-            return! renderPage page "nav-home" next ctx
+            return! renderPage services page "nav-home" next ctx
     }
 
 let handler (services:Services) : HttpHandler =

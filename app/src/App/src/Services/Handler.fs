@@ -19,7 +19,7 @@ let private getPage (services:Services) : HttpHandler =
             do! pushUrl ds "/services"
             return Some ctx
         else
-            return! renderPage page "nav-services" next ctx
+            return! renderPage services page "nav-services" next ctx
     }
 
 let handler (services:Services) : HttpHandler =

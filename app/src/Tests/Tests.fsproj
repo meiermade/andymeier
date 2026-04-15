@@ -12,6 +12,7 @@
     <Compile Include="NotionParseTests.fs" />
     <Compile Include="NotionPageTests.fs" />
     <Compile Include="NotionServiceTests.fs" />
+    <Compile Include="ViewTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,7 @@
 module App.Common.Handler
 
 open App.Common.View
+open App.ServiceRegistry
 open Giraffe
 open FSharp.ViewEngine
 open Microsoft.AspNetCore.Http
@@ -21,9 +22,9 @@ let pushUrl (ds:IDatastarService) (url:string) = task {
     do! ds.ExecuteScriptAsync(js)
 }
 
-let renderPage (page:HtmlElement) (selectedNav:string) : HttpHandler =
+let renderPage (services:Services) (page:HtmlElement) (selectedNav:string) : HttpHandler =
     fun next ctx -> task {
-        let doc = Document.primary(page, selectedNav=selectedNav)
+        let doc = Document.primary(page, services.config.googleAnalytics.measurementId, selectedNav)
         let html = Render.toHtmlDocString doc
         return! htmlString html next ctx
     }

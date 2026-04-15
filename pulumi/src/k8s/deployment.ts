@@ -17,6 +17,7 @@ let appSecret = new k8s.core.v1.Secret('app', {
         SQLITE_PATH: '/data/app.db',
         NOTION_ARTICLES_DATABASE_ID: config.notionConfig.articlesDatabaseId,
         NOTION_API_KEY: config.notionConfig.apiKey,
+        GOOGLE_ANALYTICS_MEASUREMENT_ID: config.googleAnalyticsConfig.measurementId
     }
 }, { provider })
 
