@@ -30,7 +30,7 @@ let tests =
         ]
 
         testList "Document" [
-            test "includes consent banner and delayed google analytics loading" {
+            test "includes consent banner and delayed analytics loading" {
                 let doc = Document.primary(div { "Hello" }, "G-TEST123", "nav-home")
 
                 let html = Render.toHtmlDocString doc
@@ -44,6 +44,10 @@ let tests =
                 Expect.stringContains html "localStorage.setItem('analytics-consent',v)" "Expected consent to be persisted"
                 Expect.stringContains html "https://www.googletagmanager.com/gtag/js?id=G-TEST123" "Expected deferred gtag script source"
                 Expect.stringContains html "gtag('config','G-TEST123');" "Expected GA config call after consent"
+                Expect.stringContains html "https://cdn.jsdelivr.net/npm/@snowplow/javascript-tracker@4/dist/sp.min.js" "Expected deferred Snowplow tracker source"
+                Expect.stringContains html "https://c.andymeier.dev" "Expected Snowplow collector endpoint"
+                Expect.stringContains html "postPath:'/i/v1'" "Expected custom Snowplow post path"
+                Expect.stringContains html "appId:'andymeier-dev'" "Expected Snowplow app id"
             }
         ]
     ]

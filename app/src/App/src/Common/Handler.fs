@@ -18,7 +18,7 @@ let inline patchSignals (ds:IDatastarService) (signals:'T) = task {
 
 let pushUrl (ds:IDatastarService) (url:string) = task {
     // language=javascript
-    let js = $"""window.history.pushState(null, '', '{url}');"""
+    let js = $"""window.history.pushState(null, '', '{url}');window.trackSnowplowPageView&&window.trackSnowplowPageView();"""
     do! ds.ExecuteScriptAsync(js)
 }
 
