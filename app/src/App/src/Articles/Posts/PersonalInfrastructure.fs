@@ -11,16 +11,11 @@ open type Html
 let private metadata =
     { permalink = "personal-infrastructure"
       title = "Personal Infrastructure"
-      summary = "How I run personal websites and agents with GCP, Kubernetes, Cloudflare, Pulumi, and GitHub"
+      summary =
+        "How I run my personal and company websites and AI agents on a shared platform with GCP, Kubernetes, Cloudflare, Pulumi, and OpenTelemetry"
       cover = "https://assets.meiermade.com/andymeier/articles/personal-infrastructure/system-context-dec390cb7efb.webp"
       tags = [| "DevOps"; "Pulumi"; "GCP"; "Kubernetes"; "Cloudflare"; "TypeScript" |]
       createdAt = DateTimeOffset(2026, 8, 11, 0, 0, 0, TimeSpan.Zero) }
-
-let private heading id' label = h2 {
-    _class "mt-10 scroll-mt-24"
-    _id id'
-    text label
-}
 
 let private subheading label = h3 {
     _class "mt-8"
@@ -28,6 +23,11 @@ let private subheading label = h3 {
 }
 
 let private paragraph value = p { text value }
+
+let private inlineCode value = code {
+    _class "language-none"
+    text value
+}
 
 let private codeBlock language value = pre {
     _class $"language-{language}"
@@ -50,7 +50,7 @@ let private systemContextDiagram =
 
     operator["Operator<br/>(Person)<br/>Builds and operates personal applications"]
     visitors["Visitors<br/>(People)<br/>Use public personal applications"]
-    platform["Personal infrastructure<br/>(Software system)<br/>Runs public and private applications and behavioral analytics"]:::system
+    platform["Personal infrastructure<br/>(Software system)<br/>Runs personal and company websites and AI agents"]:::system
     github["GitHub Actions<br/>(External system)<br/>Tests, previews, and deploys reviewed changes"]
     pulumi["Pulumi Cloud and ESC<br/>(External system)<br/>Stores state and composes environments"]
     gcp["Google Cloud<br/>(External system)<br/>Runs compute, storage, messaging, and analytics"]
@@ -71,91 +71,80 @@ let private systemContextDiagram =
 let private runtimeDiagram =
     """flowchart TB
     accTitle: Personal infrastructure runtime
-    accDescr: Cloudflare routes traffic through outbound cloudflared tunnels to public applications, protected interfaces, and a constrained browser telemetry endpoint. Applications and browsers export OpenTelemetry to a Collector, which stores telemetry and named events in ClickHouse for ClickStack.
+    accDescr: Visitors and the operator reach andymeier.dev, meiermade.com, and the agents through outbound Cloudflare tunnels. The websites and agents have cloudflared sidecars. Browser telemetry uses a constrained public receiver; application telemetry uses an internal receiver. ClickStack combines ClickHouse storage with the HyperDX interface. Agents keep durable control state in PostgreSQL.
 
-    visitors["Visitors<br/>(People)"]
-    operator["Operator<br/>(Person)"]
-    cloudflare["Cloudflare<br/>(External system)<br/>Applies DNS, rate limits, and Access policy"]
-    workspace["Google Workspace<br/>(External system)<br/>Confirms identity for protected applications"]
-    tunnel["Cloudflare connectors<br/>(Container: cloudflared)<br/>Create outbound-only origin tunnels"]
-    website["andymeier.dev<br/>(Container: Kubernetes Deployment)<br/>Serves the public personal website"]:::primary
-    agents["Benji and Minnie<br/>(Containers: Kubernetes StatefulSets)<br/>Run long-lived personal agents"]:::primary
-    collector["OpenTelemetry Collector<br/>(Container: Kubernetes Deployment)<br/>Validates, redacts, queues, and routes telemetry"]
-    clickhouse[("ClickHouse<br/>(Container: operator-managed cluster)<br/>Stores events, logs, traces, and metrics")]
-    clickstack["ClickStack<br/>(Container: HyperDX application)<br/>Queries correlated telemetry"]
-    seq[("Seq<br/>(Container: Kubernetes StatefulSet)<br/>Receives logs and traces during migration")]
-    assets[("Application assets<br/>(Container: Cloud Storage bucket)<br/>Stores immutable public files")]
+    visitors["Visitors and operator<br/>(People)"]
+    cloudflare["Cloudflare<br/>(External system)<br/>Routes traffic and applies Access policy"]
+    websites["andymeier.dev and meiermade.com<br/>(Applications)<br/>Each runs with a cloudflared sidecar"]:::primary
+    agents["Benji and Minnie<br/>(Applications)<br/>Each runs with a cloudflared sidecar"]:::primary
+    collector["OpenTelemetry Collector<br/>(Container)<br/>Separate internal and public receivers"]
+    clickhouse[("ClickHouse<br/>(Data store)<br/>Events, logs, traces, and metrics")]
+    hyperdx["HyperDX<br/>(Application)<br/>Explore ClickStack telemetry"]
+    postgres[("PostgreSQL<br/>(Managed Cloud SQL)<br/>Agent inboxes and task-control state")]
+    assets[("Cloud Storage<br/>(Data store)<br/>Public assets")]
 
-    visitors -->|Use public applications| cloudflare
-    operator -->|Uses protected applications| cloudflare
-    cloudflare -->|Checks protected requests with| workspace
-    cloudflare -->|Routes application traffic| tunnel
-    cloudflare -->|Serves public assets from| assets
-    cloudflare -->|Rate-limits consented browser OTLP| tunnel
-    tunnel -->|Routes website traffic| website
-    tunnel -->|Routes agent traffic| agents
-    tunnel -->|Routes browser telemetry| collector
-    tunnel -->|Opens protected interfaces| clickstack
-    website -->|Exports internal OTLP| collector
-    collector -->|Stores all signals| clickhouse
-    collector -->|Dual-exports logs and traces| seq
-    clickstack -->|Queries| clickhouse
-    agents -->|Export existing telemetry| seq
-    website -->|References immutable files| assets
+    visitors -->|Use public or authorized applications| cloudflare
+    cloudflare -->|Routes website traffic through tunnels| websites
+    cloudflare -->|Routes agent traffic through tunnels| agents
+    cloudflare -->|Rate-limits browser OTLP through a shared tunnel| collector
+    cloudflare -->|Opens protected interface through a shared tunnel| hyperdx
+    websites -->|Export internal OTLP| collector
+    agents -.->|Configured OTLP destination| collector
+    collector -->|Stores telemetry| clickhouse
+    hyperdx -->|Queries| clickhouse
+    agents -->|Persist durable control state| postgres
+    websites -->|Reference public assets| assets
 
     classDef primary fill:#059669,stroke:#047857,color:#ffffff,stroke-width:3px"""
 
 let private deploymentDiagram =
     """flowchart TB
     accTitle: Personal infrastructure deployment
-    accDescr: GitHub Actions uses Pulumi Cloud and ESC to deploy andymeier.dev, Benji, Minnie, and the shared OpenTelemetry and ClickStack platform into Google Cloud. Operator-managed ClickHouse and MongoDB use persistent disks inside the zonal GKE cluster.
+    accDescr: GitHub Actions and Pulumi deploy two website Deployments, separate agent StatefulSets, and ClickStack into a zonal GKE cluster. Each website and agent Pod includes cloudflared. Shared connectors expose HyperDX and browser telemetry. Cloud SQL PostgreSQL sits outside the cluster; ClickHouse, MongoDB, agent workspaces, and the Collector queue use persistent disks.
 
-    github["GitHub Actions<br/>(Deployment environment)"]
-    pulumi["Pulumi Cloud and ESC<br/>(Configuration and state)"]
-    cloudflare["Cloudflare edge<br/>(External network)"]
+    github["GitHub Actions<br/>Reviewed delivery"]
+    pulumi["Pulumi Cloud and ESC<br/>Desired state and configuration"]
+    cloudflare["Cloudflare edge<br/>DNS, Access, and tunnels"]
 
     subgraph gcp["Google Cloud"]
         direction TB
-        registry[("Artifact Registry<br/>Immutable application images")]
-
+        registry[("Artifact Registry<br/>Immutable images")]
         subgraph gke["Zonal GKE cluster"]
             direction TB
-            runtime["GKE runtime<br/>Nodes and system components"]
-            connectors["Cloudflare connectors<br/>Kubernetes Deployments"]
-            website["andymeier.dev<br/>Kubernetes Deployment and Service"]:::primary
-            agents["Benji and Minnie<br/>Kubernetes StatefulSets and Services"]:::primary
-            seq["Seq<br/>Kubernetes StatefulSet and persistent disk"]
-            collector["OpenTelemetry Collector<br/>Kubernetes Deployment and persistent queue"]
-            clickstack["ClickStack<br/>HyperDX Deployment"]
-            clickhouse[("ClickHouse and MongoDB<br/>Operator-managed persistent workloads")]
+            websites["andymeier.dev and meiermade.com<br/>Separate Deployments<br/>App + cloudflared per Pod"]:::primary
+            agents["Benji and Minnie<br/>Separate StatefulSets<br/>App + cloudflared and workspace disks"]:::primary
+            connectors["Shared cloudflared connectors<br/>Platform endpoints"]
+            collector["OpenTelemetry Collector<br/>Deployment + persistent queue"]
+            hyperdx["HyperDX<br/>Deployment"]
+            data[("ClickHouse and MongoDB<br/>Operator-managed persistent workloads")]
+            runtime["GKE system components"]
         end
+        postgres[("Cloud SQL PostgreSQL<br/>Managed agent control databases")]
+        secrets[("Secret Manager<br/>Deployment and application secrets")]
+        storage[("Cloud Storage<br/>Public assets")]
+        operations[("Cloud Logging and Monitoring<br/>System logs and infrastructure metrics")]
 
-        secrets[("Secret Manager<br/>Long-lived application secrets")]
-        storage[("Cloud Storage<br/>Immutable application assets")]
-        operations[("Cloud Logging and Monitoring<br/>System logs, metrics, dashboards, and alerts")]
-
-        registry -->|Supplies website image| website
-        registry -->|Supplies agent image| agents
-        connectors -->|Routes website traffic| website
-        connectors -->|Routes agent traffic| agents
-        connectors -->|Opens protected interfaces| seq
-        connectors -->|Opens protected interface| clickstack
-        connectors -->|Routes browser OTLP| collector
-        website -->|References assets| storage
-        website -->|Exports OpenTelemetry| collector
-        collector -->|Stores telemetry| clickhouse
-        collector -->|Dual-exports logs and traces| seq
-        clickstack -->|Queries telemetry| clickhouse
-        agents -->|Reads authorized values| secrets
-        agents -->|Exports existing telemetry| seq
-        runtime -->|Exports system telemetry| operations
+        registry -->|Website images| websites
+        registry -->|Agent image| agents
+        connectors -->|Public browser OTLP| collector
+        connectors -->|Protected interface| hyperdx
+        websites -->|Internal OTLP| collector
+        agents -.->|Configured OTLP destination| collector
+        collector -->|Stores telemetry in ClickHouse| data
+        hyperdx -->|Telemetry and application state| data
+        agents -->|Durable inboxes and task state| postgres
+        websites -->|Reference assets| storage
+        runtime -->|System telemetry| operations
     end
 
-    github -->|Exchanges OIDC identity and runs updates| pulumi
-    github -->|Publishes images| registry
+    github -->|OIDC and reviewed updates| pulumi
+    github -->|Publishes through Pulumi| registry
     pulumi -->|Applies desired state| gcp
-    pulumi -->|Configures routes and policies| cloudflare
-    cloudflare <-->|Private-origin tunnels| connectors
+    secrets -->|Selected values through ESC| pulumi
+    pulumi -->|Configures edge policy| cloudflare
+    cloudflare <-->|Website sidecar tunnels| websites
+    cloudflare <-->|Agent sidecar tunnels| agents
+    cloudflare <-->|Platform tunnels| connectors
 
     style gcp fill:transparent,stroke:#047857,stroke-width:3px
     style gke fill:transparent,stroke:#059669,stroke-width:2px
@@ -169,10 +158,11 @@ let private architectureDiagram dataAttribute diagram = figure {
     _attr ("tabindex", "0")
     _dataInit "renderMermaid($el)"
 
-    figcaption {
-        _class "sticky left-0 mb-3 w-fit text-xs text-gray-500 dark:text-gray-400 md:hidden"
-        text "Scroll horizontally to see the complete diagram."
-    }
+    if dataAttribute <> "data-delivery-flow" then
+        figcaption {
+            _class "sticky left-0 mb-3 w-fit text-xs text-gray-500 dark:text-gray-400 md:hidden"
+            text "Scroll horizontally to see the complete diagram."
+        }
 
     div {
         _class "mermaid article-mermaid"
@@ -188,22 +178,107 @@ let private runtimeView = architectureDiagram "data-container-view" runtimeDiagr
 let private deploymentView =
     architectureDiagram "data-deployment-view" deploymentDiagram
 
+let private telemetryView =
+    architectureDiagram
+        "data-telemetry-flow"
+        """flowchart TB
+    accTitle: Application and browser telemetry
+    accDescr: Browser analytics passes regional policy and visitor choice before reaching a filtered public receiver. Application telemetry uses a separate internal receiver. Both Collector receivers feed ClickHouse, which HyperDX queries.
+
+    browser["Browser analytics"]
+    policy["Regional policy<br/>and visitor choice"]
+    applications["Application telemetry"]
+    subgraph collector["OpenTelemetry Collector"]
+        public["Public receiver<br/>Filter and minimize"]
+        internal["Internal receiver"]
+    end
+    clickhouse[("ClickHouse<br/>Events, logs, traces, metrics")]
+    hyperdx["HyperDX<br/>Search and correlate"]:::primary
+
+    browser --> policy --> public
+    applications --> internal
+    public --> clickhouse
+    internal --> clickhouse
+    clickhouse -->|Queried through| hyperdx
+
+    classDef primary fill:#059669,stroke:#047857,color:#ffffff,stroke-width:3px"""
+
+let private deliveryView =
+    architectureDiagram
+        "data-delivery-flow"
+        """flowchart TB
+    accTitle: Reviewed application delivery
+    accDescr: A pull request runs tests and a Pulumi preview before review and merge. After merge, CI builds and publishes the image, deploys through Pulumi, waits for readiness, and runs acceptance checks.
+
+    pr["Pull request"]
+    checks["Tests + Pulumi preview"]
+    review["Review"]
+    merge["Merge"]
+    deploy["Build + publish image<br/>Pulumi deploy + readiness"]
+    acceptance["Browser or API<br/>acceptance checks"]:::primary
+
+    pr --> checks --> review --> merge --> deploy --> acceptance
+
+    classDef primary fill:#059669,stroke:#047857,color:#ffffff,stroke-width:3px"""
+
+let private comparisonTable label columns rows = div {
+    _class
+        "my-6 overflow-x-auto rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+
+    _attr ("tabindex", "0")
+    _role "region"
+    _ariaLabel label
+
+    p {
+        _class "not-prose sticky left-0 mb-3 w-fit text-xs text-gray-500 dark:text-gray-400 md:hidden"
+        text "Scroll horizontally to read the full table."
+    }
+
+    table {
+        _class "my-0 w-full min-w-[36rem] text-base"
+
+        caption {
+            _class "sr-only"
+            text label
+        }
+
+        thead {
+            tr {
+                for column in columns do
+                    th {
+                        _scope "col"
+                        text column
+                    }
+            }
+        }
+
+        tbody {
+            for label, values in rows do
+                tr {
+                    th {
+                        _scope "row"
+                        _class "py-3 pr-4 text-left align-top font-medium text-gray-900 dark:text-gray-100"
+                        text label
+                    }
+
+                    for value in values do
+                        td {
+                            _class "py-3 pr-4 align-top"
+                            text value
+                        }
+                }
+        }
+    }
+}
+
 let private organizationTree =
-    """personal-cloud/
-├── identity/
-│   ├── project.ts
-│   ├── serviceAccounts.ts
-│   └── oidc.ts
-├── infrastructure/
-│   ├── gcp/
-│   ├── cloudflare/
-│   └── kubernetes/
-├── environments/
-│   ├── shared.yaml
-│   └── <application>.yaml
-└── applications/
-    ├── andymeier/
-    └── <personal-application>/"""
+    """platform-identity/       # Cloud workload identities and OIDC trust
+platform-infrastructure/ # Shared compute, networking, data, and observability
+environments/            # Pulumi ESC configuration
+andymeier/               # Personal website and articles
+meiermade/               # Company website
+agent/                   # Shared runtime for Benji and Minnie
+skills/                  # Reusable agent instructions and tools"""
 
 let private gkeExample =
     """const cluster = new gcp.container.Cluster('personal', {
@@ -265,6 +340,59 @@ new k8s.core.v1.Service('app', {
     spec: { type: 'ClusterIP', selector: labels, ports: [{ port: 80 }] },
 })"""
 
+let private cloudflarePolicyExample =
+    """const accountId = config.cloudflareConfig.accountId
+
+const allowAdmins = new cloudflare.ZeroTrustAccessPolicy('allow-admins', {
+    accountId,
+    name: 'Allow Admins',
+    decision: 'allow',
+    includes: [{ email: { email: 'admin@example.com' } }],
+}, { provider })"""
+
+let private cloudflareApplicationExample =
+    """const hostname = 'hyperdx.example.com'
+
+const hyperdx = new cloudflare.ZeroTrustAccessApplication('hyperdx.example.com', {
+    accountId,
+    name: 'HyperDX',
+    domain: hostname,
+    type: 'self_hosted',
+    allowedIdps: [accessIdentityProvider.googleAccessIdentityProviderId],
+    autoRedirectToIdentity: true,
+    httpOnlyCookieAttribute: true,
+    policies: [{ id: allowAdmins.id, precedence: 1 }],
+}, { provider })"""
+
+let private cloudflareTunnelExample =
+    """const platformTunnel = new cloudflare.ZeroTrustTunnelCloudflared('platform', {
+    accountId,
+    name: 'platform',
+    configSrc: 'cloudflare',
+}, { provider })
+
+new cloudflare.ZeroTrustTunnelCloudflaredConfig('gcp-platform', {
+    accountId,
+    tunnelId: platformTunnel.id,
+    source: 'cloudflare',
+    config: {
+        ingresses: [{
+            hostname,
+            // Internal Kubernetes Service, not the connector's localhost.
+            service: hyperdxDeployment.uiServiceUrl,
+            originRequest: {
+                access: {
+                    required: true,
+                    audTags: [hyperdx.aud],
+                    teamName: config.cloudflareConfig.teamName,
+                },
+            },
+        }, {
+            service: 'http_status:404',
+        }],
+    },
+}, { provider })"""
+
 let private escExample =
     """values:
   gcpLogin:
@@ -306,13 +434,13 @@ steps:
     uses: pulumi/actions@v7
     with:
       work-dir: ./pulumi
-      stack-name: prod
+      stack-name: <organization>/<project>/prod
       command: <preview-or-up>"""
 
-let private content =
+let private introduction =
     [ p {
           text
-              "I run my public websites, private utilities, and long-lived AI agents on one small cloud platform. Google Cloud provides the foundation, Kubernetes gives each workload a common deployment API, Cloudflare handles traffic and access, Pulumi defines the infrastructure, and GitHub Actions delivers changes. andymeier.dev, Benji, and Minnie are the current workloads."
+              "I run my personal website, company website, and long-lived AI agents on a shared cloud platform. andymeier.dev publishes my articles, meiermade.com presents my consulting business, and Benji and Minnie help with recurring work. Google Cloud provides the foundation, Kubernetes gives each workload a common deployment API, Cloudflare handles traffic and access, Pulumi defines the infrastructure, and GitHub Actions delivers changes."
       }
       p {
           text
@@ -321,206 +449,310 @@ let private content =
       p {
           text
               "I favor a small, coherent set of tools with strong APIs. In an agent-driven workflow, that lets me and my agents build, inspect, and diagnose the same systems programmatically. Every client environment has its own scale, risk, compliance, and operational requirements, so experience here informs those decisions rather than becoming a default blueprint."
-      }
-      nav {
-          _ariaLabel "Table of contents"
-
-          h2 {
-              _class "mt-8"
-              text "Contents"
-          }
-
-          ul {
-              _class "list-disc"
-
-              for id', label in
-                  [ "architecture", "Architecture at a glance"
-                    "organization", "How it is organized"
-                    "applications", "Personal applications and agents"
-                    "gcp", "Why Google Cloud"
-                    "kubernetes", "Kubernetes without platform engineering"
-                    "cloudflare", "Cloudflare for networking and access"
-                    "observability", "OpenTelemetry and ClickStack"
-                    "pulumi", "Pulumi and environments"
-                    "github", "GitHub for delivery"
-                    "tradeoffs", "Intentional tradeoffs" ] do
-                  li {
-                      a {
-                          _href $"#{id'}"
-                          text label
-                      }
-                  }
-          }
-      }
-      heading "architecture" "Architecture at a glance"
-      subheading "System context"
-      paragraph
-          "Cloudflare fronts every public and protected application, while GitHub Actions and Pulumi deliver reviewed changes to Google Cloud. Google Workspace provides my identity for protected applications."
-      systemContext
-      subheading "Runtime"
-      paragraph
-          "andymeier.dev serves the public website, while Benji and Minnie run as long-lived AI agents. A shared OpenTelemetry Collector separates trusted application telemetry from constrained public browser telemetry, then sends all signals to ClickHouse. Logs and traces are also sent to Seq during the migration period."
-      runtimeView
-      subheading "Deployment"
-      paragraph
-          "Application images live in Artifact Registry. andymeier.dev, Benji, Minnie, Cloudflare connectors, the Collector, ClickStack, ClickHouse, MongoDB, and Seq run in one zonal GKE cluster. Secret Manager, Cloud Storage, persistent disks, Cloud Logging, and Cloud Monitoring remain managed Google Cloud services."
-      deploymentView
-      heading "organization" "How it is organized"
-      paragraph
-          "I organize the infrastructure in dependency order. Identity comes first, followed by shared infrastructure, application environments, and application-owned deployments."
-      codeBlock "none" organizationTree
-      paragraph
-          "Each resource has one owner. The infrastructure layer owns cluster-wide capabilities; application repositories own their workloads, routes, and access policies. Environments connect the two without copying identifiers or credentials between repositories."
-      paragraph
-          "Namespaces are the runtime boundary. Each application gets its own namespace and deployment identity, and Kubernetes RBAC limits the deployer to that namespace. Workload Identity gives a Pod a narrowly scoped Google identity only when it needs a managed service."
-      heading "applications" "Personal applications and agents"
-      paragraph
-          "andymeier.dev is a stateless web application behind a private Service. Benji and Minnie are my two long-running AI agents. I use them for coding, scheduled routines, email and messaging, task follow-up, and other recurring work. All three applications share deployment, identity, networking, and observability conventions."
-      p {
-          text
-              "Benji and Minnie share one runtime but deploy as separate single-replica StatefulSets. Each has independent configuration, identity, persistent storage, hostname, Cloudflare policy, and "
-
-          link "https://pi.dev/" "Pi coding agent"
-
-          text
-              " sessions. Their runtime handles webhooks, scheduled work, and longer task sessions. Each agent can evolve or restart without sharing credentials or session state."
-      }
-      paragraph
-          "The agents need persistent processes, private endpoints, background work, workload identity, durable volumes, and traceable task execution. Kubernetes gives them and the stateless website one operational model without forcing them into the same architecture."
-      heading "gcp" "Why Google Cloud"
-      paragraph
-          "Google Cloud fits this environment because Google Workspace, IAM, GKE, Artifact Registry, Secret Manager, Cloud Logging, and Cloud Monitoring share a coherent identity and operations model. Its APIs and command-line tools are consistent, and Google Kubernetes Engine (GKE) is the managed Kubernetes service I know best and prefer."
-      p {
-          text
-              "The economics of a small zonal cluster are unusually good. Google charges a cluster management fee, but the "
-
-          link "https://cloud.google.com/kubernetes-engine/pricing" "GKE free tier"
-
-          text
-              " provides $74.40 in monthly credits per billing account, offsetting the management fee for one zonal Standard or Autopilot cluster. Worker nodes, disks, networking, and usage-based services remain billable, but the managed control plane adds no incremental fee within that allowance."
-      }
-      paragraph
-          "I use a zonal Standard cluster to control node pools, pack small workloads efficiently, and avoid paying for multi-zone availability I do not need. Auto-repair, auto-upgrade, a regular release channel, and reproducible configuration handle much of the maintenance."
-      paragraph "This TypeScript is an abridged version of my zonal GKE configuration:"
-      codeBlock "typescript" gkeExample
-      heading "kubernetes" "Kubernetes without platform engineering"
-      paragraph
-          "I deliberately use a small Kubernetes vocabulary: Namespaces, Deployments, and Services, with Jobs and ConfigMaps only when a workload requires them. Deployments create and replace Pods, Services give them a stable private address, and Namespaces provide ownership and authorization boundaries."
-      p {
-          text "That small subset still provides a useful "
-          link "https://kubernetes.io/docs/concepts/overview/kubernetes-api/" "programmatic API"
-
-          text
-              ". A Deployment declares its image, replicas, probes, resources, and security context. Kubernetes reconciles the workload, restarts failed containers, and waits for readiness during a rollout. That gives me repeatable deployments without custom process managers or remote-shell scripts."
-      }
-      paragraph
-          "The same tools list workloads, inspect events, stream logs, restart rollouts, and forward private ports for every application. GKE sends logs to Cloud Logging and system metrics to Cloud Monitoring by default. Keeping the Kubernetes vocabulary small keeps its complexity bounded."
-      paragraph "This is an abridged application Deployment and Service:"
-      codeBlock "typescript" applicationDeploymentExample
-      heading "cloudflare" "Cloudflare for networking and access"
-      p {
-          text "All application origins stay on the private network. A "
-
-          link
-              "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/"
-              "Cloudflare Tunnel"
-
-          text
-              " connector runs in Kubernetes and creates an outbound-only connection to Cloudflare. The cluster does not need a public application load balancer, and its Services can remain private ClusterIP addresses. Public traffic reaches an accepted hostname at Cloudflare and is forwarded through the tunnel to the appropriate Service."
-      }
-      p {
-          text "For a private application, "
-
-          link
-              "https://developers.cloudflare.com/cloudflare-one/setup/secure-private-apps/private-web-app/"
-              "Cloudflare Access"
-
-          text
-              " applies an identity policy before the request ever reaches the origin. I can define a policy for each hostname and use Google Workspace as the identity provider. A public website can remain public, while an administration page or experimental utility can require my account or an approved group. Both use the same tunnel and private network. Cloudflare exposes APIs for DNS, tunnel routes, and Access policies, so I manage those controls through Pulumi rather than configuring them only in the dashboard."
-      }
-      paragraph
-          "For browser-based applications, this gives me per-application access without exposing origins or granting a device network-wide access."
-      heading "observability" "OpenTelemetry and ClickStack"
-      p {
-          text "Applications and consented browsers export standard OTLP to an "
-          link "https://opentelemetry.io/docs/collector/" "OpenTelemetry Collector"
-          text ". The internal receiver accepts trusted application logs, traces, and metrics. A separate public HTTP receiver applies strict CORS, request-size limits, Cloudflare rate limits, event-name validation, resource normalization, and attribute allowlists before accepting browser events."
-      }
-      p {
-          text "Named browser and business occurrences use OpenTelemetry EventRecords. They travel through the Logs signal but remain distinguishable from diagnostic logs through the top-level EventName field. The Collector stores events, logs, traces, and metrics in "
-          link "https://clickhouse.com/docs/use-cases/observability/clickstack/overview" "ClickHouse and ClickStack"
-          text ", while semantic ClickHouse views separate named events from diagnostic records."
-      }
-      p {
-          text "Seq remains connected during migration so I can compare search, correlation, retention, and operator workflows before deciding whether ClickStack fully replaces it. The application instrumentation and browser event contract remain portable because neither depends on a proprietary ingestion protocol. Cloudflare Access protects both operational interfaces."
-      }
-      p {
-          text
-              "Benji and Minnie each have a separate Google Workspace account and Kubernetes identity. Their Kubernetes identities can inspect workloads, events, and logs without changing them. Because a Workspace account is also a "
-
-          link "https://cloud.google.com/iam/docs/principal-identifiers" "Google Cloud IAM principal"
-
-          text
-              ", I can grant narrowly scoped viewer roles for relevant Google Cloud APIs when an agent needs cloud-level context. ClickStack and Seq expose application behavior and correlated traces during migration; Cloud Logging and Cloud Monitoring provide Kubernetes events, system logs, infrastructure metrics, and cluster context. Together, those APIs let an agent gather evidence without receiving deployment permissions."
-      }
-      heading "pulumi" "Pulumi and environments"
-      p {
-          text "I define infrastructure with "
-          link "https://www.pulumi.com/docs/iac/languages-sdks/javascript/" "Pulumi and TypeScript"
-
-          text
-              " to reuse policies and resource shapes with normal language and refactoring tools. Provider types and IntelliSense expose available properties while I write and review changes, and strong types provide useful evidence even when AI helps with discovery."
-      }
-      paragraph
-          "I keep resource modules small, ownership explicit, and abstractions limited. Pulumi calculates previews, records state, and applies only the reviewed difference."
-      p {
-          text
-              "Pulumi ESC is the environment boundary. An environment composes stack outputs, non-secret configuration, short-lived cloud credentials, and selected secrets into the exact values a deployment needs. The "
-
-          link "https://www.pulumi.com/docs/esc/guides/pulumi-iac/" "GCP login provider"
-
-          text
-              " exchanges OpenID Connect identity for a temporary Google Cloud token. Long-lived secrets stay in GCP Secret Manager, where I can rotate them independently and audit access."
-      }
-      paragraph
-          "For secret access, I create the secret container in GCP, grant a dedicated service account permission to read only the required secret, and allow a specific Pulumi environment to impersonate that account through OIDC. ESC then reads the current secret value when the environment opens. The application repository does not receive a service-account key, and one environment cannot automatically read another environment's secrets. An abridged ESC environment captures that trust chain:"
-      codeBlock "yaml" escExample
-      heading "github" "GitHub for delivery"
-      paragraph
-          "Each application has a GitHub repository. Pull requests collect code and infrastructure changes, run tests, and produce a Pulumi preview. Merging publishes an immutable image, applies the reviewed update, waits for Kubernetes readiness, and runs browser or API checks."
-      p {
-          text "GitHub Actions requests an OIDC token, and "
-
-          link "https://www.pulumi.com/docs/iac/guides/continuous-delivery/github-actions/" "Pulumi exchanges it"
-
-          text
-              " for short-lived, scoped access. ESC obtains a separate temporary Google Cloud identity, so trust follows the repository and environment rather than stored access tokens or cloud keys."
-      }
-      paragraph "The core deployment workflow is small:"
-      codeBlock "yaml" githubWorkflowExample
-      p {
-          text "Locally, the "
-          link "https://cli.github.com/manual/" "GitHub CLI"
-
-          text
-              " makes the same workflow practical from the terminal. I use it to create and inspect pull requests, read check results, review diffs, and manage branches. The GitHub API also gives agents the same repository, pull-request, and check data without requiring a browser. The pull request—not a workstation running an unreviewed production update—is the normal unit of change."
-      }
-      heading "tradeoffs" "Intentional tradeoffs"
-      paragraph
-          "A zonal GKE cluster is not the smallest possible way to host one website. A managed static host or one virtual machine would use fewer concepts. The calculation changes when several personal applications reuse the same cluster, private ingress, deployment workflow, observability, and identity model. Adding another application becomes a namespace, a Deployment, a Service, a route, and a workflow rather than another hand-configured server."
-      paragraph
-          "The zonal design also accepts that a zone-level incident can interrupt every application. Regional control planes and multi-zone node pools would improve availability but increase the baseline compute cost and operational surface. For personal applications, I prefer health probes, reproducible deployments, immutable images, and managed data services over paying continuously for regional redundancy."
-      paragraph
-          "Cloudflare, Google Cloud, Pulumi, Kubernetes, and GitHub are deliberate dependencies. Replacing any one of them would require real work. I accept that coupling because each product removes more operational burden than it adds, and because the boundaries between them are still visible: containers, Kubernetes resources, DNS routes, OIDC identities, and TypeScript programs."
-      paragraph
-          "The result is a small, coherent platform that keeps personal applications inexpensive, private by default, observable, and programmatically deployable. A narrow Kubernetes vocabulary and short-lived identities keep it manageable for one operator."
-      script {
-          _src (Asset.fingerprinted "/scripts/mermaid.11.16.0.min.js")
-          _onload "window.renderMermaid?.(document)"
-      }
-      script {
-          js
-              "window.renderMermaid=async function(el){const nodes=el?.matches?.('.mermaid')?[el]:Array.from(el?.querySelectorAll?.('.mermaid')??[]);if(!window.mermaid||nodes.length===0)return;for(const node of nodes){node.dataset.mermaidSource=node.dataset.mermaidSource||node.textContent.trim();node.textContent=node.dataset.mermaidSource;node.removeAttribute('data-processed')}window.mermaid.initialize({startOnLoad:false,theme:document.documentElement.classList.contains('dark')?'dark':'neutral',securityLevel:'strict'});await window.mermaid.run({nodes});for(const node of nodes){const scroller=node.parentElement;if(scroller&&scroller.scrollWidth>scroller.clientWidth&&scroller.scrollLeft===0)scroller.scrollLeft=(scroller.scrollWidth-scroller.clientWidth)/2}};void window.renderMermaid(document)"
       } ]
 
-let article = Article.create metadata (ArticlePage.primary metadata content)
+let private sections =
+    [ ArticlePage.section
+          "architecture"
+          "Architecture at a glance"
+          [ subheading "System context"
+            paragraph
+                "Cloudflare fronts every public and protected application, while GitHub Actions and Pulumi deliver reviewed changes to Google Cloud. Google Workspace provides my identity for protected applications."
+            systemContext
+            subheading "Runtime"
+            paragraph
+                "andymeier.dev and meiermade.com are public websites; Benji and Minnie are long-lived AI agents with protected interfaces and authenticated webhook routes. A shared OpenTelemetry Collector separates internal application telemetry from constrained public browser telemetry. ClickStack combines ClickHouse storage with HyperDX for exploration. The agents use managed PostgreSQL for durable inboxes and task-control state."
+            runtimeView
+            subheading "Deployment"
+            paragraph
+                "Application images live in Artifact Registry. The websites, agents, Collector, HyperDX, ClickHouse, and MongoDB run in one zonal GKE cluster. Each website and agent Pod includes its own cloudflared sidecar; shared connectors expose platform endpoints. Cloud SQL PostgreSQL, Secret Manager, Cloud Storage, Cloud Logging, and Cloud Monitoring sit outside the cluster as managed Google Cloud services."
+            deploymentView ]
+      ArticlePage.section
+          "organization"
+          "How it is organized"
+          [ paragraph
+                "These are separate repositories in the Meier Made GitHub organization, not directories in a single application. I organize the infrastructure in dependency order: workload identity, shared infrastructure, application environments, and application-owned deployments."
+            codeBlock "none" organizationTree
+            p {
+                text "Each resource has one owner. The "
+                inlineCode "platform-infrastructure"
+                text " repository owns shared capabilities. The "
+                inlineCode "andymeier"
+                text ", "
+                inlineCode "meiermade"
+                text ", and "
+                inlineCode "agent"
+                text " repositories each contain "
+                inlineCode "app/"
+                text " for application code and "
+                inlineCode "pulumi/"
+                text " for their deployments, routes, and access policies. The "
+                inlineCode "environments"
+                text " repository composes stack outputs and credentials through ESC. The "
+                inlineCode "skills"
+
+                text
+                    " repository supplies reusable instructions and command tools without owning the services they access."
+            }
+            paragraph
+                "Namespaces and Kubernetes RBAC define workload ownership and deployment permissions. They are not automatic network isolation: the cluster enables NetworkPolicy enforcement, but applications must declare the traffic restrictions they need, and there is no cluster-wide default-deny policy. Workload Identity binds Kubernetes service accounts to authorized Google service accounts without distributing cloud keys." ]
+      ArticlePage.section
+          "applications"
+          "Personal applications and agents"
+          [ paragraph
+                "andymeier.dev and meiermade.com are stateless F# web applications. The first is my personal website and technical blog; the second is my company website, with services, projects, team information, and public policies. Both run behind private origins and share deployment, networking, and observability conventions."
+            p {
+                text
+                    "Benji and Minnie are my two long-running AI agents. I use them for coding, scheduled routines, email and messaging, and task follow-up. They share one runtime but deploy as separate single-replica StatefulSets, with separate configuration, Kubernetes service accounts, persistent workspaces, hostnames, Cloudflare policies, and "
+
+                link "https://pi.dev/" "Pi coding agent"
+
+                text
+                    " sessions. Managed Cloud SQL PostgreSQL holds each agent's durable communication inbox and task-control state, while persistent volumes hold workspaces and session files."
+            }
+            paragraph
+                "The agents need persistent processes, protected endpoints, background work, workload identity, and durable state. Kubernetes gives them and the stateless websites one operational model without forcing them into the same architecture." ]
+      ArticlePage.section
+          "gcp"
+          "Why Google Cloud"
+          [ paragraph
+                "Google Cloud fits this environment because Google Workspace, IAM, GKE, Artifact Registry, Secret Manager, Cloud Logging, and Cloud Monitoring share a coherent identity and operations model. Its APIs and command-line tools are consistent, and Google Kubernetes Engine (GKE) is the managed Kubernetes service I know best and prefer."
+            p {
+                text
+                    "The economics of a small zonal cluster are excellent. Google charges a cluster management fee, but the "
+
+                link "https://cloud.google.com/kubernetes-engine/pricing" "GKE free tier"
+
+                text
+                    " provides $74.40 in monthly credits per billing account, offsetting the management fee for one zonal Standard or Autopilot cluster. Worker nodes, disks, networking, and usage-based services remain billable, but the managed control plane adds no incremental fee within that allowance."
+            }
+            paragraph
+                "I use a zonal Standard cluster to control node pools, pack small workloads efficiently, and avoid paying for multi-zone availability I do not need. Auto-repair, auto-upgrade, a regular release channel, and reproducible configuration handle much of the maintenance."
+            paragraph "This TypeScript is an abridged version of my zonal GKE configuration:"
+            codeBlock "typescript" gkeExample ]
+      ArticlePage.section
+          "kubernetes"
+          "Kubernetes without platform engineering"
+          [ paragraph
+                "I start with Namespaces, Deployments, and Services, then add StatefulSets and persistent volumes for agents, Jobs for bounded work, and operators for the databases inside the cluster. Deployments create and replace Pods, Services give them stable private addresses, and Namespaces organize ownership. The websites stay simple even when another workload needs more machinery."
+            p {
+                text "That small subset still provides a useful "
+                link "https://kubernetes.io/docs/concepts/overview/kubernetes-api/" "programmatic API"
+
+                text
+                    ". A Deployment declares its image, replicas, probes, resources, and security context. Kubernetes reconciles the workload, restarts failed containers, and waits for readiness during a rollout. That gives me repeatable deployments without custom process managers or remote-shell scripts."
+            }
+            paragraph
+                "The same tools list workloads, inspect events, stream logs, restart rollouts, and forward private ports for every application. I configure GKE to send system-component logs to Cloud Logging and infrastructure metrics to Cloud Monitoring. Routine application stdout and stderr are not also collected into Cloud Logging; application observability uses OpenTelemetry and ClickStack."
+            paragraph "This is an abridged application Deployment and Service:"
+            codeBlock "typescript" applicationDeploymentExample ]
+      ArticlePage.section
+          "cloudflare"
+          "Cloudflare for networking and access"
+          [ p {
+                text "All application origins stay on the private network. A "
+
+                link
+                    "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/"
+                    "Cloudflare Tunnel"
+
+                text
+                    " connector runs in Kubernetes and creates an outbound-only connection to Cloudflare. The cluster does not need a public application load balancer. For each website and agent, cloudflared runs as a sidecar in the application Pod and forwards to the app over localhost; Services remain private ClusterIP addresses. Shared platform connectors route to internal Services for endpoints such as HyperDX and the browser Collector."
+            }
+            p {
+                text "For a private application, "
+
+                link
+                    "https://developers.cloudflare.com/cloudflare-one/setup/secure-private-apps/private-web-app/"
+                    "Cloudflare Access"
+
+                text
+                    " checks identity before forwarding the request to the origin. Access applications protect hostnames and attach reusable policies by ID, while Google Workspace supplies the human identity. The tunnel carries traffic; the Access application determines who may use it. I define both through Pulumi."
+            }
+            p {
+                text "HyperDX is a concrete example. These abridged TypeScript examples adapted from "
+                inlineCode "platform-infrastructure"
+
+                text
+                    " show the shared policy, protected application, and tunnel route. Provider setup and imports are omitted; configuration and referenced resource outputs come from the surrounding modules."
+            }
+            subheading "Define a shared policy"
+            paragraph "I define the administrator policy once, then reuse it across protected applications:"
+            codeBlock "typescript" cloudflarePolicyExample
+            subheading "Protect the HyperDX hostname"
+            paragraph
+                "The HyperDX Access application selects the shared Google Workspace identity provider and attaches the administrator policy by ID:"
+            codeBlock "typescript" cloudflareApplicationExample
+            p {
+                text
+                    "The full application also attaches the reusable Pi, Benji, and Minnie service-token policies. Benji and Minnie additionally require the platform NAT address. The "
+
+                inlineCode "platform-infrastructure"
+
+                text
+                    " repository exports shared policy and identity-provider IDs; product repositories consume them through ESC rather than redefining the shared resources."
+            }
+            subheading "Route the tunnel to the private Service"
+            paragraph
+                "The shared platform connector runs as a standalone Kubernetes Deployment, unlike the application sidecars. This excerpt keeps only its HyperDX route. The connector requires an Access token for the application's audience before forwarding to the internal Service:"
+            codeBlock "typescript" cloudflareTunnelExample
+            p {
+                text "A proxied CNAME points the hostname to "
+                inlineCode "<tunnel-id>.cfargotunnel.com"
+
+                text
+                    ". Pulumi retrieves the tunnel token and places it in a Kubernetes Secret consumed by cloudflared. The final 404 rule rejects unmatched hostnames. Public websites and the browser telemetry endpoint do not require an Access login; protection is chosen per application, not implied by using a tunnel."
+            } ]
+      ArticlePage.section
+          "observability"
+          "OpenTelemetry and ClickStack"
+          [ subheading "One telemetry pipeline"
+            p {
+                text "The websites send standard OTLP to an "
+                link "https://opentelemetry.io/docs/collector/" "OpenTelemetry Collector"
+                text ". Separate receivers keep internal application telemetry apart from public browser input. "
+
+                link
+                    "https://clickhouse.com/docs/use-cases/observability/clickstack/overview"
+                    "ClickHouse and ClickStack"
+
+                text " provide storage and exploration, with HyperDX as the search interface."
+            }
+            telemetryView
+            paragraph
+                "Named browser and business occurrences use OpenTelemetry EventRecords: the top-level EventName distinguishes them from diagnostic logs. Semantic views separate those records in ClickHouse. The Collector is configured for 30-day application telemetry retention and a persistent delivery queue; ClickHouse's own diagnostic logs have shorter retention."
+            paragraph
+                "The agent environments also select the internal Collector. Configuration alone does not prove delivery: exporter validation requires fresh records, and correlation depends on propagated trace context. Cloud Logging and Cloud Monitoring supply the separate system-level view."
+            subheading "Browser visibility and privacy"
+            comparisonTable
+                "Browser telemetry signals"
+                [ "Signal"; "What it helps explain" ]
+                [ "Navigation and engagement",
+                  [ "What people read and explore: article opens, completion, and outbound links on andymeier.dev; service/project views and contact/scheduling clicks on meiermade.com." ]
+                  "Fetch traces",
+                  [ "Request timing and failures, with same-origin trace-context propagation where supported." ]
+                  "JavaScript errors", [ "Client-side problems that server logs alone cannot explain." ]
+                  "Web Vitals", [ "Page experience, without backfilling a page load from before acceptance." ] ]
+            paragraph
+                "A tab-scoped session ID links browser records; this is not session replay. Opt-in regions and unknown locations require acceptance. Other recognized locations use default-on analytics with an opt-out. A saved refusal applies in either mode, and visitors can withdraw through analytics settings. Collection is off in the normal local Watch workflow, independently of server observability."
+            paragraph
+                "The public path applies strict CORS, request-size and Cloudflare rate limits, event-name validation, and attribute allowlists. The Collector clears log bodies and span status messages; navigation URLs become paths and campaign attribution is constrained. Browser telemetry remains untrusted input, not proof of an authenticated action."
+            subheading "Agents as operators"
+            paragraph
+                "Reusable skills let me and the agents search HyperDX, follow trace IDs, and run bounded read-only ClickHouse queries. Their Kubernetes identities can inspect workloads, events, and logs; their shared Google runtime principal has narrowly scoped viewer roles for cluster, logging, and monitoring context, not deployment authority."
+            comparisonTable
+                "Credential lifecycles"
+                [ "Purpose"; "Credential path"; "Boundary" ]
+                [ "Deployment and application configuration",
+                  [ "Secret Manager → Pulumi ESC → deployment"
+                    "Selected secrets and short-lived cloud identity for the authorized environment." ]
+                  "Agent service commands",
+                  [ "Caller-scoped 1Password vault → selected command → protected service"
+                    "Resolve only the credentials needed by that subprocess; no new deployment secret for each tool." ] ]
+            paragraph
+                "Cloudflare Access authenticates the perimeter. A HyperDX API key or ClickHouse database credential separately authorizes backend access. Reaching the service is not permission to read its data." ]
+      ArticlePage.section
+          "pulumi"
+          "Pulumi and environments"
+          [ p {
+                text "I define infrastructure with "
+                link "https://www.pulumi.com/docs/iac/languages-sdks/javascript/" "Pulumi and TypeScript"
+
+                text
+                    " to reuse policies and resource shapes with normal language and refactoring tools. Provider types and IntelliSense expose available properties while I write and review changes, and strong types provide useful evidence even when AI helps with discovery."
+            }
+            p {
+                text "Pulumi ESC composes stack outputs, configuration, and selected secrets for each environment. Its "
+                link "https://www.pulumi.com/docs/esc/guides/pulumi-iac/" "GCP login provider"
+
+                text
+                    " exchanges OpenID Connect identity for a temporary Google Cloud token. A dedicated service account can read only the authorized secrets; the repository receives no service-account key."
+            }
+            paragraph
+                "I keep resource modules small and ownership explicit. Pulumi calculates previews and records state; ESC resolves environment values when opened. This abridged configuration shows the login, secret lookup, and projection into Pulumi:"
+            codeBlock "yaml" escExample ]
+      ArticlePage.section
+          "github"
+          "GitHub for delivery"
+          [ paragraph
+                "The pull request is the unit of change. Checks and review happen before merge; CI then builds the image, deploys through Pulumi, waits for readiness, and tests the resulting application."
+            deliveryView
+            p {
+                text "GitHub Actions requests an OIDC token, and "
+
+                link "https://www.pulumi.com/docs/iac/guides/continuous-delivery/github-actions/" "Pulumi exchanges it"
+
+                text
+                    " for short-lived, scoped access. ESC obtains a separate temporary Google Cloud identity, so trust follows the repository and environment rather than stored access tokens or cloud keys."
+            }
+            paragraph "The core deployment workflow is small:"
+            codeBlock "yaml" githubWorkflowExample
+            p {
+                text "Locally, the "
+                link "https://cli.github.com/manual/" "GitHub CLI"
+
+                text
+                    " and GitHub API give me and the agents the same pull requests, diffs, and check results. Production changes follow that review path rather than an unreviewed update from a workstation."
+            } ]
+      ArticlePage.section
+          "tradeoffs"
+          "Intentional tradeoffs"
+          [ paragraph
+                "A static host would be simpler for one website. I accept more moving parts because several websites and agents reuse them. The important choices are explicit:"
+            comparisonTable
+                "Platform tradeoffs"
+                [ "Choice"; "Benefit"; "Cost accepted" ]
+                [ "Zonal GKE",
+                  [ "Managed Kubernetes with a lower baseline than multi-zone redundancy."
+                    "A zone-level incident can interrupt every workload in the cluster." ]
+                  "Shared infrastructure",
+                  [ "Reuse private ingress, deployment, identity, and observability conventions."
+                    "Shared capacity and a common failure boundary need attention." ]
+                  "Self-hosted ClickStack",
+                  [ "One queryable store for application diagnostics and named events."
+                    "Maintain ClickHouse, MongoDB, persistent storage, queue capacity, and retention." ]
+                  "Provider dependencies",
+                  [ "Google Cloud, Cloudflare, Pulumi, and GitHub remove operational work."
+                    "Replacing them takes real migration work, despite portable containers and OTLP." ] ]
+            paragraph
+                "The value is not just that I can deploy another application. It is that I and my agents can use the same APIs, scoped tools, and telemetry to understand what it is doing."
+            script {
+                _src (Asset.fingerprinted "/scripts/mermaid.11.16.0.min.js")
+                _onload "window.renderMermaid?.(document)"
+            }
+            script {
+                js
+                    """
+window.renderMermaid = function(el) {
+    const render = async () => {
+        if (!window.mermaid) return;
+        const theme = document.documentElement.classList.contains('dark') ? 'dark' : 'neutral';
+        const candidates = el?.matches?.('.mermaid') ? [el] : Array.from(el?.querySelectorAll?.('.mermaid') ?? []);
+        const nodes = candidates.filter(node => node.isConnected && (node.dataset.mermaidTheme !== theme || !node.querySelector('svg')));
+        if (!nodes.length) return;
+        for (const node of nodes) {
+            node.dataset.mermaidSource = node.dataset.mermaidSource || node.textContent.trim();
+            node.textContent = node.dataset.mermaidSource;
+            node.removeAttribute('data-processed');
+        }
+        window.mermaid.initialize({ startOnLoad: false, theme, securityLevel: 'strict' });
+        await window.mermaid.run({ nodes });
+        for (const node of nodes) {
+            node.dataset.mermaidTheme = theme;
+            const scroller = node.parentElement;
+            if (scroller && scroller.scrollWidth > scroller.clientWidth && scroller.scrollLeft === 0)
+                scroller.scrollLeft = (scroller.scrollWidth - scroller.clientWidth) / 2;
+        }
+    };
+    // Figure initialization and page restoration can coincide; never reset a diagram during another render.
+    window.mermaidRenderQueue = (window.mermaidRenderQueue || Promise.resolve()).then(render, render);
+    return window.mermaidRenderQueue;
+};
+void window.renderMermaid(document);
+"""
+            } ]
+
+      ]
+
+let article =
+    Article.create metadata (ArticlePage.primary metadata introduction sections)

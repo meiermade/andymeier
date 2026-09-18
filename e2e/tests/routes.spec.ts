@@ -178,7 +178,13 @@ test('personal infrastructure diagrams render after client-side navigation', asy
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   await page.getByRole('link', { name: 'Personal Infrastructure', exact: true }).click()
   await expect(page).toHaveURL('/articles/personal-infrastructure')
-  await expect(page.locator('.article-mermaid svg')).toHaveCount(3)
+  await expect(page.locator('.article-mermaid svg')).toHaveCount(5)
+  await expect(page.locator('[data-container-view] svg')).toContainText('meiermade.com')
+  await expect(page.locator('[data-container-view] svg')).toContainText('HyperDX')
+  await expect(page.locator('[data-deployment-view] svg')).toContainText('Cloud SQL PostgreSQL')
+  await expect(page.locator('[data-telemetry-flow] svg')).toContainText('Public receiver')
+  await expect(page.locator('[data-delivery-flow] svg')).toContainText('Acceptance checks', { ignoreCase: true })
+  await expect(page.locator('article')).not.toContainText('Seq')
 })
 
 test('articles index renders and opens a source-controlled article', async ({ page }) => {
@@ -205,7 +211,7 @@ test('development environment article presents the current setup', async ({ page
   await expect(page.getByRole('heading', { name: 'Pi coding agent', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'JetBrains IDEs', exact: true })).toBeVisible()
   await expect(page.getByText('Windows Subsystem for Linux', { exact: false })).toHaveCount(0)
-  await expect(page.locator('article > div')).toHaveCSS('padding-bottom', '32px')
+  await expect(page.getByRole('article')).toHaveCSS('padding-bottom', '32px')
 })
 
 test('article pages keep the top navigation visible and track reading progress', async ({ page }) => {
@@ -259,7 +265,37 @@ test('article search and source-controlled detail content are deterministic', as
   await expect(page.getByRole('heading', { name: 'Kubernetes without platform engineering', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Personal applications and agents', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Cloudflare for networking and access', exact: true })).toBeVisible()
+  for (const name of ['Define a shared policy', 'Protect the HyperDX hostname', 'Route the tunnel to the private Service']) {
+    await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
+  }
+  const accessPolicy = page.locator('pre').filter({ hasText: 'new cloudflare.ZeroTrustAccessPolicy' })
+  const accessApplication = page.locator('pre').filter({ hasText: 'new cloudflare.ZeroTrustAccessApplication' })
+  const tunnelRoute = page.locator('pre').filter({ hasText: 'new cloudflare.ZeroTrustTunnelCloudflaredConfig' })
+  await expect(accessPolicy).toContainText("decision: 'allow'")
+  await expect(accessApplication).toContainText('id: allowAdmins.id')
+  await expect(accessApplication).toContainText("const hostname = 'hyperdx.example.com'")
+  await expect(tunnelRoute).toContainText('audTags: [hyperdx.aud]')
+  await expect(tunnelRoute).toContainText('required: true')
+  await expect(tunnelRoute).toContainText('hyperdxDeployment.uiServiceUrl')
+  await expect(tunnelRoute).toContainText('http_status:404')
+  for (const example of [accessPolicy, accessApplication, tunnelRoute]) {
+    await expect(example.locator('.token.keyword').first()).toBeVisible()
+  }
   await expect(page.getByRole('heading', { name: 'OpenTelemetry and ClickStack', exact: true })).toBeVisible()
+  for (const name of ['One telemetry pipeline', 'Browser visibility and privacy', 'Agents as operators']) {
+    await expect(page.getByRole('heading', { name, exact: true })).toBeVisible()
+  }
+  const repositoryMap = page.locator('pre code.language-none')
+  for (const repository of ['platform-identity/', 'platform-infrastructure/', 'environments/', 'andymeier/', 'meiermade/', 'agent/', 'skills/']) {
+    await expect(repositoryMap).toContainText(repository)
+  }
+  await expect(repositoryMap).not.toContainText('personal-cloud/')
+  const ownership = page.locator('article p').filter({ hasText: 'Each resource has one owner.' })
+  await expect(ownership.locator('code')).toHaveText([
+    'platform-infrastructure', 'andymeier', 'meiermade', 'agent', 'app/', 'pulumi/', 'environments', 'skills',
+  ])
+  await expect(ownership).toContainText('The skills repository supplies')
+  await expect(page.locator('article')).toContainText('default-on analytics with an opt-out')
   await expect(page.getByRole('heading', { name: 'Pulumi and environments', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'GitHub for delivery', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'andymeier.dev', exact: true })).toHaveCount(0)
@@ -278,6 +314,8 @@ test('article search and source-controlled detail content are deterministic', as
     { locator: page.locator('[data-system-context]'), title: 'Personal infrastructure system context' },
     { locator: page.locator('[data-container-view]'), title: 'Personal infrastructure runtime' },
     { locator: page.locator('[data-deployment-view]'), title: 'Personal infrastructure deployment' },
+    { locator: page.locator('[data-telemetry-flow]'), title: 'Application and browser telemetry' },
+    { locator: page.locator('[data-delivery-flow]'), title: 'Reviewed application delivery' },
   ]
 
   for (const diagram of diagrams) {
@@ -288,6 +326,16 @@ test('article search and source-controlled detail content are deterministic', as
   }
 
   await expect(diagrams[0].locator.locator('svg desc')).toContainText('GitHub Actions, Pulumi Cloud, Google Cloud, Cloudflare, and Google Workspace')
+
+  for (const [name, headers] of [
+    ['Browser telemetry signals', ['Signal', 'What it helps explain']],
+    ['Credential lifecycles', ['Purpose', 'Credential path', 'Boundary']],
+    ['Platform tradeoffs', ['Choice', 'Benefit', 'Cost accepted']],
+  ] as const) {
+    const table = page.getByRole('table', { name, exact: true })
+    await expect(table.getByRole('columnheader')).toHaveText([...headers])
+    await expect(table.getByRole('rowheader').first()).toBeVisible()
+  }
 
   const [, , diagramWidth, diagramHeight] = (await diagrams[0].locator.locator('svg').getAttribute('viewBox'))!.split(' ').map(Number)
   expect(diagramHeight).toBeGreaterThan(diagramWidth)
@@ -306,7 +354,7 @@ test('article search and source-controlled detail content are deterministic', as
     await expect(diagram.locator.locator('svg title')).toHaveText(diagram.title)
   }
 
-  for (const excludedTopic of ['Meier Made Platform', 'PostgreSQL', 'Cloud SQL', 'Auth0', 'Dagster', 'Airbyte', 'Metabase', 'Raspberry Pi', 'Penpot', 'Redis', 'Memorystore']) {
+  for (const excludedTopic of ['Meier Made Platform', 'Seq', 'Dual-exports', 'personal-cloud/', 'Auth0', 'Dagster', 'Airbyte', 'Metabase', 'Raspberry Pi', 'Penpot', 'Redis', 'Memorystore']) {
     await expect(page.getByText(excludedTopic, { exact: false })).toHaveCount(0)
   }
 })
@@ -713,12 +761,23 @@ test('articles remain usable at a mobile viewport', async ({ page }) => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 
     if (article.path === '/articles/personal-infrastructure') {
-      for (const selector of ['[data-system-context]', '[data-container-view]', '[data-deployment-view]']) {
+      for (const selector of ['[data-system-context]', '[data-container-view]', '[data-deployment-view]', '[data-telemetry-flow]']) {
         const diagram = page.locator(selector)
         await expect(diagram.locator('svg')).toBeVisible()
         await expect(diagram.getByText('Scroll horizontally to see the complete diagram.')).toBeVisible()
         expect(await diagram.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true)
         expect(await diagram.evaluate(element => element.scrollLeft > 0)).toBe(true)
+      }
+      await expect(page.locator('[data-delivery-flow] svg')).toBeVisible()
+      expect(await page.locator('[data-delivery-flow]').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+      for (const name of ['Browser telemetry signals', 'Credential lifecycles', 'Platform tradeoffs']) {
+        const region = page.getByRole('region', { name, exact: true })
+        await region.scrollIntoViewIfNeeded()
+        await region.focus()
+        expect(await region.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true)
+        await region.press('ArrowRight')
+        await expect.poll(() => region.evaluate(element => element.scrollLeft)).toBeGreaterThan(0)
+        await expect(region.getByRole('table', { name, exact: true })).toBeVisible()
       }
     }
   }

@@ -36,10 +36,11 @@ module Asset =
         resolveWithManifest manifest.Value path
 
 module Navigation =
-    let initialize = "window.history.scrollRestoration = 'manual'"
+    let initialize = "window.history.scrollRestoration = 'manual'; window.meierMadeScrollUrl = window.location.pathname + window.location.search"
 
+    // Popstate changes the URL before restored HTML arrives; late scroll events still belong to the outgoing page.
     let saveScroll =
-        "window.history.replaceState(Object.assign({}, window.history.state || {}, {meierMadeScrollX: window.scrollX, meierMadeScrollY: window.scrollY}), '', window.location.href)"
+        "window.meierMadeScrollUrl === window.location.pathname + window.location.search && window.history.replaceState(Object.assign({}, window.history.state || {}, {meierMadeScrollX: window.scrollX, meierMadeScrollY: window.scrollY}), '', window.location.href)"
 
     let action (href:string) =
         let url = JsonSerializer.Serialize href
@@ -47,7 +48,7 @@ module Navigation =
         $"evt.button === 0 && !evt.ctrlKey && !evt.metaKey && !evt.shiftKey && !evt.altKey && !evt.currentTarget.hasAttribute('download') && (!evt.currentTarget.target || evt.currentTarget.target === '_self') && evt.currentTarget.origin === window.location.origin && (evt.preventDefault(), {url} === window.location.pathname + window.location.search || ({saveScroll}, {request}))"
 
     let restoreAction =
-        "@get(window.location.pathname + window.location.search, {filterSignals: {include: /^$/}, headers: {'X-MeierMade-Navigation': 'restore'}})"
+        "window.articleNavigation && document.querySelector('[data-article-url]')?.dataset.articleUrl === window.location.pathname + window.location.search ? window.articleNavigation.restore() : @get(window.location.pathname + window.location.search, {filterSignals: {include: /^$/}, headers: {'X-MeierMade-Navigation': 'restore'}})"
 
 module PageHead =
     let canonicalUrl (metadata:PageMetadata) =
@@ -467,7 +468,7 @@ type Document =
                 _dataSignals $"{{selectedNav: '{selectedNav}'}}"
                 _class "bg-gray-200 dark:bg-gray-950"
                 div {
-                    _class "mx-auto max-w-7xl"
+                    _class "mx-auto max-w-7xl has-[[data-article-page]]:max-w-[88rem]"
                     TopNav.primary
                     page
                     Footer.primary
