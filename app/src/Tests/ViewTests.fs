@@ -159,10 +159,18 @@ let tests =
                       tags = [| "Engineering"; "Finance" |]
                       createdAt = System.DateTimeOffset(2026, 2, 1, 0, 0, 0, System.TimeSpan.Zero) }
 
-                let html = ArticlePage.primary metadata [] |> Render.toHtmlDocString
+                let html = ArticlePage.primary metadata [] [] |> Render.toHtmlDocString
 
                 Expect.stringContains html "Engineering" "Expected article tag on detail page"
                 Expect.stringContains html "Finance" "Expected article tag on detail page"
+                Expect.isFalse (html.Contains "aria-label=\"On this page\"") "An article without sections has no empty navigation"
+
+                let section = ArticlePage.section "example-section" "Example & details" [ Html.p { "Body" } ]
+                let withSections = ArticlePage.primary metadata [] [ section ] |> Render.toHtmlDocString
+                Expect.stringContains withSections "id=\"example-section\"" "The section supplies its heading ID"
+                Expect.equal (withSections.Split("href=\"#example-section\"").Length - 1) 2 "Desktop and mobile use the same section destination"
+                Expect.equal (withSections.Split("Example &amp; details").Length - 1) 3 "Both navigations and the heading use the same escaped label"
+                Expect.equal (withSections.Split("aria-label=\"On this page\"").Length - 1) 2 "Both navigations are labelled"
             }
 
             test "scopes clear actions to search or added filters" {

@@ -43,6 +43,17 @@ body:has([data-article-page]) .article-scroll-progress {
     min-width: 56rem;
 }
 
+[data-telemetry-flow] .article-mermaid svg {
+    min-width: 32rem;
+    margin-inline: auto;
+}
+
+[data-delivery-flow] .article-mermaid svg {
+    min-width: 0;
+    max-width: 100%;
+    margin-inline: auto;
+}
+
 @media (min-width: 768px) {
     .article-mermaid svg {
         min-width: 0;

@@ -31,7 +31,7 @@ let private navigationUrl (ctx:HttpContext) =
     ctx.Request.Path.ToString() + QueryString.Create(query).ToString()
 
 let private afterNavigationScript updateHistoryAndScroll =
-    $"""(function(){{{updateHistoryAndScroll}requestAnimationFrame(function(){{document.getElementById('page-content')?.focus({{preventScroll:true}});window.meiermadeTelemetry?.trackPage();}});}})();"""
+    $"""(function(){{{updateHistoryAndScroll}window.meierMadeScrollUrl=window.location.pathname+window.location.search;requestAnimationFrame(function(){{document.getElementById('page-content')?.focus({{preventScroll:true}});window.meiermadeTelemetry?.trackPage();}});}})();"""
 
 let historyScript (url:string) =
     let serializedUrl = JsonSerializer.Serialize url
