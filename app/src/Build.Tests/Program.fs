@@ -11,9 +11,9 @@ open System.Threading.Tasks
 
 let private packageJson = """{"devDependencies":{"@playwright/test":"1.62.1"}}"""
 let private image = "mcr.microsoft.com/playwright:v1.62.1-noble@sha256:abc123"
-let private accepted = """{"ok":1,"request_id":"sample1","nodes":{"de1.node.check-host.net":["de","Germany","Nuremberg"],"de4.node.check-host.net":["de","Germany","Frankfurt"],"us1.node.check-host.net":["us","USA","Los Angeles"]}}"""
-let private results de1 de4 us =
-    sprintf """{"de1.node.check-host.net":%s,"de4.node.check-host.net":%s,"us1.node.check-host.net":%s}""" de1 de4 us
+let private accepted = """{"ok":1,"request_id":"sample1","nodes":{"de2.node.check-host.net":["de","Germany","Langen"],"de4.node.check-host.net":["de","Germany","Frankfurt"],"us1.node.check-host.net":["us","USA","Los Angeles"]}}"""
+let private results de2 de4 us =
+    sprintf """{"de2.node.check-host.net":%s,"de4.node.check-host.net":%s,"us1.node.check-host.net":%s}""" de2 de4 us
 let private row status = $"[[1,0.1,\"response\",{status}]]"
 let private optIn = results (row "200") (row "\"200\"") (row "\"409\"")
 let private defaultOn = results (row "409") (row "\"409\"") (row "200")
@@ -98,7 +98,7 @@ let browserE2ETests =
         test "selects real German and US nodes for a public HTTPS policy check" {
             let url = RegionalAnalytics.checkUrl "https://andymeier.dev/" "opt-in"
             Expect.stringContains url "host=https%3A%2F%2Fandymeier.dev%2Fprivacy%2Fpolicy-check%2Fopt-in" "public URL"
-            for node in [ "de1"; "de4"; "us1" ] do
+            for node in [ "de2"; "de4"; "us1" ] do
                 Expect.stringContains url $"node={node}.node.check-host.net" "explicit probe node"
             for site in [ "http://example.com"; "https://secret@example.com"; "https://example.com?token=secret"; "https://example.com#secret" ] do
                 Expect.throws (fun () -> RegionalAnalytics.checkUrl site "opt-in" |> ignore) "rejects insecure or credential-bearing URLs"
@@ -107,7 +107,8 @@ let browserE2ETests =
 
         test "requires the expected nodes to still be in the requested countries" {
             Expect.equal (RegionalAnalytics.acceptedRequest accepted) "sample1" "request ID"
-            for invalid in [ accepted.Replace("\"de\"", "\"us\""); accepted.Replace("\"ok\":1", "\"ok\":0"); accepted.Replace("sample1", "") ] do
+            let missingNode = """{"ok":1,"request_id":"sample1","nodes":{"de4.node.check-host.net":["de","Germany","Frankfurt"],"us1.node.check-host.net":["us","USA","Los Angeles"]}}"""
+            for invalid in [ missingNode; accepted.Replace("de2.node", "de1.node"); accepted.Replace("\"de\"", "\"us\""); accepted.Replace("\"ok\":1", "\"ok\":0"); accepted.Replace("sample1", "") ] do
                 Expect.throws (fun () -> RegionalAnalytics.acceptedRequest invalid |> ignore) "cannot silently substitute geography or an invalid request"
         }
 
