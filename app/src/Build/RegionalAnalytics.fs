@@ -9,7 +9,7 @@ open System.Threading.Tasks
 // Real HTTPS requests, not synthetic geolocation or caller-supplied country headers.
 // Check-Host receives only the public, read-only policy-check URLs.
 let private nodes =
-    [ "de1.node.check-host.net", "de"
+    [ "de2.node.check-host.net", "de"
       "de4.node.check-host.net", "de"
       "us1.node.check-host.net", "us" ]
 
