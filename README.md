@@ -50,6 +50,8 @@ cd app
 ./fake.sh Test
 ```
 
+For a credential-free local Pulumi TypeScript check, run `cd pulumi && npm ci && npm run check` from the repository root. Pulumi previews run in CI, not locally.
+
 After deployment, `./fake.sh VerifyPublishedAnalytics --single-target` verifies real regional requests through [Check-Host's HTTP API](https://check-host.net/about/api), then runs the existing Firefox acceptance suite from a Cloudflare-confirmed U.S. runner. The regional check uses two German nodes and one U.S. node, validates their returned countries, and checks both policy endpoints: the intended mode must return 200 and the opposite mode must return 409.
 
 Only public, read-only `/privacy/policy-check/...` URLs are submitted to Check-Host; results are public. No credentials, cookies, personal data, forged country headers, new cloud resources, Cloudflare API tokens, Pulumi authentication, or OIDC are used by the E2E job. Cloudflare Request Trace's synthetic geography is not evidence of the origin country: it can disagree with real-region behavior. Provider failures, missing/wrong-country nodes, timeouts, rate limits, and unexpected statuses fail the gate.
