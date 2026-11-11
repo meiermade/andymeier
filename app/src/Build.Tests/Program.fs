@@ -203,8 +203,8 @@ let browserE2ETests =
 let localWatchTests =
     testList "Local Watch configuration" [
         test "keeps one stable target and ownership record across worktrees" {
-            Expect.equal LocalWatch.defaultUrl "http://127.0.0.1:5290" "reserved site URL"
-            Expect.equal LocalWatch.defaultPort 5290 "reserved site port"
+            Expect.equal LocalWatch.defaultUrl "http://127.0.0.1:5390" "reserved site URL"
+            Expect.equal LocalWatch.defaultPort 5390 "reserved site port"
             Expect.equal (Path.GetFileName (LocalWatch.watcherPidFile "watch")) "andymeier-watch.pid" "one Watch target"
         }
         test "parses ownership records without losing the exact start identity" {

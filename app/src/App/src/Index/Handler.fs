@@ -23,6 +23,16 @@ let private getHomePage (services:Services) : HttpHandler =
             return! renderPage services metadata page "nav-home" next ctx
     }
 
+let private getPrivacyPage (services:Services) : HttpHandler =
+    fun next ctx -> task {
+        if ctx.IsDatastar then
+            let ds = ctx.GetService<IDatastarService>()
+            do! patchPage ctx ds App.PrivacyPage.metadata App.PrivacyPage.page ""
+            return Some ctx
+        else
+            return! renderPage services App.PrivacyPage.metadata App.PrivacyPage.page "" next ctx
+    }
+
 let private privacyPolicyCheck expected : HttpHandler =
     fun _ ctx -> task {
         ctx.Response.Headers.CacheControl <- "no-store"
@@ -40,7 +50,7 @@ let handler (services:Services) : HttpHandler =
         route "/health" >=> GET >=> text "Healthy"
         route "/privacy/consent" >=> POST >=> App.Consent.persist
         routef "/privacy/policy-check/%s" (fun expected -> GET >=> privacyPolicyCheck expected)
-        route "/privacy" >=> GET >=> renderPage services App.PrivacyPage.metadata App.PrivacyPage.page ""
+        route "/privacy" >=> GET >=> getPrivacyPage services
         routex "(/?)" >=> GET >=> getHomePage services
         route "/services" >=> GET >=> redirectTo true "https://meiermade.com/services"
         route "/projects" >=> GET >=> redirectTo true "https://meiermade.com/projects"

@@ -48,23 +48,22 @@ let tests =
                 Expect.stringContains profile "The opinions shared here are my own." "Expected personal-opinions disclaimer"
             }
 
-            test "uses Datastar navigation disclosures without emulated menus" {
+            test "keeps progressive navigation with accessible shared menus" {
                 let navigation = Render.toHtmlDocString TopNav.primary
 
                 Expect.stringContains navigation "href=\"/articles\"" "Expected progressive navigation links"
                 Expect.stringContains navigation "!evt.ctrlKey" "Expected modified clicks to retain native anchor behavior"
                 Expect.isFalse (navigation.Contains "click__prevent") "Expected default navigation to be prevented only for eligible clicks"
-                Expect.stringContains navigation "data-disclosure-root" "Expected hand-rolled Datastar disclosures"
-                Expect.stringContains navigation "aria-expanded" "Expected accessible disclosure triggers"
-                Expect.stringContains navigation "aria-controls" "Expected triggers to identify disclosure panels"
-                Expect.isFalse (navigation.Contains "role=\"menu\"") "Expected native links and buttons instead of emulated menus"
-                Expect.isFalse (navigation.Contains "role=\"menuitem") "Expected native links and buttons instead of emulated menu items"
+                Expect.stringContains navigation "aria-expanded" "Expected accessible menu triggers"
+                Expect.stringContains navigation "aria-controls" "Expected triggers to identify their panels"
+                Expect.stringContains navigation "role=\"menu\"" "Expected shared menu semantics"
+                Expect.stringContains navigation "role=\"menuitemradio\"" "Expected theme choices to expose selection"
                 Expect.isFalse (navigation.Contains "<el-") "Expected no Tailwind Elements navigation"
             }
         ]
 
         testList "Articles" [
-            test "uses accessible Datastar disclosures with canonical filter links" {
+            test "uses accessible shared menus with canonical filter links" {
                 let page =
                     App.Articles.View.articlesPage {
                         articles = []
@@ -75,8 +74,8 @@ let tests =
 
                 let html = Render.toHtmlDocString page
 
-                Expect.stringContains html "data-filter-control=\"tag\"" "Expected a hand-rolled Datastar tag disclosure"
-                Expect.stringContains html "data-filter-control=\"year\"" "Expected a hand-rolled Datastar year disclosure"
+                Expect.stringContains html "data-filter-control=\"tag\"" "Expected a tag filter"
+                Expect.stringContains html "data-filter-control=\"year\"" "Expected a year filter"
                 Expect.stringContains html "href=\"/articles?tag=Finance\"" "Expected canonical tag filter link"
                 Expect.stringContains html "href=\"/articles?year=2026\"" "Expected canonical year filter link"
                 Expect.isFalse (html.Contains "role=\"combobox\"") "Expected no emulated combobox"

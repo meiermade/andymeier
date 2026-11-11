@@ -23,7 +23,7 @@ dotnet paket restore
 
 Articles are authored directly in `app/src/App/src/Articles/Posts` with FSharp.ViewEngine. `Watch` uses those source-controlled articles and requires no content-service credentials.
 
-`Watch` serves the single review URL `http://127.0.0.1:5290` after `/health` succeeds. It neither starts Docker/Seq nor needs a trusted TLS certificate. It owns and replaces only a prior Andy Meier Watch process tree across worktrees, supervises Prism, telemetry, Tailwind and .NET together, and removes owned siblings on Ctrl-C, SIGTERM or unexpected child exit. Browser analytics is explicitly disabled for Watch; server observability remains configured independently.
+`Watch` serves the single review URL `http://127.0.0.1:5390` after `/health` succeeds. It neither starts Docker/Seq nor needs a trusted TLS certificate. It owns and replaces only a prior Andy Meier Watch process tree across worktrees, supervises Prism, telemetry, Tailwind and .NET together, and removes owned siblings on Ctrl-C, SIGTERM or unexpected child exit. Browser analytics is explicitly disabled for Watch; server observability remains configured independently.
 
 An unrelated listener is never terminated; Watch reports the occupied stable URL instead.
 

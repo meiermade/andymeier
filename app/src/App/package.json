@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run build:prism && npm run build:telemetry",
+    "build": "npm run build:prism && npm run build:browser",
     "build:prism": "esbuild Client/prism.ts --bundle --format=iife --minify --outfile=wwwroot/scripts/prism.js",
-    "build:telemetry": "esbuild Client/privacy.ts Client/telemetry.ts --bundle --format=esm --minify --outdir=wwwroot/scripts",
+    "build:browser": "esbuild Client/components.ts Client/privacy.ts Client/telemetry.ts --bundle --format=esm --minify --outdir=wwwroot/scripts",
     "check": "tsc --noEmit",
     "test": "vitest run"
   },

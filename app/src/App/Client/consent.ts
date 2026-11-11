@@ -87,7 +87,8 @@ export function initializeConsent(policy: ConsentPolicy, lifecycle: AnalyticsLif
     const error = document.getElementById('analytics-consent-error');
     const title = document.getElementById('analytics-consent-title');
     const settings = document.getElementById('analytics-settings');
-    const buttons = Array.from(banner.querySelectorAll<HTMLButtonElement>('button'));
+    // Keep stable component hosts: their native buttons are created and repaired by FVE.
+    const buttons = Array.from(banner.querySelectorAll('fve-button'));
     let returnFocus: HTMLElement | null = null;
     const controller = createConsentController({
       policy,
@@ -107,7 +108,7 @@ export function initializeConsent(policy: ConsentPolicy, lifecycle: AnalyticsLif
       },
       lifecycle,
       view: {
-        setSaving: saving => buttons.forEach(button => { button.disabled = saving; }),
+        setSaving: saving => buttons.forEach(button => button.toggleAttribute('disabled', saving)),
         hideError: () => error?.classList.add('hidden'),
         showError: () => {
           if (!error) return;

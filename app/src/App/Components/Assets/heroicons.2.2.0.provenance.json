@@ -1,0 +1,29 @@
+{
+  "name": "heroicons",
+  "version": "2.2.0",
+  "source": "https://github.com/tailwindlabs/heroicons",
+  "tarball": "https://registry.npmjs.org/heroicons/-/heroicons-2.2.0.tgz",
+  "integrity": "sha512-yOwvztmNiBWqR946t+JdgZmyzEmnRMC2nxvHFC90bF1SUttwB6yJKYeme1JeEcBfobdOs827nCyiWBS2z/brog==",
+  "license": "MIT",
+  "glyphs": 316,
+  "families": [
+    {
+      "name": "outline",
+      "folder": "24/outline"
+    },
+    {
+      "name": "solid",
+      "folder": "24/solid"
+    },
+    {
+      "name": "mini",
+      "folder": "20/solid"
+    },
+    {
+      "name": "micro",
+      "folder": "16/solid"
+    }
+  ],
+  "generator": "Documentation/update-heroicons.mjs",
+  "transform": "Unmodified inner SVG markup, whitespace-normalized; matching native viewBox and paint attributes supplied by Icon.fs."
+}

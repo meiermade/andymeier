@@ -5,6 +5,35 @@
     <NoWarn>$(NoWarn);NU1510</NoWarn>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
+  <!-- fve:components:start -->
+  <ItemGroup Label="fve components">
+      <Compile Include="Components/ComponentBuilder.fs" />
+      <Compile Include="Components/Foundation.fs" />
+      <Compile Include="Components/IconNames.fs" />
+      <Compile Include="Components/IconData.fs" />
+      <Compile Include="Components/Icon.fs" />
+      <Compile Include="Components/Button.fs" />
+      <Compile Include="Components/Link.fs" />
+      <Compile Include="Components/FieldFoundation.fs" />
+      <Compile Include="Components/Input.fs" />
+      <Compile Include="Components/InputGroup.fs" />
+      <Compile Include="Components/DropdownMenu.fs" />
+      <Compile Include="Components/ColorMode.fs" />
+      <Compile Include="Components/Badge.fs" />
+      <Compile Include="Components/EmptyState.fs" />
+      <Compile Include="Components/Popover.fs" />
+      <None Include="fve.json" />
+      <None Include="Components/Assets/heroicons-LICENSE.txt" />
+      <None Include="Components/Assets/heroicons.2.2.0.provenance.json" />
+      <None Include="Components/Assets/bootstrap-icons-LICENSE.txt" />
+      <None Include="Components/Assets/bootstrap-icons.1.13.1.provenance.json" />
+      <None Include="Components/Assets/datastar-LICENSE.txt" />
+      <None Include="Components/Assets/datastar-rocket.1.0.4.js" />
+      <None Include="Components/Assets/button.js" />
+      <None Include="Components/Assets/dropdown-menu.js" />
+      <None Include="Components/Assets/popover.js" />
+  </ItemGroup>
+  <!-- fve:components:end -->
   <ItemGroup>
     <Content Include="input.css" />
     <Content Include="paket.references" />

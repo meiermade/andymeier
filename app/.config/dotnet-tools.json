@@ -15,6 +15,13 @@
         "fantomas"
       ],
       "rollForward": false
+    },
+    "fsharp.viewengine.cli": {
+      "version": "2026.11.1",
+      "commands": [
+        "fve"
+      ],
+      "rollForward": false
     }
   }
 }

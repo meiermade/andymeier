@@ -5,6 +5,7 @@ open App.Infrastructure
 open App.Articles
 open App.Articles.Shared
 open App.Common.View
+open App.Components
 open type Html
 open type Datastar
 
@@ -17,7 +18,7 @@ let aboutMe =
     p {
         _class "mt-4 text-lg text-gray-600 dark:text-gray-400"
         text "I’m an engineer and the owner of "
-        a { _class "underline hover:text-emerald-600 dark:hover:text-emerald-400"; _href "https://meiermade.com"; text "Meier Made, LLC" }
+        fveLink { _href "https://meiermade.com"; "Meier Made, LLC" }
         text ". Originally from St. Louis, Missouri, I now live in New York City. The opinions shared here are my own."
     }
 
@@ -33,9 +34,14 @@ let homePage (recentArticles:Article list) =
                     img { _class "w-72 aspect-square rounded-full mb-4"; _src (Asset.fingerprinted "/images/profile.jpg") }
                     div {
                         _class "flex justify-center space-x-2"
-                        a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://github.com/meiermade"; MiniIcon.github }
-                        a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://x.com/andymeierdev"; MiniIcon.xdotcom }
-                        a { _class "p-2 text-gray-600 rounded-full hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"; _href "https://www.linkedin.com/in/andrew-meier/"; MiniIcon.linkedIn }
+                        for label, href, icon in [ "GitHub", "https://github.com/meiermade", IconName.GitHub; "X", "https://x.com/andymeierdev", IconName.X; "LinkedIn", "https://www.linkedin.com/in/andrew-meier/", IconName.LinkedIn ] do
+                            fveLink {
+                                _href href
+                                _ariaLabel label
+                                _variant LinkVariant.Ghost
+                                _color Color.Neutral
+                                fveIcon { _name icon }
+                            }
                     }
                 }
                 div {
@@ -54,9 +60,8 @@ let homePage (recentArticles:Article list) =
                 }
                 div {
                     _class "mt-4"
-                    a {
+                    fveLink {
                         _href "/articles"
-                        _class "text-sm text-emerald-600 hover:underline hover:cursor-pointer dark:text-emerald-400"
                         _dataOn ("click", Navigation.action "/articles")
                         "View all"
                     }
