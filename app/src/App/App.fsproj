@@ -23,6 +23,7 @@
     <Compile Include="src/Articles/Posts/FSharpSemanticKernel.fs" />
     <Compile Include="src/Articles/Posts/PersonalInfrastructure.fs" />
     <Compile Include="src/Articles/Posts/DevelopmentEnvironment.fs" />
+    <Compile Include="src/Articles/Posts/Bpc157.fs" />
     <Compile Include="src/Articles/Catalog.fs" />
     <Compile Include="src/Articles/View.fs" />
     <Compile Include="src/Articles/Handler.fs" />

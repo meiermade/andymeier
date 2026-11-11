@@ -8,13 +8,13 @@ open FSharp.ViewEngine
 let articleCatalogTests =
     testList
         "Article catalog"
-        [ test "contains the three published articles in reverse chronological order" {
+        [ test "contains the four articles in reverse chronological order" {
               let permalinks = Catalog.all |> List.map _.permalink
 
               Expect.equal
                   permalinks
-                  [ "personal-infrastructure"; "dev-env"; "fsharp-semantic-kernel" ]
-                  "Expected the published article catalog"
+                  [ "bpc-157-elbow-research"; "personal-infrastructure"; "dev-env"; "fsharp-semantic-kernel" ]
+                  "Expected the article catalog"
           }
 
           test "renders source-controlled article pages with durable assets" {
@@ -247,6 +247,7 @@ let articleCatalogTests =
           }
 
           test "finds articles by permalink" {
-              Expect.isSome (Catalog.tryFind "personal-infrastructure") "Expected a published article"
+              Expect.isSome (Catalog.tryFind "personal-infrastructure") "Expected an existing article"
+              Expect.isSome (Catalog.tryFind "bpc-157-elbow-research") "Expected the recovery journal to resolve"
               Expect.isNone (Catalog.tryFind "missing") "Expected an unknown permalink not to resolve"
           } ]
