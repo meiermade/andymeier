@@ -3,6 +3,7 @@ FROM --platform=$BUILDPLATFORM node:24.11.1-alpine AS browser-builder
 WORKDIR /app/src/App
 COPY src/App/package.json src/App/package-lock.json ./
 RUN npm ci --ignore-scripts
+COPY src/App/Components/Assets Components/Assets
 COPY src/App/Client Client
 COPY src/App/tsconfig.json ./
 RUN mkdir -p wwwroot/scripts \

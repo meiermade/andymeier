@@ -32,6 +32,8 @@ jobs:
       - name: Run tests
         working-directory: ./app
         run: ./fake.sh Test --single-target
+      - name: Build production browser assets
+        run: docker build --target browser-builder --file app/Dockerfile app
       - name: Install Tailwind CSS
         run: |
           curl --fail --location --silent --show-error \
