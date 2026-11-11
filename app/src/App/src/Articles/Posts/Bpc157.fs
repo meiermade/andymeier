@@ -186,6 +186,12 @@ let private sections =
                             td { "5 units · 250 mcg" }
                             td { "Still painful during a palm-up resisted curl. No noticeable side effects." }
                         }
+                        tr {
+                            th { _scope "row"; "November 11, 2026 · Day 3" }
+                            td { "7:30 AM" }
+                            td { "5 units · 250 mcg" }
+                            td { "Still painful during a palm-up curl. No noticeable side effects." }
+                        }
                     }
                 }
             } ] ]
