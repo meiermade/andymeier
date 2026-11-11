@@ -5,7 +5,8 @@ open App.Articles
 let all: Article list =
     [ Posts.FSharpSemanticKernel.article
       Posts.PersonalInfrastructure.article
-      Posts.DevelopmentEnvironment.article ]
+      Posts.DevelopmentEnvironment.article
+      Posts.Bpc157.article ]
     |> List.sortByDescending _.createdAt
 
 let tryFind permalink =
