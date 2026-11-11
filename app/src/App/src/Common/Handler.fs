@@ -31,7 +31,7 @@ let private navigationUrl (ctx:HttpContext) =
     ctx.Request.Path.ToString() + QueryString.Create(query).ToString()
 
 let private afterNavigationScript updateHistoryAndScroll =
-    $"""(function(){{{updateHistoryAndScroll}window.meierMadeScrollUrl=window.location.pathname+window.location.search;requestAnimationFrame(function(){{document.getElementById('page-content')?.focus({{preventScroll:true}});window.meiermadeTelemetry?.trackPage();}});}})();"""
+    $"""(function(){{{updateHistoryAndScroll}document.querySelectorAll('#top-nav [popover]:popover-open').forEach(panel=>panel.hidePopover());window.meierMadeScrollUrl=window.location.pathname+window.location.search;requestAnimationFrame(function(){{document.getElementById('page-content')?.focus({{preventScroll:true}});window.meiermadeTelemetry?.trackPage();}});}})();"""
 
 let historyScript (url:string) =
     let serializedUrl = JsonSerializer.Serialize url
@@ -46,7 +46,7 @@ let private updateHistory (ctx:HttpContext) (ds:IDatastarService) (url:string) =
 }
 
 let patchPage (ctx:HttpContext) (ds:IDatastarService) (metadata:PageMetadata) (page:HtmlElement) (selectedNav:string) = task {
-    do! patchSignals ds {| navigationOpen = false; selectedNav = selectedNav |}
+    do! patchSignals ds {| selectedNav = selectedNav |}
     for element in PageHead.patchableElements metadata do
         do! patchElement ds element
     do! patchElement ds page

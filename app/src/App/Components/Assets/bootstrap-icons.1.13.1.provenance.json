@@ -1,0 +1,28 @@
+{
+  "name": "bootstrap-icons",
+  "version": "1.13.1",
+  "source": "https://github.com/twbs/icons",
+  "tarball": "https://registry.npmjs.org/bootstrap-icons/-/bootstrap-icons-1.13.1.tgz",
+  "integrity": "sha512-ijombt4v6bv5CLeXvRWKy7CuM3TRTuPEuGaGKvTV5cz65rQSY8RQ2JcHt6b90cBBAC7s8fsf2EkQDldzCoXUjw==",
+  "license": "MIT",
+  "glyphs": [
+    {
+      "name": "GitHub",
+      "slug": "github",
+      "file": "github.svg"
+    },
+    {
+      "name": "X",
+      "slug": "x",
+      "file": "twitter-x.svg"
+    },
+    {
+      "name": "LinkedIn",
+      "slug": "linkedin",
+      "file": "linkedin.svg"
+    }
+  ],
+  "nativeViewBox": "0 0 16 16",
+  "generator": "Documentation/update-heroicons.mjs",
+  "transform": "Unmodified inner SVG markup, whitespace-normalized; currentColor paint and native viewBox supplied by Icon.fs."
+}

@@ -126,6 +126,36 @@ test('internal navigation preserves history and restores entry scroll positions'
   expect(datastarRequests).toEqual(['/articles', '/articles/personal-infrastructure', '/articles', '/', '/articles', '/', '/articles'])
 })
 
+test('privacy navigation preserves the dark theme and synchronizes history', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('theme', 'dark'))
+  await page.goto('/articles/bpc-157-elbow-research')
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await page.evaluate(() => { document.documentElement.dataset.testDocument = 'privacy-navigation' })
+
+  await page.getByRole('link', { name: 'Privacy', exact: true }).click()
+  await expect(page).toHaveURL('/privacy')
+  await expect(page.getByRole('heading', { name: 'Privacy', exact: true })).toBeVisible()
+  await expect(page).toHaveTitle('Privacy | Andy Meier')
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://andymeier.dev/privacy')
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await expect(page.locator('html')).toHaveAttribute('data-test-document', 'privacy-navigation')
+  await expect(page.locator('#page-content')).toBeFocused()
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+  await expect(page.getByRole('progressbar', { name: 'Article reading progress' })).toBeHidden()
+
+  await page.goBack()
+  await expect(page).toHaveURL('/articles/bpc-157-elbow-research')
+  await expect(page.getByRole('heading', { name: 'BPC-157: Elbow Tendonitis Recovery', exact: true })).toBeVisible()
+  await expect(page.locator('html')).toHaveClass(/dark/)
+
+  await page.goForward()
+  await expect(page).toHaveURL('/privacy')
+  await expect(page.getByRole('heading', { name: 'Privacy', exact: true })).toBeVisible()
+  await expect(page).toHaveTitle('Privacy | Andy Meier')
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await expect(page.locator('html')).toHaveAttribute('data-test-document', 'privacy-navigation')
+})
+
 test('modified internal-link clicks retain native new-tab behavior', async ({ page, context }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   const existingPageCount = context.pages().length
@@ -144,15 +174,23 @@ test('modified internal-link clicks retain native new-tab behavior', async ({ pa
 test('mobile navigation closes after enhanced navigation', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  const menu = page.getByRole('group', { name: 'Navigation' })
+  const menu = page.getByRole('menu', { name: 'Open navigation' })
 
   await page.getByRole('button', { name: 'Open navigation' }).click()
   await expect(menu).toBeVisible()
-  await menu.getByRole('link', { name: 'Articles' }).click()
+  await menu.getByRole('menuitem', { name: 'Articles' }).click()
 
   await expect(page).toHaveURL('/articles')
   await expect(menu).toBeHidden()
   await expect(page.locator('#page-content')).toBeFocused()
+
+  await page.getByRole('button', { name: 'Choose theme' }).click()
+  await page.getByRole('menuitemradio', { name: 'Dark' }).click()
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await page.getByRole('searchbox', { name: 'Search articles' }).fill('bpc')
+  await page.getByRole('button', { name: 'Search', exact: true }).click()
+  await expect(page).toHaveURL('/articles?search=bpc')
+  await expect(page.getByRole('heading', { name: 'BPC-157: Elbow Tendonitis Recovery', exact: true })).toBeVisible()
 })
 
 test('internal links retain a full-document fallback without JavaScript', async ({ browser }) => {
@@ -171,6 +209,10 @@ test('internal links retain a full-document fallback without JavaScript', async 
   await expect(page).toHaveURL('/articles')
   await expect(page.getByRole('heading', { name: 'Articles', exact: true })).toBeVisible()
   await expect(page).toHaveTitle('Articles | Andy Meier')
+  await page.getByRole('link', { name: 'Privacy', exact: true }).click()
+  await expect(page).toHaveURL('/privacy')
+  await expect(page.getByRole('heading', { name: 'Privacy', exact: true })).toBeVisible()
+  await expect(page).toHaveTitle('Privacy | Andy Meier')
   await context.close()
 })
 
@@ -342,7 +384,7 @@ test('article search and source-controlled detail content are deterministic', as
 
   const lightDiagrams = await Promise.all(diagrams.map(diagram => diagram.locator.locator('svg').innerHTML()))
   await page.getByRole('button', { name: 'Choose theme' }).click()
-  await page.getByRole('button', { name: 'Dark' }).click()
+  await page.getByRole('menuitemradio', { name: 'Dark' }).click()
   await expect(page.locator('html')).toHaveClass(/dark/)
   await expect.poll(async () => {
     const darkDiagrams = await Promise.all(diagrams.map(diagram => diagram.locator.locator('svg').innerHTML()))
@@ -359,27 +401,24 @@ test('article search and source-controlled detail content are deterministic', as
   }
 })
 
-test('article filter disclosures support native keyboard selection', async ({ page }) => {
+test('article filter menus support keyboard selection and preserve combined criteria', async ({ page }) => {
   for (const filter of [
-    { name: 'tag', ariaLabel: 'Tag filter', value: '.NET' },
+    { name: 'tag', ariaLabel: 'Tag filter', value: 'Health' },
     { name: 'year', ariaLabel: 'Published year filter', value: '2026' },
   ]) {
-    await page.goto('/articles', { waitUntil: 'domcontentloaded' })
-    await page.getByText('+ Add filter', { exact: true }).click()
+    await page.goto('/articles?search=bpc', { waitUntil: 'domcontentloaded' })
+    await page.getByRole('button', { name: 'Add filter', exact: true }).click()
 
-    const disclosure = page.locator(`[data-filter-control="${filter.name}"]`)
-    const button = disclosure.getByRole('button', { name: filter.ariaLabel })
-    const panel = disclosure.locator('[data-disclosure-panel]')
-    const option = disclosure.getByRole('link', { name: filter.value, exact: true })
+    const control = page.locator(`[data-filter-control="${filter.name}"]`)
+    const button = control.getByRole('button', { name: filter.ariaLabel })
+    const panel = control.getByRole('menu')
+    const option = control.getByRole('menuitem', { name: filter.value, exact: true })
 
     await button.focus()
     await button.press('Enter')
     await expect(panel).toBeVisible()
     await expect(button).toHaveAttribute('aria-expanded', 'true')
-    await page.keyboard.press('Tab')
-    if (await panel.evaluate(element => element === document.activeElement)) {
-      await page.keyboard.press('Tab')
-    }
+    await page.keyboard.type(filter.value)
     await expect(option).toBeFocused()
 
     await page.keyboard.press('Escape')
@@ -388,46 +427,45 @@ test('article filter disclosures support native keyboard selection', async ({ pa
 
     await button.press('Space')
     await expect(panel).toBeVisible()
-    await page.keyboard.press('Tab')
-    if (await panel.evaluate(element => element === document.activeElement)) {
-      await page.keyboard.press('Tab')
-    }
+    await page.keyboard.type(filter.value)
     await expect(option).toBeFocused()
     await page.keyboard.press('Enter')
 
     await expect.poll(() => new URL(page.url()).searchParams.get(filter.name)).toBe(filter.value)
+    expect(new URL(page.url()).searchParams.get('search')).toBe('bpc')
     expect(new URL(page.url()).searchParams.has('datastar')).toBe(false)
+    await expect(page.getByRole('heading', { name: 'BPC-157: Elbow Tendonitis Recovery', exact: true })).toBeVisible()
   }
 })
 
-test('navigation disclosures use native keyboard behavior without Tailwind Elements', async ({ page }) => {
+test('shared navigation menus support keyboard focus and persistent theme selection', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
 
-  await expect(page.locator('el-dropdown, el-menu, el-select, el-options, el-option')).toHaveCount(0)
-  await expect(page.locator('[role="menu"], [role="menuitem"], [role="menuitemradio"]')).toHaveCount(0)
-
   const themeButton = page.getByRole('button', { name: 'Choose theme' })
-  const themePanel = page.locator('#theme-panel')
+  const themePanel = page.getByRole('menu', { name: 'Choose theme' })
   await themeButton.focus()
   await themeButton.press('Enter')
   await expect(themePanel).toBeVisible()
-  await page.keyboard.press('Tab')
-  await expect(page.getByRole('button', { name: 'Light' })).toBeFocused()
-  await page.keyboard.press('Tab')
-  await expect(page.getByRole('button', { name: 'Dark' })).toBeFocused()
+  await expect(page.getByRole('menuitemradio', { name: 'Light' })).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByRole('menuitemradio', { name: 'Dark' })).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(themePanel).toBeHidden()
   await expect(themeButton).toBeFocused()
   await expect(page.locator('html')).toHaveClass(/dark/)
+  await page.reload()
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await themeButton.click()
+  await expect(page.getByRole('menuitemradio', { name: 'Dark' })).toHaveAttribute('aria-checked', 'true')
+  await page.keyboard.press('Escape')
 
   await page.setViewportSize({ width: 390, height: 844 })
   const navigationButton = page.getByRole('button', { name: 'Open navigation' })
-  const navigationPanel = page.locator('#navigation-panel')
+  const navigationPanel = page.getByRole('menu', { name: 'Open navigation' })
   await navigationButton.focus()
   await navigationButton.press('Space')
   await expect(navigationPanel).toBeVisible()
-  await page.keyboard.press('Tab')
-  await expect(navigationPanel.getByRole('link', { name: 'Articles' })).toBeFocused()
+  await expect(navigationPanel.getByRole('menuitem', { name: 'Articles' })).toBeFocused()
   await page.keyboard.press('Escape')
   await expect(navigationPanel).toBeHidden()
   await expect(navigationButton).toBeFocused()
@@ -629,6 +667,35 @@ test('analytics choices keep mobile visual and keyboard order aligned', async ({
   await expect(decline).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(accept).toBeFocused()
+})
+
+test('shared consent buttons disable while saving and recover after a failed save', async ({ page }) => {
+  test.skip(isRemote, 'Consent failure injection is local only.')
+  await page.goto('/')
+  const settings = page.getByRole('button', { name: 'Analytics settings' })
+  const decline = page.getByRole('button', { name: 'Decline analytics' })
+  const accept = page.getByRole('button', { name: 'Accept analytics' })
+  let release!: () => void
+  const pendingSave = new Promise<void>(resolve => { release = resolve })
+  await page.route('**/privacy/consent', async route => {
+    await pendingSave
+    await route.fulfill({ status: 500 })
+  })
+  await settings.click()
+  await decline.click()
+  try {
+    await expect(decline).toBeDisabled()
+    await expect(accept).toBeDisabled()
+  } finally {
+    release()
+  }
+  await expect(page.getByText('We could not save your analytics preference. Please try again.')).toBeVisible()
+  await expect(decline).toBeEnabled()
+  await expect(accept).toBeEnabled()
+  await page.unroute('**/privacy/consent')
+  await accept.click()
+  await expect(page.getByRole('dialog', { name: 'Optional analytics' })).toBeHidden()
+  await expect(settings).toBeFocused()
 })
 
 test('browser telemetry starts only after analytics consent', async ({ page }) => {

@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "registryVersion": "2026.11.1",
+  "project": "App.fsproj",
+  "namespace": "App.Components",
+  "components": [
+    "icon",
+    "button",
+    "link",
+    "input",
+    "input-group",
+    "dropdown-menu",
+    "color-mode",
+    "badge",
+    "empty-state",
+    "popover"
+  ],
+  "files": [
+    {
+      "component": "component-builder",
+      "path": "Components/ComponentBuilder.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "e5275bfa9cb07d5c189956bb16254ec855fa4ccc5d3059f5d9746cc933123cac"
+    },
+    {
+      "component": "foundation",
+      "path": "Components/Foundation.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "77b63b67b0ea7af2b0c537eba44267cd3d8e42781f7ed9211ae84a8f4c7279e0"
+    },
+    {
+      "component": "icon",
+      "path": "Components/IconNames.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "f315748de2fb8581e7fac19c735f876de1c553c3a73193cef1d6220c604eb37e"
+    },
+    {
+      "component": "icon",
+      "path": "Components/IconData.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "0c429c0789e1ece8e983c16d815c32bb7881f7c22245d1982bc6f6acd1063116"
+    },
+    {
+      "component": "icon",
+      "path": "Components/Icon.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "ffd7617f24a3a33bae8ad7e289c2fdedf610e7fdad5b15743eef50a9de5913f6"
+    },
+    {
+      "component": "icon",
+      "path": "Components/Assets/heroicons-LICENSE.txt",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "60e0b68c0f35c078eef3a5d29419d0b03ff84ec1df9c3f9d6e39a519a5ae7985"
+    },
+    {
+      "component": "icon",
+      "path": "Components/Assets/heroicons.2.2.0.provenance.json",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "9df87ee3fa1beb2c9271125af4a3d895f200d509dca8707ac07a66e0e0b2f009"
+    },
+    {
+      "component": "icon",
+      "path": "Components/Assets/bootstrap-icons-LICENSE.txt",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "0fb3e11bd57e896c5a512afd64864d28a37de45d19835016c87ca1ad19ead969"
+    },
+    {
+      "component": "icon",
+      "path": "Components/Assets/bootstrap-icons.1.13.1.provenance.json",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "2b2c3862713fd35ae1c8943483fec9dbccda528028dacb1b770e7e11651a97f0"
+    },
+    {
+      "component": "rocket-runtime",
+      "path": "Components/Assets/datastar-LICENSE.txt",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "17da0e216d3c6a819526f5b72a6a44d84d34bcd9beb4191ac6af89c1508ef08f"
+    },
+    {
+      "component": "rocket-runtime",
+      "path": "Components/Assets/datastar-rocket.1.0.4.js",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "881e5c95fcce231fb1538e55bf6e6da4ffa13a7866c3d65370265fe5862ab877"
+    },
+    {
+      "component": "button",
+      "path": "Components/Assets/button.js",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "ed4b4ae6e16759ac35b0fca9af9cd529e0137dc4c0a79fdb43670d8d79bfc6c8"
+    },
+    {
+      "component": "button",
+      "path": "Components/Button.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "4ee17023a7078ee82a6e8d4e23e2d65a080dfb2ff87ea823db89441391160be0"
+    },
+    {
+      "component": "link",
+      "path": "Components/Link.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "d1885ed76bb36f2eeb4d7e90f49340d1c49f7e684dca1460de36c028f7a68cd1"
+    },
+    {
+      "component": "field-foundation",
+      "path": "Components/FieldFoundation.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "c9a0b2b620ef0d3f81b37ca9d1ad46d0efb1cb989b811e3929ec6cd1b52eb79b"
+    },
+    {
+      "component": "input",
+      "path": "Components/Input.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "bafb7730a7d1af94ff465220b0bd8e74c432b5edd47635d51d8dee7f7778a148"
+    },
+    {
+      "component": "input-group",
+      "path": "Components/InputGroup.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "ffe17b2adccbd22f9d60cd00288807b96c5e2181c7e7d489b25c1b12b7c8d7de"
+    },
+    {
+      "component": "dropdown-menu",
+      "path": "Components/Assets/dropdown-menu.js",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "10404f9271d070304af8ea4ca16bffdc06d959c3bff640458173ffbbf7b2dfdd"
+    },
+    {
+      "component": "dropdown-menu",
+      "path": "Components/DropdownMenu.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "fc0e4a6fab996c53049f608be80da57b2c8bd9540aefc729efe2bce35d1b8964"
+    },
+    {
+      "component": "color-mode",
+      "path": "Components/ColorMode.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "9f9a279cd1574491be41403834517bcdb2569f72fa98a902d9d328765f1a9a93"
+    },
+    {
+      "component": "badge",
+      "path": "Components/Badge.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "fe962ed8268a8729d77a76da76cb5c2183fc569b770d683780f1953d8206cce7"
+    },
+    {
+      "component": "empty-state",
+      "path": "Components/EmptyState.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "fff187c26d6ca26adc8ab7c370a17614f83176fc27bd84a1a0daa56a7ef99db3"
+    },
+    {
+      "component": "popover",
+      "path": "Components/Assets/popover.js",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "9bfbf77d64381934346f3b4d694a5c14fa5f35b809691c79190525ae3475f048"
+    },
+    {
+      "component": "popover",
+      "path": "Components/Popover.fs",
+      "registryVersion": "2026.11.1",
+      "registryChecksum": "226febf6856b1023a1aad723d80cb2de78e65be4f661a39b08b9af583b0a4bb3"
+    }
+  ]
+}

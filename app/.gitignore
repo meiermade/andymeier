@@ -7,6 +7,7 @@ obj
 bin
 out
 compiled.css
+src/App/wwwroot/scripts/components.js
 src/App/wwwroot/scripts/prism.js
 src/App/wwwroot/scripts/privacy.js
 src/App/wwwroot/scripts/telemetry.js

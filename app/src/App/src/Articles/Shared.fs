@@ -2,17 +2,13 @@ module App.Articles.Shared
 
 open App.Articles
 open App.Common.View
+open App.Components
 open FSharp.ViewEngine
 open type Datastar
 open type Html
 
 module ArticleCard =
-    let private tag (text: string) = span {
-        _class
-            "inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600"
-
-        text
-    }
+    let private tag (label: string) = fveBadge { label }
 
     let tags (tags: string[]) = div {
         _class "flex flex-wrap gap-2"
@@ -35,7 +31,7 @@ module ArticleCard =
 
                     span {
                         _class "mr-1.5"
-                        MiniIcon.calendar
+                        fveIcon { _name IconName.CalendarDays; _size Size.Small }
                     }
 
                     time {
