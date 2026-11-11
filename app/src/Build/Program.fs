@@ -91,10 +91,6 @@ let playwrightImage () =
 Target.create "Watch" <| fun _ ->
     LocalWatch.run Trace.trace appDir
 
-Target.create "BuildCss" <| fun _ ->
-    exec "tailwindcss" appDir [ "--input"; "./input.css"; "--output"; "./wwwroot/css/compiled.css"; "--minify" ]
-    |> _.Wait()
-
 Target.create "BuildBrowser" <| fun _ ->
     if not (Environment.GetEnvironmentVariable("SKIP_BROWSER_BUILD") = "true") then
         exec "npm" appDir [ "ci"; "--ignore-scripts" ] |> _.Wait()
@@ -135,8 +131,5 @@ Target.create "Publish" <| fun _ ->
 Target.create "Default" (fun _ -> Target.listAvailable())
 
 "BuildBrowser" ==>! "Publish"
-"BuildCss" ==>! "Publish"
-"BuildBrowser" ==>! "TestE2E"
-"BuildCss" ==>! "TestE2E"
 
 Target.runOrDefaultWithArguments "Default"
