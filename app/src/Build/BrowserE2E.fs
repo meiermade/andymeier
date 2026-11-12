@@ -1,7 +1,6 @@
 module BrowserE2E
 
 open System
-open System.Diagnostics
 open System.IO
 open System.Net.Http
 open System.Text.Json
@@ -35,7 +34,7 @@ let npmInstallCommand e2eDirectory =
         workingDirectory = e2eDirectory
         timeout = TimeSpan.FromMinutes 5. }
 
-let playwrightCommand e2eDirectory image baseUrl scope expectedMode analyticsEnabled =
+let playwrightCommand e2eDirectory image baseUrl scope expectedMode analyticsEnabled serverContainer =
     let environment =
         [ "--env"; "CI=true"
           "--env"; $"E2E_ANALYTICS_ENABLED={analyticsEnabled}"
@@ -50,7 +49,9 @@ let playwrightCommand e2eDirectory image baseUrl scope expectedMode analyticsEna
           "--rm"
           "--init"
           "--ipc=host" ]
-        @ (if scope = "local" && OperatingSystem.IsLinux() then [ "--network=host" ] else [])
+        @ (serverContainer
+           |> Option.map (fun name -> [ "--network"; $"container:{name}" ])
+           |> Option.defaultValue [])
         @ environment
         @ [ "--volume"; $"{Path.GetFullPath e2eDirectory}:/work"
             "--workdir"; "/work"
@@ -59,15 +60,6 @@ let playwrightCommand e2eDirectory image baseUrl scope expectedMode analyticsEna
             "--project=firefox"
             "--retries=0" ]) with
         workingDirectory = e2eDirectory }
-
-let nativePlaywrightCommand e2eDirectory baseUrl analyticsEnabled =
-    { BuildProcess.create "npm" [ "test"; "--"; "--project=firefox"; "--retries=0" ] with
-        workingDirectory = e2eDirectory
-        environment =
-            Map [ "CI", "true"
-                  "E2E_ANALYTICS_ENABLED", analyticsEnabled
-                  "E2E_SCOPE", "local"
-                  "SITE_E2E_BASE_URL", baseUrl ] }
 
 let countryFromEdgeTrace (content:string) =
     content.Split('\n', StringSplitOptions.RemoveEmptyEntries)
@@ -101,66 +93,58 @@ let private waitForEndpoint log (url:string) =
     if not ready then invalidOp $"Endpoint did not become ready at {url}."
     log $"Endpoint ready at {url}."
 
-let private startProcess (command:BuildProcess.Command) (writer:TextWriter) =
-    let startInfo = ProcessStartInfo(command.executable)
-    startInfo.UseShellExecute <- false
-    startInfo.RedirectStandardOutput <- true
-    startInfo.RedirectStandardError <- true
-    startInfo.WorkingDirectory <- command.workingDirectory
-    for argument in command.arguments do startInfo.ArgumentList.Add argument
-    for KeyValue(key, value) in command.environment do startInfo.Environment[key] <- value
+let buildImageCommand rootDirectory imageTag =
+    { BuildProcess.create "docker" [
+        "build"
+        "--tag"; imageTag
+        "--file"; "app/Dockerfile"
+        "app" ] with
+        workingDirectory = rootDirectory }
 
-    let child = new Process(StartInfo = startInfo, EnableRaisingEvents = true)
-    child.OutputDataReceived.Add(fun event -> if not (isNull event.Data) then lock writer (fun () -> writer.WriteLine event.Data))
-    child.ErrorDataReceived.Add(fun event -> if not (isNull event.Data) then lock writer (fun () -> writer.WriteLine event.Data))
-    if not (child.Start()) then invalidOp $"Unable to start {command.executable}."
-    child.BeginOutputReadLine()
-    child.BeginErrorReadLine()
-    child
-
-let private stopProcess (child:Process) =
-    try
-        if not child.HasExited then
-            child.Kill(entireProcessTree = true)
-            child.WaitForExit(5000) |> ignore
-    with :? InvalidOperationException -> ()
-
-let localServerCommand rootDirectory baseUrl analyticsEnabled =
-    { BuildProcess.create "dotnet" [
+let localServerCommand imageTag containerName baseUrl analyticsEnabled =
+    let port = Uri(baseUrl).Port
+    BuildProcess.create "docker" [
         "run"
-        "--no-build"
-        "--project"; Path.Combine(rootDirectory, "app", "src", "App", "App.fsproj") ] with
-        workingDirectory = Path.Combine(rootDirectory, "app")
-        environment =
-            Map [ "ANALYTICS_ENABLED", analyticsEnabled
-                  "ASPNETCORE_ENVIRONMENT", "Development"
-                  "OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:4318"
-                  "PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT", "https://otel.test"
-                  "SERVER_URL", baseUrl ] }
+        "--detach"
+        "--name"; containerName
+        "--publish"; $"127.0.0.1:{port}:5000"
+        "--env"; $"ANALYTICS_ENABLED={analyticsEnabled}"
+        "--env"; "ASPNETCORE_ENVIRONMENT=Production"
+        "--env"; "OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318"
+        "--env"; "PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT=https://otel.test"
+        "--env"; "SERVER_URL=http://0.0.0.0:5000"
+        imageTag ]
 
-let buildAppCommand rootDirectory =
-    { BuildProcess.create "dotnet" [ "build"; "src/App/App.fsproj"; "--nologo"; "--verbosity"; "minimal" ] with
-        workingDirectory = Path.Combine(rootDirectory, "app") }
+let private cleanup log arguments =
+    let result = BuildProcess.run (BuildProcess.create "docker" arguments)
+    if result.exitCode <> 0 then log result.standardError
 
 let runLocal log rootDirectory e2eDirectory image baseUrl stateDirectory =
-    runLogged log (buildAppCommand rootDirectory) |> ignore
-    runLogged log (npmInstallCommand e2eDirectory) |> ignore
+    let runId = Guid.NewGuid().ToString("N")
+    let candidateImage = $"andymeier-e2e:{runId}"
     Directory.CreateDirectory stateDirectory |> ignore
-    for analyticsEnabled in [ "false"; "true" ] do
-        let logPath = Path.Combine(stateDirectory, $"server-analytics-{analyticsEnabled}.log")
-        use writer = new StreamWriter(logPath, append = false, AutoFlush = true)
-        use server = startProcess (localServerCommand rootDirectory baseUrl analyticsEnabled) writer
+    runLogged log (npmInstallCommand e2eDirectory) |> ignore
 
-        try
-            waitForEndpoint log $"{baseUrl}/health"
-            let command =
-                if OperatingSystem.IsLinux() then
-                    playwrightCommand e2eDirectory image baseUrl "local" None analyticsEnabled
-                else
-                    nativePlaywrightCommand e2eDirectory baseUrl analyticsEnabled
-            runLogged log command |> ignore
-        finally
-            stopProcess server
+    try
+        runLogged log (buildImageCommand rootDirectory candidateImage) |> ignore
+        for analyticsEnabled in [ "false"; "true" ] do
+            let containerName = $"andymeier-e2e-{runId}-{analyticsEnabled}"
+            let logPath = Path.Combine(stateDirectory, $"server-analytics-{analyticsEnabled}.log")
+
+            try
+                runLogged log (localServerCommand candidateImage containerName baseUrl analyticsEnabled) |> ignore
+                waitForEndpoint log $"{baseUrl}/health"
+                // Sharing the server network keeps acceptance requests on loopback, including
+                // the trusted forwarded-scheme check, on both local Docker and Linux CI.
+                playwrightCommand e2eDirectory image "http://127.0.0.1:5000" "local" None analyticsEnabled (Some containerName)
+                |> runLogged log
+                |> ignore
+            finally
+                let logs = BuildProcess.run (BuildProcess.create "docker" [ "logs"; containerName ])
+                File.WriteAllText(logPath, logs.standardOutput + Environment.NewLine + logs.standardError)
+                cleanup log [ "rm"; "--force"; containerName ]
+    finally
+        cleanup log [ "image"; "rm"; candidateImage ]
 
 let private verifyActualUsContext log baseUrl =
     use client = new HttpClient(Timeout = TimeSpan.FromSeconds 15.)
@@ -177,6 +161,6 @@ let runPublished log e2eDirectory image baseUrl =
     use client = new HttpClient(Timeout = TimeSpan.FromSeconds 15.)
     (RegionalAnalytics.verify log client baseUrl).GetAwaiter().GetResult()
     verifyActualUsContext log baseUrl
-    playwrightCommand e2eDirectory image baseUrl "deployed" (Some AnalyticsMode.DefaultOn) "true"
+    playwrightCommand e2eDirectory image baseUrl "deployed" (Some AnalyticsMode.DefaultOn) "true" None
     |> runLogged log
     |> ignore

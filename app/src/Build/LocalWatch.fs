@@ -16,7 +16,7 @@ let defaultUrl = "http://127.0.0.1:5390"
 let dotnetArguments = [ "watch"; "run"; "--no-restore"; "--no-hot-reload"; "--non-interactive" ]
 let prismArguments = [ "run"; "build:prism"; "--"; "--watch=forever" ]
 let browserArguments = [ "run"; "build:browser"; "--"; "--watch=forever" ]
-let cssArguments = [ "--input"; "./input.css"; "--output"; "./wwwroot/css/compiled.css"; "--watch=always" ]
+let cssArguments = [ "run"; "build:css"; "--"; "--watch=always" ]
 
 [<Literal>]
 let defaultPort = 5390
@@ -198,7 +198,7 @@ let run trace workDir =
         runForegroundProcesses token [
             "Prism assets", processDefinition workDir "npm" prismArguments Map.empty
             "Browser assets", processDefinition workDir "npm" browserArguments Map.empty
-            "TailwindCSS", processDefinition workDir "tailwindcss" cssArguments Map.empty
+            "TailwindCSS", processDefinition workDir "npm" cssArguments Map.empty
             "Andy Meier Server", processDefinition workDir "dotnet" dotnetArguments environment
         ] (fun readyToken ->
             use client = new HttpClient(Timeout = TimeSpan.FromSeconds 1.)

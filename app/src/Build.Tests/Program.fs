@@ -47,6 +47,15 @@ let browserE2ETests =
                 "mismatched image"
         }
 
+        test "builds the complete production image without publishing it" {
+            let command = BrowserE2E.buildImageCommand "/repo" "andymeier-e2e:test"
+            Expect.equal command.executable "docker" "real production container build"
+            Expect.equal command.workingDirectory "/repo" "Dockerfile and context resolve from the repository"
+            Expect.containsAll command.arguments [ "build"; "--tag"; "andymeier-e2e:test"; "--file"; "app/Dockerfile"; "app" ] "complete image recipe"
+            Expect.isFalse (command.arguments |> List.contains "--target") "does not stop at an intermediate stage"
+            Expect.isFalse (command.arguments |> List.contains "--push") "acceptance does not publish an image"
+        }
+
         test "plans a pinned deployed Playwright container" {
             let command =
                 BrowserE2E.playwrightCommand
@@ -56,6 +65,7 @@ let browserE2ETests =
                     "deployed"
                     (Some BrowserE2E.AnalyticsMode.DefaultOn)
                     "true"
+                    None
 
             Expect.equal command.executable "docker" "container runtime"
             Expect.equal command.workingDirectory "/repo/e2e" "E2E directory"
@@ -77,15 +87,14 @@ let browserE2ETests =
             Expect.isFalse (command.arguments |> List.contains "playwright") "does not install or invoke a global Playwright CLI"
         }
 
-        test "local acceptance explicitly selects analytics for both browser and server" {
+        test "candidate acceptance uses the production image and loopback in both analytics modes" {
             for enabled in [ "false"; "true" ] do
-                let server = BrowserE2E.localServerCommand "/repo" "http://127.0.0.1:5051" enabled
-                let native = BrowserE2E.nativePlaywrightCommand "/repo/e2e" "http://127.0.0.1:5051" enabled
-                let container = BrowserE2E.playwrightCommand "/repo/e2e" image "http://127.0.0.1:5051" "local" None enabled
-                Expect.equal server.environment["ANALYTICS_ENABLED"] enabled "server switch is explicit"
-                Expect.equal server.environment["PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT"] "https://otel.test" "intercepted public endpoint"
-                Expect.equal native.environment["E2E_ANALYTICS_ENABLED"] enabled "native browser suite"
-                Expect.contains container.arguments $"E2E_ANALYTICS_ENABLED={enabled}" "container browser suite"
+                let server = BrowserE2E.localServerCommand "andymeier-e2e:test" "candidate" "http://127.0.0.1:5051" enabled
+                let browser = BrowserE2E.playwrightCommand "/repo/e2e" image "http://127.0.0.1:5000" "local" None enabled (Some "candidate")
+                Expect.equal server.executable "docker" "server comes from the built image, not dotnet run"
+                Expect.equal (List.last server.arguments) "andymeier-e2e:test" "both modes use the same image"
+                Expect.containsAll server.arguments [ "--publish"; "127.0.0.1:5051:5000"; "ASPNETCORE_ENVIRONMENT=Production"; "PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT=https://otel.test"; $"ANALYTICS_ENABLED={enabled}" ] "explicit production container configuration"
+                Expect.containsAll browser.arguments [ "--network"; "container:candidate"; "SITE_E2E_BASE_URL=http://127.0.0.1:5000"; $"E2E_ANALYTICS_ENABLED={enabled}" ] "browser reaches that container over loopback"
         }
 
         test "production explicitly enables browser analytics without changing server export" {

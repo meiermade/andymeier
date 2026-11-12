@@ -32,14 +32,7 @@ jobs:
       - name: Run tests
         working-directory: ./app
         run: ./fake.sh Test --single-target
-      - name: Install Tailwind CSS
-        run: |
-          curl --fail --location --silent --show-error \
-            https://github.com/tailwindlabs/tailwindcss/releases/download/v4.3.3/tailwindcss-linux-x64 \
-            --output /tmp/tailwindcss
-          echo 'dc61b3ac6b8c9ca874c0cc4c57b2409791a64c5540404ca5f5367360babc313a  /tmp/tailwindcss' | sha256sum --check
-          sudo install /tmp/tailwindcss /usr/local/bin/tailwindcss
-      - name: Run local E2E
+      - name: Test production image
         working-directory: ./app
         run: ./fake.sh TestE2E
       - name: Upload E2E diagnostics
