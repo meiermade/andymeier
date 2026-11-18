@@ -17,7 +17,7 @@
       "rollForward": false
     },
     "fsharp.viewengine.cli": {
-      "version": "2026.11.1",
+      "version": "2026.11.3",
       "commands": [
         "fve"
       ],

@@ -13,6 +13,7 @@ module private ThemeClasses =
     let foundation = normalize """
         fve-components [color-scheme:light] dark:not-data-[fve-color-mode=light]:[color-scheme:dark] [.dark_&:not([data-fve-color-mode=light])]:[color-scheme:dark] [&.dark]:[color-scheme:dark] data-[fve-color-mode=dark]:[color-scheme:dark] data-[fve-color-mode=light]:[color-scheme:light]
         [--fve-background:oklch(98.5%_0.002_247.839)] [--fve-surface:oklch(100%_0_0)] [--fve-surface-subtle:oklch(96.7%_0.003_264.542)] [--fve-surface-hover:oklch(96.7%_0.003_264.542)] [--fve-surface-active:oklch(92.8%_0.006_264.531)]
+        [--fve-hover-wash:light-dark(#0000000d,#ffffff1a)] [--fve-pressed-wash:light-dark(#0000001a,#ffffff26)]
         [--fve-text:oklch(21%_0.034_264.665)] [--fve-muted-text:oklch(44.6%_0.03_256.802)] [--fve-border:oklch(87.2%_0.01_258.338)] [--fve-overlay-backdrop:oklch(13%_0.028_261.692/55%)]
         [--fve-neutral-subtle:oklch(96.7%_0.003_264.542)] [--fve-neutral-text:oklch(37.3%_0.034_259.733)] [--fve-neutral-ring:oklch(70.7%_0.022_261.325)]
         [--fve-positive-subtle:oklch(96.2%_0.044_156.743)] [--fve-positive-text:oklch(44.8%_0.119_151.328)] [--fve-positive-ring:oklch(72.3%_0.219_149.579)]
@@ -163,6 +164,7 @@ module ComponentAttributes =
         static member _announcement(value:LiveAnnouncement) = Html._attr("announcement", match value with LiveAnnouncement.Static -> "static" | LiveAnnouncement.Polite -> "polite" | LiveAnnouncement.Assertive -> "assertive")
         static member _description(value:string) = Html._attr("description", value)
         static member _trend(value:string) = Html._attr("trend", value)
+        static member _persistenceKey(value:string) = Html._attr("persistence-key", value)
         static member _orientation(value:Orientation) =
             Html._attr("orientation", match value with Orientation.Horizontal -> "horizontal" | Orientation.Vertical -> "vertical")
         static member _density(value:Density) =
@@ -277,14 +279,14 @@ module PaletteAttributes =
         static member _palette(value:ColorPalette) = Html._attr("palette", System.Text.Json.JsonSerializer.Serialize value)
 
 module internal ComponentColors =
-    let private mode solid onSolid soft mix =
+    let private mode solid onSolid soft =
         { solid = solid
-          solidHover = $"color-mix(in srgb, {solid} 85%%, {mix})"
-          solidActive = $"color-mix(in srgb, {solid} 70%%, {mix})"
+          solidHover = $"color-mix(in srgb, {solid} 85%%, black)"
+          solidActive = $"color-mix(in srgb, {solid} 70%%, black)"
           onSolid = onSolid
           soft = soft
-          softHover = $"color-mix(in srgb, {soft} 90%%, {solid})"
-          softActive = $"color-mix(in srgb, {soft} 80%%, {solid})"
+          softHover = $"color-mix(in srgb, {soft} 82%%, {solid})"
+          softActive = $"color-mix(in srgb, {soft} 76%%, {solid})"
           text = solid
           border = solid
           focus = solid }
@@ -306,13 +308,13 @@ module internal ComponentColors =
               focus = token "focus" value.focus }
         { light = apply light; dark = apply dark }
 
-    let primary = tokens "primary" (mode "var(--fve-brand-text)" "#ffffff" "var(--fve-brand-subtle)" "#000000") (mode "var(--fve-brand-text)" "#101828" "var(--fve-brand-subtle)" "#ffffff")
-    let secondary = tokens "secondary" (mode "#6d28d9" "#ffffff" "#f5f3ff" "#000000") (mode "#c4b5fd" "#101828" "#2e1065" "#ffffff")
-    let success = tokens "success" (mode "#15803d" "#ffffff" "#f0fdf4" "#000000") (mode "#86efac" "#101828" "#052e16" "#ffffff")
-    let warning = tokens "warning" (mode "#92400e" "#ffffff" "#fffbeb" "#000000") (mode "#fde68a" "#101828" "#451a03" "#ffffff")
-    let error = tokens "error" (mode "#b91c1c" "#ffffff" "#fef2f2" "#000000") (mode "#fca5a5" "#101828" "#450a0a" "#ffffff")
-    let info = tokens "info" (mode "#1d4ed8" "#ffffff" "#eff6ff" "#000000") (mode "#93c5fd" "#101828" "#172554" "#ffffff")
-    let neutral = tokens "neutral" (mode "#374151" "#ffffff" "var(--fve-surface-subtle)" "#000000") (mode "#e5e7eb" "#101828" "var(--fve-surface-subtle)" "#ffffff")
+    let primary = tokens "primary" (mode "var(--fve-brand-text)" "#ffffff" "var(--fve-brand-subtle)") (mode "var(--fve-brand-text)" "#101828" "var(--fve-brand-subtle)")
+    let secondary = tokens "secondary" (mode "#6d28d9" "#ffffff" "#f5f3ff") (mode "#c4b5fd" "#101828" "#2e1065")
+    let success = tokens "success" (mode "#15803d" "#ffffff" "#f0fdf4") (mode "#86efac" "#101828" "#052e16")
+    let warning = tokens "warning" (mode "#92400e" "#ffffff" "#fffbeb") (mode "#fde68a" "#101828" "#451a03")
+    let error = tokens "error" (mode "#b91c1c" "#ffffff" "#fef2f2") (mode "#fca5a5" "#101828" "#450a0a")
+    let info = tokens "info" (mode "#1d4ed8" "#ffffff" "#eff6ff") (mode "#93c5fd" "#101828" "#172554")
+    let neutral = tokens "neutral" (mode "#374151" "#ffffff" "var(--fve-surface-subtle)") (mode "#e5e7eb" "#101828" "var(--fve-surface-subtle)")
 
     let style (palette:ColorPalette) (attributes:HtmlAttribute list) =
         let values (colors:ColorPaletteMode) =
@@ -327,18 +329,23 @@ module internal ComponentColors =
                 else None)
         let colors =
             List.zip (values palette.light) (values palette.dark)
-            |> List.map (fun ((name, light), (_, dark)) -> $"--fve-color-{name}:light-dark({light},{dark})")
+            |> List.map (fun ((name, light), (_, dark)) -> $"--fve-internal-color-{name}:light-dark({light},{dark})")
         String.concat ";" (consumerStyle @ colors)
 
-    let solid = "bg-[var(--fve-color-solid)] text-[var(--fve-color-on-solid)]"
-    let soft = "bg-[var(--fve-color-soft)] text-[var(--fve-color-text)]"
-    let outline = "bg-transparent text-[var(--fve-color-text)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--fve-color-border)_20%,transparent)]"
-    let ghost = "bg-transparent text-[var(--fve-color-text)]"
-    let solidInteraction = "enabled:hover:bg-[var(--fve-color-hover)] enabled:active:bg-[var(--fve-color-active)]"
-    let softInteraction = "enabled:hover:bg-[var(--fve-color-soft-hover)] enabled:active:bg-[var(--fve-color-soft-active)]"
-    let focus = "focus-visible:ring-[var(--fve-color-focus)] focus-visible:ring-offset-[var(--fve-surface)]"
+    let solid = "bg-[var(--fve-internal-color-solid)] text-[var(--fve-internal-color-on-solid)]"
+    let soft = "bg-[var(--fve-internal-color-soft)] text-[var(--fve-internal-color-text)]"
+    let outline = "bg-transparent text-[var(--fve-internal-color-text)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--fve-internal-color-border)_20%,transparent)]"
+    let ghost = "bg-transparent text-[var(--fve-internal-color-text)]"
+    let solidInteraction = "enabled:hover:bg-[var(--fve-internal-color-hover)] enabled:active:bg-[var(--fve-internal-color-active)]"
+    let softInteraction = "enabled:hover:bg-[var(--fve-internal-color-soft-hover)] enabled:active:bg-[var(--fve-internal-color-soft-active)]"
+    // Stronger tinted fills need a darker light-mode foreground, while dark-mode text stays bright.
+    let quietTextInteraction = "not-disabled:not-aria-disabled:not-aria-busy:hover:text-[light-dark(var(--fve-internal-color-hover),var(--fve-internal-color-text))] not-disabled:not-aria-disabled:not-aria-busy:active:text-[light-dark(var(--fve-internal-color-active),var(--fve-internal-color-text))]"
+    let textInteraction = "hover:text-[var(--fve-internal-color-hover)] active:text-[var(--fve-internal-color-active)] hover:decoration-2 active:decoration-2"
+    // An image wash composites over the existing surface without fading content or replacing selection colors.
+    let neutralInteraction = "[&:not([readonly])]:not-disabled:not-aria-disabled:not-aria-busy:hover:bg-[linear-gradient(var(--fve-hover-wash),var(--fve-hover-wash))] [&:not([readonly])]:not-disabled:not-aria-disabled:not-aria-busy:active:bg-[linear-gradient(var(--fve-pressed-wash),var(--fve-pressed-wash))]"
+    let focus = "focus-visible:ring-[var(--fve-internal-color-focus)] focus-visible:ring-offset-[var(--fve-surface)]"
 module internal ActionStyles =
-    let geometryClasses = "min-h-[var(--fve-control-min-height)] min-w-[var(--fve-control-min-height)] p-[max(0px,calc((var(--fve-control-min-height)-var(--fve-control-line-height))/2-var(--fve-control-border-width,0px)))] text-[length:var(--fve-control-font-size)] leading-[var(--fve-control-line-height)]"
+    let geometryClasses = "min-h-[var(--fve-control-min-height)] min-w-[var(--fve-control-min-height)] px-[max(0px,calc(var(--fve-control-padding-inline)-var(--fve-internal-control-border-width,0px)))] py-[max(0px,calc(var(--fve-control-padding-block)-var(--fve-internal-control-border-width,0px)))] text-[length:var(--fve-control-font-size)] leading-[var(--fve-control-line-height)]"
 
     let iconClasses = "[&_svg]:size-[var(--fve-control-icon-size,1rem)] [&_svg]:shrink-0"
 
@@ -349,16 +356,16 @@ module internal ControlGroup =
     // A logical segment exports geometry to marked native controls, regardless of wrapper depth.
     // Popovers and dialogs are independent surfaces, not segments of their opener's group.
     let private controls =
-        "[&_[data-fve-group-control]]:relative [&_[data-fve-group-control]]:shrink-0 [&_[data-fve-group-control]:focus-visible]:z-10 [&_[data-fve-group-control]]:[border-start-start-radius:var(--fve-group-radius-ss,var(--fve-radius-control))] [&_[data-fve-group-control]]:[border-start-end-radius:var(--fve-group-radius-se,var(--fve-radius-control))] [&_[data-fve-group-control]]:[border-end-start-radius:var(--fve-group-radius-es,var(--fve-radius-control))] [&_[data-fve-group-control]]:[border-end-end-radius:var(--fve-group-radius-ee,var(--fve-radius-control))] [&_[data-fve-group-control=outline]]:[border-inline-start-width:var(--fve-group-border-inline-start,1px)] [&_[data-fve-group-control=outline]]:[border-block-start-width:var(--fve-group-border-block-start,1px)]"
+        "[&_[data-fve-group-control]]:relative [&_[data-fve-group-control]]:shrink-0 [&_[data-fve-group-control]:focus-visible]:z-10 [&_[data-fve-group-control]]:[border-start-start-radius:var(--fve-internal-group-radius-ss,var(--fve-radius-control))] [&_[data-fve-group-control]]:[border-start-end-radius:var(--fve-internal-group-radius-se,var(--fve-radius-control))] [&_[data-fve-group-control]]:[border-end-start-radius:var(--fve-internal-group-radius-es,var(--fve-radius-control))] [&_[data-fve-group-control]]:[border-end-end-radius:var(--fve-internal-group-radius-ee,var(--fve-radius-control))] [&_[data-fve-group-control=outline]]:[border-inline-start-width:var(--fve-internal-group-border-inline-start,1px)] [&_[data-fve-group-control=outline]]:[border-block-start-width:var(--fve-internal-group-border-block-start,1px)]"
 
     let private surfaces =
-        "[&_:is([popover],dialog)]:[--fve-group-radius-ss:initial] [&_:is([popover],dialog)]:[--fve-group-radius-se:initial] [&_:is([popover],dialog)]:[--fve-group-radius-es:initial] [&_:is([popover],dialog)]:[--fve-group-radius-ee:initial] [&_:is([popover],dialog)]:[--fve-group-border-inline-start:initial] [&_:is([popover],dialog)]:[--fve-group-border-block-start:initial]"
+        "[&_:is([popover],dialog)]:[--fve-internal-group-radius-ss:initial] [&_:is([popover],dialog)]:[--fve-internal-group-radius-se:initial] [&_:is([popover],dialog)]:[--fve-internal-group-radius-es:initial] [&_:is([popover],dialog)]:[--fve-internal-group-radius-ee:initial] [&_:is([popover],dialog)]:[--fve-internal-group-border-inline-start:initial] [&_:is([popover],dialog)]:[--fve-internal-group-border-block-start:initial]"
 
     let private geometry = function
         | "vertical" ->
-            "flex-col [&>*]:[--fve-group-radius-ss:0px] [&>*]:[--fve-group-radius-se:0px] [&>*]:[--fve-group-radius-es:0px] [&>*]:[--fve-group-radius-ee:0px] [&>:first-child]:[--fve-group-radius-ss:var(--fve-radius-control)] [&>:first-child]:[--fve-group-radius-se:var(--fve-radius-control)] [&>:last-child]:[--fve-group-radius-es:var(--fve-radius-control)] [&>:last-child]:[--fve-group-radius-ee:var(--fve-radius-control)] [&>:not(:first-child)]:[--fve-group-border-block-start:0px]"
+            "flex-col [&>*]:[--fve-internal-group-radius-ss:0px] [&>*]:[--fve-internal-group-radius-se:0px] [&>*]:[--fve-internal-group-radius-es:0px] [&>*]:[--fve-internal-group-radius-ee:0px] [&>:first-child]:[--fve-internal-group-radius-ss:var(--fve-radius-control)] [&>:first-child]:[--fve-internal-group-radius-se:var(--fve-radius-control)] [&>:last-child]:[--fve-internal-group-radius-es:var(--fve-radius-control)] [&>:last-child]:[--fve-internal-group-radius-ee:var(--fve-radius-control)] [&>:not(:first-child)]:[--fve-internal-group-border-block-start:0px]"
         | _ ->
-            "[&>*]:[--fve-group-radius-ss:0px] [&>*]:[--fve-group-radius-se:0px] [&>*]:[--fve-group-radius-es:0px] [&>*]:[--fve-group-radius-ee:0px] [&>:first-child]:[--fve-group-radius-ss:var(--fve-radius-control)] [&>:first-child]:[--fve-group-radius-es:var(--fve-radius-control)] [&>:last-child]:[--fve-group-radius-se:var(--fve-radius-control)] [&>:last-child]:[--fve-group-radius-ee:var(--fve-radius-control)] [&>:not(:first-child)]:[--fve-group-border-inline-start:0px]"
+            "[&>*]:[--fve-internal-group-radius-ss:0px] [&>*]:[--fve-internal-group-radius-se:0px] [&>*]:[--fve-internal-group-radius-es:0px] [&>*]:[--fve-internal-group-radius-ee:0px] [&>:first-child]:[--fve-internal-group-radius-ss:var(--fve-radius-control)] [&>:first-child]:[--fve-internal-group-radius-es:var(--fve-radius-control)] [&>:last-child]:[--fve-internal-group-radius-se:var(--fve-radius-control)] [&>:last-child]:[--fve-internal-group-radius-ee:var(--fve-radius-control)] [&>:not(:first-child)]:[--fve-internal-group-border-inline-start:0px]"
 
     let classes orientation =
         "isolate inline-flex items-stretch [&>*]:shrink-0 [&>*:focus-within]:relative [&>*:focus-within]:z-10 "
@@ -414,7 +421,7 @@ module internal ComponentHtml =
     let controlSizeClass size = size |> Option.map Size.className |> Option.defaultValue ""
 
     let sizeClasses size =
-        classes [ controlSizeClass size; "min-h-[var(--fve-control-min-height)] px-[max(0px,calc(var(--fve-control-padding-inline)-var(--fve-control-border-width,0px)))] py-[max(0px,calc(var(--fve-control-padding-block)-var(--fve-control-border-width,0px)))] text-[length:var(--fve-control-font-size)] leading-[var(--fve-control-line-height)]" ]
+        classes [ controlSizeClass size; "min-h-[var(--fve-control-min-height)] px-[max(0px,calc(var(--fve-control-padding-inline)-var(--fve-internal-control-border-width,0px)))] py-[max(0px,calc(var(--fve-control-padding-block)-var(--fve-internal-control-border-width,0px)))] text-[length:var(--fve-control-font-size)] leading-[var(--fve-control-line-height)]" ]
 
     let loadingGlyph size =
         let sizeClass =

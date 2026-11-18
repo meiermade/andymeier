@@ -309,7 +309,7 @@ module internal DropdownMenu =
         let itemClasses unavailable =
             ComponentHtml.classes
                 [ ComponentHtml.popupItemClasses
-                  "group fve-popup-item flex w-full items-center gap-3 rounded-none px-3 py-[var(--fve-control-padding-block)] text-left text-[length:var(--fve-control-font-size)] leading-[var(--fve-control-line-height)] font-normal text-[var(--fve-color-text)]"
+                  "group fve-popup-item flex w-full items-center gap-3 rounded-none px-3 py-[var(--fve-control-padding-block)] text-left text-[length:var(--fve-control-font-size)] leading-[var(--fve-control-line-height)] font-normal text-[var(--fve-internal-color-text)]"
                   if unavailable then
                       "cursor-not-allowed opacity-50" ]
 

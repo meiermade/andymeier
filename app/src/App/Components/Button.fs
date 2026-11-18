@@ -34,6 +34,32 @@ module internal Button =
                 invalidArg "attributes" "A Datastar indicator must name a signal without '$'."
             value)
 
+    // Submit/reset must remain real form controls before Rocket loads or when JavaScript is unavailable.
+    let private nativeFormControl attributes children =
+        let variant = ComponentElement.choice "variant" "outline" ["solid"; "soft"; "outline"; "ghost"] attributes
+        let quietInteraction =
+            if ComponentElement.value "color" attributes |> Option.defaultValue "neutral" = "neutral" then ComponentColors.neutralInteraction
+            else ComponentColors.softInteraction
+        let appearance =
+            match variant with
+            | "solid" -> ComponentColors.solid + " " + ComponentColors.solidInteraction
+            | "soft" -> ComponentColors.soft + " " + ComponentColors.softInteraction
+            | "outline" -> "[--fve-internal-control-border-width:1px] border border-[color-mix(in_srgb,var(--fve-internal-color-border)_20%,transparent)] " + ComponentColors.ghost + " " + quietInteraction
+            | _ -> ComponentColors.ghost + " " + quietInteraction
+        let nativeNames = Set.ofList ["name"; "value"; "form"; "formaction"; "formmethod"; "formenctype"; "formtarget"; "formnovalidate"; "autofocus"; "tabindex"; "title"; "accesskey"; "hidden"; "lang"; "dir"; "disabled"; "class"; "style"]
+        ComponentElement.render "button"
+            [ _type (ComponentElement.value "type" attributes |> Option.defaultValue "button")
+              _data ("fve-button-control", "")
+              _data ("fve-group-control", if variant = "outline" then "outline" else "plain")
+              _class (ComponentHtml.classes [ActionStyles.baseClasses; ActionStyles.geometryClasses; ComponentHtml.controlSizeClass (ComponentElement.size None attributes); appearance; if variant <> "solid" && ComponentElement.value "color" attributes <> Some "custom" then ComponentColors.quietTextInteraction; ComponentColors.focus])
+              _style (ComponentColors.style (ComponentElement.palette attributes) [])
+              match ComponentElement.value "data-fve-control-id" attributes with Some id -> _id id | None -> () ]
+            (attributes |> List.filter (fun item -> nativeNames.Contains(item.Name.ToLowerInvariant()) || item.Name.StartsWith("aria-", StringComparison.OrdinalIgnoreCase)))
+            [ span {
+                  _data ("fve-button-content", "")
+                  _class "inline-flex min-w-0 items-center justify-center gap-2"
+                  yield! children } ]
+
     let private renderHost (authored:HtmlAttribute list) (children:HtmlElement list) =
         let attributes =
             authored
@@ -68,7 +94,7 @@ module internal Button =
             if (attribute "data-attr:aria-busy").IsSome then None
             else indicator |> Option.map (fun signal -> $"${signal} ? 'true' : null")
         (Html.el "fve-button") {
-            _attr ("data-preserve-attr", "data-rocket-host data-scope-children")
+            _dataPreserveAttr "data-rocket-host data-scope-children"
             match disabledBinding with Some expression -> _dataAttr ("disabled", expression) | None -> ()
             match busyBinding with Some expression -> _dataAttr ("aria-busy", expression) | None -> ()
             for item in ComponentHtml.safeAttributes (
@@ -80,7 +106,10 @@ module internal Button =
                 if List.contains family ["data-bind";"data-computed";"data-indicator";"data-ref"] && not (item.Name.Contains "__root") then
                     { item with Name = item.Name + "__root" }
                 else item
-            ComponentContent.fragment children
+            if value "type" = Some "submit" || value "type" = Some "reset" then
+                nativeFormControl attributes children
+            else
+                ComponentContent.fragment children
         }
 
     let render attributes children =

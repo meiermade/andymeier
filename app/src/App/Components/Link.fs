@@ -19,13 +19,16 @@ module internal Link =
             | _ -> ()
         let variant = ComponentElement.choice "variant" "text" ["text"; "solid"; "soft"; "outline"; "ghost"] attributes
         let size = ComponentElement.size None attributes
+        let quietInteraction =
+            if ComponentElement.value "color" attributes = Some "neutral" then ComponentColors.neutralInteraction
+            else "hover:bg-[var(--fve-internal-color-soft-hover)] active:bg-[var(--fve-internal-color-soft-active)]"
         let appearance =
             match variant with
-            | "solid" -> ComponentColors.solid + " hover:bg-[var(--fve-color-hover)] active:bg-[var(--fve-color-active)]"
-            | "soft" -> ComponentColors.soft + " hover:bg-[var(--fve-color-soft-hover)] active:bg-[var(--fve-color-soft-active)]"
-            | "outline" -> "[--fve-control-border-width:1px] border border-[color-mix(in_srgb,var(--fve-color-border)_20%,transparent)] bg-transparent text-[var(--fve-color-text)] hover:bg-[var(--fve-color-soft-hover)] active:bg-[var(--fve-color-soft-active)]"
-            | "ghost" -> ComponentColors.ghost + " hover:bg-[var(--fve-color-soft-hover)] active:bg-[var(--fve-color-soft-active)]"
-            | _ -> "font-medium text-[var(--fve-color-text)] underline underline-offset-4 hover:decoration-2 outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            | "solid" -> ComponentColors.solid + " hover:bg-[var(--fve-internal-color-hover)] active:bg-[var(--fve-internal-color-active)]"
+            | "soft" -> ComponentColors.soft + " hover:bg-[var(--fve-internal-color-soft-hover)] active:bg-[var(--fve-internal-color-soft-active)]"
+            | "outline" -> "[--fve-internal-control-border-width:1px] border border-[color-mix(in_srgb,var(--fve-internal-color-border)_20%,transparent)] bg-transparent text-[var(--fve-internal-color-text)] " + quietInteraction
+            | "ghost" -> ComponentColors.ghost + " " + quietInteraction
+            | _ -> "font-medium text-[var(--fve-internal-color-text)] underline underline-offset-4 hover:decoration-2 outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         let classes = ComponentHtml.classes [
             if variant = "text" then
                 ActionStyles.iconClasses
@@ -37,6 +40,9 @@ module internal Link =
                 ComponentHtml.controlSizeClass size
                 ActionStyles.geometryClasses
             appearance
+            if ComponentElement.value "color" attributes <> Some "custom" then
+                if variant = "text" then ComponentColors.textInteraction
+                elif variant <> "solid" then ComponentColors.quietTextInteraction
             ComponentColors.focus ]
         ComponentElement.render "a"
             [ _href href

@@ -91,7 +91,7 @@ module internal Popover =
             |> Option.defaultValue (id + "-trigger")
             |> TextField.stableId
 
-        let anchor = "--fve-popover-" + ComponentHtml.optionToken id
+        let anchor = "--fve-internal-popover-" + ComponentHtml.optionToken id
 
         let side =
             ComponentElement.choice "side" "bottom" [ "top"; "bottom"; "start"; "end" ] attributes
