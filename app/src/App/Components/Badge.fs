@@ -14,7 +14,7 @@ module internal Badge =
             | "outline" -> ComponentColors.outline
             | "ghost" -> ComponentColors.ghost
             | _ when color = "neutral" || color = "custom" -> ComponentColors.soft
-            | _ -> "bg-[color-mix(in_oklab,var(--fve-color-soft)_45%,var(--fve-surface))] text-[color-mix(in_oklab,var(--fve-color-text)_65%,var(--fve-text))]"
+            | _ -> "bg-[color-mix(in_oklab,var(--fve-internal-color-soft)_45%,var(--fve-surface))] text-[color-mix(in_oklab,var(--fve-internal-color-text)_65%,var(--fve-text))]"
         ComponentElement.render "span"
             [ _class ("inline-flex items-center gap-1.5 rounded-[var(--fve-radius-control)] px-2 py-1 text-xs font-medium " + appearance)
               _style (ComponentColors.style (ComponentElement.palette attributes) []) ] (ComponentHtml.safeAttributes ["variant"; "color"; "palette"] attributes) children

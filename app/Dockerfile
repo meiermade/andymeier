@@ -11,7 +11,7 @@ RUN npm run check \
     && npm test \
     && npm run build
 
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0-noble AS builder
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:11.0-resolute AS builder
 
 WORKDIR /app
 
@@ -32,7 +32,7 @@ RUN chmod +x ./fake.sh
 # publish the server without rebuilding assets
 RUN SKIP_BROWSER_BUILD=true ./fake.sh Publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra AS runner
+FROM mcr.microsoft.com/dotnet/aspnet:11.0-resolute-chiseled-extra AS runner
 
 WORKDIR /app
 
