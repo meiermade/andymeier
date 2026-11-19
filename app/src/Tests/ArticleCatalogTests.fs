@@ -8,13 +8,26 @@ open FSharp.ViewEngine
 let articleCatalogTests =
     testList
         "Article catalog"
-        [ test "contains the four articles in reverse chronological order" {
+        [ test "contains the five articles in reverse chronological order" {
               let permalinks = Catalog.all |> List.map _.permalink
 
               Expect.equal
                   permalinks
-                  [ "bpc-157-elbow-research"; "personal-infrastructure"; "dev-env"; "fsharp-semantic-kernel" ]
+                  [ "why-im-building-athleneum"
+                    "bpc-157-elbow-research"
+                    "personal-infrastructure"
+                    "dev-env"
+                    "fsharp-semantic-kernel" ]
                   "Expected the article catalog"
+          }
+
+          test "renders the Athleneum backstory with live links and no draft images" {
+              let article = Catalog.tryFind "why-im-building-athleneum" |> Option.get
+              let html = Render.toHtmlDocString article.page
+              Expect.stringContains html "href=\"https://athleneum.com/\"" "Expected a link to the live site"
+              Expect.stringContains html "href=\"https://athleneum.com/waitlist\"" "Expected the public waitlist link"
+              Expect.stringContains html "https://www.rhodes.edu/campus-maps" "Expected the official campus map link"
+              Expect.isFalse (html.Contains "/images/drafts/") "Draft images must stay local"
           }
 
           test "renders source-controlled article pages with durable assets" {
@@ -25,10 +38,13 @@ let articleCatalogTests =
               for article, html in rendered do
                   Expect.stringContains html article.title $"Expected {article.permalink} title"
 
-                  Expect.stringContains
-                      html
-                      "https://assets.meiermade.com/andymeier/articles/"
-                      $"Expected {article.permalink} GCS assets"
+                  let expectedAssetOrigin =
+                      if article.permalink = "why-im-building-athleneum" then
+                          "https://athleneum.com/images/"
+                      else
+                          "https://assets.meiermade.com/andymeier/articles/"
+
+                  Expect.stringContains html expectedAssetOrigin $"Expected {article.permalink} public assets"
 
                   Expect.isFalse
                       (html.Contains "prod-files-secure.s3")

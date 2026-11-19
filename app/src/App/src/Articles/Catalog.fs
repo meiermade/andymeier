@@ -6,7 +6,8 @@ let all: Article list =
     [ Posts.FSharpSemanticKernel.article
       Posts.PersonalInfrastructure.article
       Posts.DevelopmentEnvironment.article
-      Posts.Bpc157.article ]
+      Posts.Bpc157.article
+      Posts.WhyImBuildingAthleneum.article ]
     |> List.sortByDescending _.createdAt
 
 let tryFind permalink =
