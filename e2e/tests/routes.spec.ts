@@ -87,7 +87,11 @@ test('internal navigation preserves history and restores entry scroll positions'
   await expect(page).toHaveURL('/articles')
   await expect.poll(() => page.evaluate(() => history.length)).toBe(currentRouteHistoryLength)
 
-  await page.getByRole('link', { name: 'Personal Infrastructure', exact: true }).click()
+  const infrastructureLink = page.getByRole('link', { name: 'Personal Infrastructure', exact: true })
+  // New articles can move this card below the fold. Measure the outgoing scroll after it is in view.
+  await infrastructureLink.scrollIntoViewIfNeeded()
+  const listScrollBeforeArticle = await page.evaluate(() => window.scrollY)
+  await infrastructureLink.click()
   await expect(page).toHaveURL('/articles/personal-infrastructure')
   await expect(page.getByRole('heading', { name: 'Personal Infrastructure', exact: true }).first()).toBeVisible()
   await expect(page).toHaveTitle('Personal Infrastructure | Andy Meier')
@@ -97,6 +101,7 @@ test('internal navigation preserves history and restores entry scroll positions'
   await expect(page).toHaveURL('/articles')
   await expect(page.getByRole('heading', { name: 'Articles', exact: true })).toBeVisible()
   await expect(page).toHaveTitle('Articles | Andy Meier')
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(listScrollBeforeArticle)
 
   await page.goBack()
   await expect(page).toHaveURL('/')
@@ -107,7 +112,7 @@ test('internal navigation preserves history and restores entry scroll positions'
   await page.goForward()
   await expect(page).toHaveURL('/articles')
   await expect(page.getByRole('heading', { name: 'Articles', exact: true })).toBeVisible()
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(listScrollBeforeArticle)
 
   await page.evaluate(() => window.scrollTo(0, 1200))
   const articlesScrollY = await page.evaluate(() => window.scrollY)
