@@ -342,7 +342,7 @@ type Document =
                 _dataSignals $"{{selectedNav: '{selectedNav}'}}"
                 _class "bg-gray-200 dark:bg-gray-950"
                 div {
-                    _class "mx-auto max-w-7xl has-[[data-article-page]]:max-w-[88rem]"
+                    _class "mx-auto max-w-7xl"
                     TopNav.primary
                     page
                     Footer.primary

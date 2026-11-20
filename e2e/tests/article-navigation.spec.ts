@@ -33,9 +33,42 @@ for (const [slug, count] of [['personal-infrastructure', 10], ['dev-env', 11], [
       elements.map(element => ({ label: element.textContent, href: element.getAttribute('href') })))
     expect(links).toEqual(headings)
     expect(new Set(headings.map(heading => heading.href)).size).toBe(count)
-    expect(await page.locator('article').evaluate(el => el.clientWidth)).toBeGreaterThanOrEqual(992)
   })
 }
+
+test('desktop articles span the site frame with the cover and keep the body beside the contents', async ({ page }) => {
+  await page.setViewportSize({ width: 1512, height: 1000 })
+  await page.goto('/')
+
+  const siteHeader = page.locator('#top-nav')
+  const headerEdges = () => siteHeader.evaluate(el => {
+    const { left, right } = el.getBoundingClientRect()
+    return { left, right }
+  })
+
+  const home = await headerEdges()
+  await page.locator('#nav-articles').click()
+  await expect(page.getByRole('heading', { name: 'Articles', level: 1 })).toBeVisible()
+  expect(await headerEdges()).toEqual(home)
+  await page.getByRole('link', { name: 'Personal Infrastructure', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Personal Infrastructure', level: 1 })).toBeVisible()
+  expect(await headerEdges()).toEqual(home)
+  const contents = page.getByRole('navigation', { name: 'On this page', exact: true })
+  await expect(contents).toBeVisible()
+
+  const article = page.locator('[data-article-page] article')
+  const title = page.getByRole('heading', { name: 'Personal Infrastructure', level: 1 })
+  const contentsLabel = page.locator('[data-article-page] aside').getByText('On this page', { exact: true })
+  const [coverBox, titleBox, articleBox, contentsBox] = await Promise.all([
+    page.locator('[data-article-page] header').boundingBox(), title.boundingBox(), article.boundingBox(), contentsLabel.boundingBox(),
+  ])
+  expect(coverBox!.x).toBe(home.left)
+  expect(coverBox!.x + coverBox!.width).toBe(home.right)
+  expect(titleBox!.x).toBe(articleBox!.x)
+  expect(articleBox!.x + articleBox!.width).toBeLessThan(contentsBox!.x)
+  expect(contentsBox!.y).toBeGreaterThanOrEqual(coverBox!.y + coverBox!.height)
+  expect(contentsBox!.y).toBe(articleBox!.y)
+})
 
 test('section links, scroll tracking, and history work after enhanced navigation', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })

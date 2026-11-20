@@ -133,7 +133,7 @@ module ArticlePage =
                         _dataOn ("click", "window.articleNavigation.navigate(evt)")
 
                         _class
-                            "block rounded-md px-3 py-2 text-sm/5 text-gray-600 hover:bg-gray-200/60 hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-[current=location]:bg-emerald-600/10 aria-[current=location]:font-semibold aria-[current=location]:text-emerald-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white dark:aria-[current=location]:text-emerald-400"
+                            "block rounded-md px-3 py-2 text-sm/5 text-gray-600 hover:bg-gray-200/60 hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 aria-[current=location]:bg-emerald-600/10 aria-[current=location]:font-semibold aria-[current=location]:text-emerald-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white dark:aria-[current=location]:text-emerald-400 min-[88rem]:px-2 min-[88rem]:focus-visible:-outline-offset-2"
 
                         text section.title
                     }
@@ -142,6 +142,16 @@ module ArticlePage =
     }
 
     let primary (metadata: ArticleMetadata) (introduction: HtmlElement list) (sections: Section list) =
+        let hasContents = not sections.IsEmpty
+
+        let contentWidth =
+            if hasContents then "mx-auto max-w-5xl px-4 min-[88rem]:col-start-2 min-[88rem]:w-full min-[88rem]:px-6"
+            else "mx-auto max-w-5xl px-4"
+
+        let heroLayout =
+            if hasContents then "min-[88rem]:col-span-full min-[88rem]:row-start-1 min-[88rem]:grid min-[88rem]:grid-cols-subgrid"
+            else ""
+
         let page = div {
             _data ("article-page", "")
             _data ("article-url", SiteUrl.article metadata.permalink)
@@ -150,82 +160,85 @@ module ArticlePage =
             _dataOn ("resize__window", "window.articleNavigation?.schedule()")
 
             div {
-                _class "bg-cover bg-no-repeat bg-center bg-blend-overlay bg-gray-800"
-
-                match SafeOutput.tryBackgroundImageStyle metadata.cover with
-                | Some style -> _style style
-                | None -> ()
+                if hasContents then
+                    _class "min-[88rem]:grid min-[88rem]:grid-cols-[2rem_minmax(0,1fr)_2rem_17rem_2rem]"
 
                 div {
-                    _class
-                        "pt-28 pb-20 px-4 mx-auto max-w-5xl min-[88rem]:max-w-[84rem] flex flex-col justify-end items-start text-gray-50"
+                    _class (if hasContents then "min-[88rem]:contents" else "")
 
-                    time {
-                        _class "text-base text-gray-50 border-l border-gray-300 pl-2"
-                        _datetime (metadata.createdAt.ToString("yyyy-MM-dd"))
-                        metadata.createdAt.ToString("MMMM d, yyyy")
-                    }
+                    header {
+                        _class $"{heroLayout} bg-cover bg-no-repeat bg-center bg-blend-overlay bg-gray-800"
 
-                    h1 {
-                        _class "mt-4 text-4xl font-bold tracking-tight text-gray-50"
-                        metadata.title
-                    }
+                        match SafeOutput.tryBackgroundImageStyle metadata.cover with
+                        | Some style -> _style style
+                        | None -> ()
 
-                    div {
-                        _class "mt-5"
-                        ArticleCard.tags metadata.tags
-                    }
-                }
-            }
+                        div {
+                            _class $"{contentWidth} flex flex-col items-start justify-end pt-28 pb-20 text-gray-50"
 
-            div {
-                _class
-                    "mx-auto max-w-5xl px-4 min-[88rem]:max-w-[84rem] min-[88rem]:grid min-[88rem]:grid-cols-[minmax(0,1fr)_15rem] min-[88rem]:gap-10"
+                            time {
+                                _class "text-base text-gray-50 border-l border-gray-300 pl-2"
+                                _datetime (metadata.createdAt.ToString("yyyy-MM-dd"))
+                                metadata.createdAt.ToString("MMMM d, yyyy")
+                            }
 
-                div {
-                    _class "min-w-0"
-
-                    if not sections.IsEmpty then
-                        details {
-                            _class "mt-8 rounded-lg border border-gray-300 dark:border-gray-700 min-[88rem]:hidden"
-                            _data ("article-mobile-toc", "")
-
-                            summary {
-                                _class
-                                    "cursor-pointer rounded-lg px-4 py-3 text-base font-semibold text-gray-900 focus-visible:outline-2 focus-visible:outline-emerald-600 dark:text-gray-100"
-
-                                "On this page"
+                            h1 {
+                                _class "mt-4 text-4xl font-bold tracking-tight text-gray-50"
+                                metadata.title
                             }
 
                             div {
-                                _class "border-t border-gray-300 p-2 dark:border-gray-700"
-                                contents sections
+                                _class "mt-5"
+                                ArticleCard.tags metadata.tags
                             }
                         }
+                    }
 
-                    article {
-                        _class
-                            "mt-8 pb-8 prose prose-lg dark:prose-invert prose-code:before:hidden prose-code:after:hidden max-w-none"
+                    div {
+                        _class $"{contentWidth} min-w-0 min-[88rem]:row-start-2"
 
-                        _dataInit "highlightCode($el)"
+                        if hasContents then
+                            details {
+                                _class "mt-8 rounded-lg border border-gray-300 dark:border-gray-700 min-[88rem]:hidden"
+                                _data ("article-mobile-toc", "")
 
-                        for element in introduction do
-                            element
+                                summary {
+                                    _class
+                                        "cursor-pointer rounded-lg px-4 py-3 text-base font-semibold text-gray-900 focus-visible:outline-2 focus-visible:outline-emerald-600 dark:text-gray-100"
 
-                        for section in sections do
-                            renderSection section
+                                    "On this page"
+                                }
+
+                                div {
+                                    _class "border-t border-gray-300 p-2 dark:border-gray-700"
+                                    contents sections
+                                }
+                            }
+
+                        article {
+                            _class
+                                "mt-8 pb-8 prose prose-lg dark:prose-invert prose-code:before:hidden prose-code:after:hidden max-w-none"
+
+                            _dataInit "highlightCode($el)"
+
+                            for element in introduction do
+                                element
+
+                            for section in sections do
+                                renderSection section
+                        }
                     }
                 }
 
-                if not sections.IsEmpty then
+                if hasContents then
                     aside {
-                        _class "hidden min-w-0 border-l border-gray-300 pl-5 dark:border-gray-700 min-[88rem]:block"
+                        _class "hidden min-w-0 pt-8 min-[88rem]:col-start-4 min-[88rem]:row-start-2 min-[88rem]:block"
 
                         div {
-                            _class "sticky top-24 mt-8 max-h-[calc(100dvh-7rem)] overflow-y-auto pb-4"
+                            _class "sticky top-24 max-h-[calc(100dvh-7rem)] overflow-y-auto pb-4"
 
                             p {
-                                _class "mb-3 px-3 text-sm font-semibold text-gray-900 dark:text-gray-100"
+                                _class "mb-3 px-2 text-sm/8 font-semibold text-gray-900 dark:text-gray-100"
                                 "On this page"
                             }
 
@@ -251,7 +264,10 @@ window.articleNavigation = window.articleNavigation || {
         if (!headings.length) return;
         const offset = (document.getElementById('top-nav')?.getBoundingClientRect().bottom || 0) + 48;
         const atEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
-        const current = atEnd ? headings.at(-1) : headings.filter(h => h.getBoundingClientRect().top <= offset).at(-1);
+        const opening = page.querySelector('article')?.firstElementChild;
+        const current = atEnd ? headings.at(-1) :
+            headings.filter(h => h.getBoundingClientRect().top <= offset).at(-1) ??
+            (opening === headings[0] ? opening : null);
         for (const link of page.querySelectorAll('[data-article-toc] a')) {
             if (current && link.hash === '#' + current.id) link.setAttribute('aria-current', 'location');
             else link.removeAttribute('aria-current');

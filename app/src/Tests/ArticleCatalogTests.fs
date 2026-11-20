@@ -8,12 +8,13 @@ open FSharp.ViewEngine
 let articleCatalogTests =
     testList
         "Article catalog"
-        [ test "contains the five articles in reverse chronological order" {
+        [ test "contains the articles in reverse chronological order" {
               let permalinks = Catalog.all |> List.map _.permalink
 
               Expect.equal
                   permalinks
-                  [ "why-im-building-athleneum"
+                  [ "generating-realistic-images-with-blender-and-openai"
+                    "why-im-building-athleneum"
                     "bpc-157-elbow-research"
                     "personal-infrastructure"
                     "dev-env"
