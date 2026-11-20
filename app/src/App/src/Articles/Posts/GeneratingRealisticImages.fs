@@ -61,9 +61,9 @@ let private frame file = image file 1536 1024
 
 let private lindbergh =
     figureImage
-        "https://www.legendfitness.com/wp-content/uploads/LindberghHS-web_7814.jpg"
-        2000
-        1500
+        (imageUrl "lindbergh-weight-room-d708713d16f6")
+        1536
+        1152
         "Three-quarter photograph of green double-sided racks at Lindbergh High School, with racked barbells, benches, and plates on outward-facing pegs."
         (fragment {
             "Lindbergh High School’s weight room. Photo: "

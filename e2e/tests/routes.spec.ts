@@ -222,7 +222,7 @@ test('internal links retain a full-document fallback without JavaScript', async 
 })
 
 test('personal infrastructure diagrams render after client-side navigation', async ({ page }) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.goto('/articles', { waitUntil: 'domcontentloaded' })
   await page.getByRole('link', { name: 'Personal Infrastructure', exact: true }).click()
   await expect(page).toHaveURL('/articles/personal-infrastructure')
   await expect(page.locator('.article-mermaid svg')).toHaveCount(5)
@@ -730,6 +730,8 @@ test('browser telemetry starts only after analytics consent', async ({ page }) =
   expect(await page.evaluate(() => sessionStorage.getItem('opentelemetry-session-id'))).toBeNull()
   expect(await page.evaluate(() => sessionStorage.getItem('opentelemetry-traffic-attribution'))).toBeNull()
 
+  await page.getByRole('link', { name: 'Articles', exact: true }).first().click()
+  await expect(page).toHaveURL('/articles')
   await page.getByRole('link', { name: 'Personal Infrastructure', exact: true }).click()
   await expect(page).toHaveURL('/articles/personal-infrastructure')
   expect(otlpRequests).toEqual([])

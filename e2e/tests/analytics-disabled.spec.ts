@@ -26,6 +26,8 @@ for (const country of ['DE', 'US', 'XX']) {
     await expect(page.locator('#cookie-consent-banner')).toBeHidden()
     expect((await page.context().cookies()).find(cookie => cookie.name === 'analytics-consent')?.value).toMatch(/^v1\.accepted\./)
 
+    await page.getByRole('link', { name: 'Articles', exact: true }).first().click()
+    await expect(page).toHaveURL('/articles')
     await page.getByRole('link', { name: 'Personal Infrastructure', exact: true }).click()
     await expect(page).toHaveURL('/articles/personal-infrastructure')
     await expect(page.getByRole('heading', { name: 'Personal Infrastructure', exact: true })).toBeVisible()
