@@ -21,13 +21,23 @@ let articleCatalogTests =
                   "Expected the article catalog"
           }
 
-          test "renders the Athleneum backstory with live links and no draft images" {
+          test "renders the Athleneum backstory with its public campus images and links" {
               let article = Catalog.tryFind "why-im-building-athleneum" |> Option.get
               let html = Render.toHtmlDocString article.page
               Expect.stringContains html "href=\"https://athleneum.com/\"" "Expected a link to the live site"
               Expect.stringContains html "href=\"https://athleneum.com/waitlist\"" "Expected the public waitlist link"
               Expect.stringContains html "https://www.rhodes.edu/campus-maps" "Expected the official campus map link"
-              Expect.isFalse (html.Contains "/images/drafts/") "Draft images must stay local"
+              let campusAssets = "https://assets.meiermade.com/andymeier/articles/why-im-building-athleneum/"
+
+              for file in
+                  [ "about-rhodes-map-crop-6c5b62d9.webp"
+                    "about-rhodes-refectory-07ba62c8.webp"
+                    "about-rhodes-library-exterior-59df7ac5.webp"
+                    "about-rhodes-athletics-cff96fcf.webp"
+                    "about-rhodes-science-96c7d7b0.webp" ] do
+                  Expect.stringContains html $"src=\"{campusAssets}{file}\"" $"Expected the public image {file}"
+
+              Expect.isFalse (html.Contains "/images/drafts/") "The article must not use local draft URLs"
           }
 
           test "renders source-controlled article pages with durable assets" {

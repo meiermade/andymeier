@@ -32,6 +32,91 @@ let private introduction =
             "In college, balancing two sports with a demanding academic workload required an efficient system. I’m building Athleneum to bring that same support to working life."
     ]
 
+let private campusAsset name =
+    $"https://assets.meiermade.com/andymeier/articles/{metadata.permalink}/{name}"
+
+let private campusPlaces =
+    [ "1", "Catherine Burrow Refectory", "left:7.7%;top:78%;width:20.5%;height:17.2%",
+      "about-rhodes-refectory-07ba62c8.webp", "Stone refectory at dusk with warm light in its windows", "960", "640"
+      "2", "Paul Barret Jr. Library", "left:32.4%;top:37.2%;width:23.2%;height:27.7%",
+      "about-rhodes-library-exterior-59df7ac5.webp", "Library exterior with a stone tower and arched windows", "1200", "900"
+      "3", "Athletic facility", "left:50%;top:6.6%;width:39%;height:18%",
+      "about-rhodes-athletics-cff96fcf.webp", "Entrance to the stone athletic facility", "508", "393"
+      "4", "Science buildings", "left:39.7%;top:66.7%;width:38.6%;height:22.6%",
+      "about-rhodes-science-96c7d7b0.webp", "Stone science building with projecting windows and an arched red entrance", "536", "373" ]
+
+let private campusMarker number = span {
+    _ariaHidden true
+    _class "grid size-6 shrink-0 place-items-center rounded-full bg-emerald-950 text-xs font-semibold text-white ring-2 ring-white"
+    text number
+}
+
+let private campus = div {
+    _class "not-prose mt-8 grid max-w-4xl items-start gap-5 md:grid-cols-[minmax(0,3fr)_minmax(0,1fr)] md:gap-6"
+
+    figure {
+        div {
+            _class "relative"
+
+            img {
+                _src (campusAsset "about-rhodes-map-crop-6c5b62d9.webp")
+                _alt "Rhodes College campus map: the refectory is southwest of Barret Library, the athletic facility is to its north, and the science buildings are to its southeast."
+                _width "1520"
+                _height "1760"
+                _loading "lazy"
+                _class "h-auto w-full rounded-md"
+            }
+
+            for number, _, position, _, _, _, _ in campusPlaces do
+                div {
+                    _ariaHidden true
+                    _style position
+                    _class "pointer-events-none absolute rounded-sm border-2 border-emerald-950"
+
+                    span {
+                        _class "absolute left-0 top-0 -translate-x-1/2 -translate-y-1/2"
+                        campusMarker number
+                    }
+                }
+        }
+
+        figcaption {
+            _class "mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400"
+            a {
+                _href "https://www.rhodes.edu/campus-maps"
+                _class "underline underline-offset-2 hover:text-gray-900 dark:hover:text-gray-100"
+                "Rhodes College campus map"
+            }
+            " with numbered highlights."
+        }
+    }
+
+    ol {
+        _ariaLabel "Numbered buildings on the Rhodes College campus map"
+        _class "grid gap-5 text-sm min-[360px]:grid-cols-2 md:grid-cols-1"
+
+        for number, label, _, file, description, width, height in campusPlaces do
+            li {
+                _class "grid content-start gap-2"
+
+                img {
+                    _src (campusAsset file)
+                    _alt description
+                    _width width
+                    _height height
+                    _loading "lazy"
+                    _class "h-auto w-full rounded-md"
+                }
+
+                div {
+                    _class "flex items-start gap-2 font-medium leading-6"
+                    campusMarker number
+                    text label
+                }
+            }
+    }
+}
+
 let private chapters =
     [
         "Separate spaces. Separate trips.",
@@ -148,10 +233,7 @@ let private sections =
                     "When it was time to train, I’d go to the athletic facility, collect my clean laundry loop and change at my personal locker. I’d get stretched in the training room, then go to practice or work out. Afterward, I could shower, drop off my used laundry loop and get something to eat in the athletic dining area. Then I’d go back to the library to finish working."
                 paragraph
                     "Whether I was living on campus or biking in, I could spend the entire day there with just my backpack. Healthy meals and clean workout clothes were taken care of. I could walk between neighboring buildings and concentrate on studying and training, rather than cooking, doing gym laundry or carrying equipment around."
-                p {
-                    link "https://www.rhodes.edu/campus-maps" "See the Rhodes College campus map"
-                    "."
-                }
+                campus
             ]
         for index, (heading, period, paragraphs) in List.indexed chapters do
             ArticlePage.chapter ("chapter-" + string (index + 2)) heading (Some period) (List.map paragraph paragraphs)
