@@ -83,7 +83,8 @@ let tests =
                 Expect.isFalse (html.Contains "role=\"listbox\"") "Expected no emulated listbox"
                 Expect.isFalse (html.Contains "data-select-root") "Expected no custom select state machine"
                 Expect.isFalse (html.Contains "<el-") "Expected no Tailwind Elements controls"
-                Expect.isFalse (html.Contains "<select") "Expected article filters not to render native selects"
+                Expect.stringContains html "<select id=\"article-sort\" name=\"sort\"" "Expected a native sort select"
+                Expect.equal (html.Split("<select").Length - 1) 1 "Only sorting uses a native select"
             }
 
             test "encodes filter values as HTML attributes instead of JavaScript literals" {

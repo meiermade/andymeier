@@ -125,9 +125,9 @@ let private articleIndex (state:ArticlesPageState) =
         }
     }
 
-    let controls = div {
-        _id "article-refinements"
-        _class "flex flex-wrap items-center gap-2 sm:justify-end"
+    let addFilter = div {
+        _id "article-add-filter"
+        if filters.tag.IsSome && filters.publishedYear.IsSome then _class "hidden"
         if filters.tag.IsNone || filters.publishedYear.IsNone then
             fvePopover {
                 _id "add-filter"
@@ -154,14 +154,21 @@ let private articleIndex (state:ArticlesPageState) =
                         }
                 }
             }
-        fveButtonGroup {
-            _ariaLabel "Sort articles"
+    }
+
+    let sortControl = fveButtonGroup {
+        _ariaLabel "Article sorting"
+        "Sort by"
+        Html.select {
+            _id "article-sort"
+            _name "sort"
+            _ariaLabel "Sort by"
+            _data ("fve-group-control", "outline")
+            _class "min-h-[var(--fve-control-min-height)] cursor-pointer rounded-[var(--fve-radius-control)] border border-[var(--fve-border)] bg-[var(--fve-surface)] py-0 pl-3 pr-8 text-[length:var(--fve-control-font-size)] text-[var(--fve-text)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--fve-brand-ring)]"
             for sort, label in [ NewestPublished, "Published"; RecentlyUpdated, "Updated" ] do
-                fveLink {
-                    _href (FilterState.url { filters with sort = sort })
-                    _variant (if filters.sort = sort then LinkVariant.Soft else LinkVariant.Outline)
-                    _color (if filters.sort = sort then Color.Primary else Color.Neutral)
-                    if filters.sort = sort then _attr ("aria-current", "true")
+                option {
+                    _value (FilterState.sortValue sort |> Option.defaultValue "")
+                    _selected (filters.sort = sort)
                     text label
                 }
         }
@@ -221,11 +228,9 @@ let private articleIndex (state:ArticlesPageState) =
                     _method "get"
                     _action "/articles"
                     _class "border-b border-gray-300/60 py-4 dark:border-gray-700/60"
-                    _dataOn ("input__debounce.200ms", searchRequest)
+                    _dataOn ("input__debounce.200ms", "evt.target.id === 'article-search' && " + searchRequest)
+                    _dataOn ("change", "evt.target.id === 'article-sort' && " + searchRequest)
                     _dataOn ("submit__prevent", searchRequest)
-                    match FilterState.sortValue filters.sort with
-                    | Some value -> input { _type "hidden"; _name "sort"; _value value }
-                    | None -> ()
                     match filters.tag with
                     | Some tag -> input { _type "hidden"; _name "tag"; _value tag }
                     | None -> ()
@@ -257,7 +262,12 @@ let private articleIndex (state:ArticlesPageState) =
                                 }
                             }
                         }
-                        controls
+                        div {
+                            _class "flex flex-wrap items-center gap-2 sm:justify-end"
+                            addFilter
+                            sortControl
+                            noscript { fveButton { _type "submit"; "Apply" } }
+                        }
                     }
                     activeFilters
                 }
@@ -265,7 +275,7 @@ let private articleIndex (state:ArticlesPageState) =
             }
         }
 
-    content, fragment { clearSearch; controls; activeFilters; results }
+    content, fragment { clearSearch; addFilter; activeFilters; results }
 
 let articlesPage state = articleIndex state |> fst |> Page.primary
 
