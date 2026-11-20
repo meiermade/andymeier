@@ -64,15 +64,60 @@ module ArticleCard =
         }
 
 module ArticlePage =
+    type SectionLayout =
+        | Stacked
+        | Chapter of period: string option
+
     type Section =
         { id: string
           title: string
-          content: HtmlElement list }
+          content: HtmlElement list
+          layout: SectionLayout }
 
     let section id title content : Section =
         { id = id
           title = title
-          content = content }
+          content = content
+          layout = Stacked }
+
+    let chapter id title period content =
+        { section id title content with layout = Chapter period }
+
+    let private sectionHeading (className: string) (section: Section) = h2 {
+        _id section.id
+        _tabindex -1
+        _data ("article-section", "")
+        _class className
+        text section.title
+    }
+
+    let private renderSection (section: Section) =
+        match section.layout with
+        | Stacked ->
+            fragment {
+                sectionHeading "mt-10 scroll-mt-24" section
+                for element in section.content do element
+            }
+        | Chapter period ->
+            Html.section {
+                _ariaLabelledby section.id
+                _class "mt-10 min-w-0 border-t border-gray-300 pt-8 dark:border-gray-700 lg:mt-12"
+
+                sectionHeading "m-0! scroll-mt-24 font-serif text-2xl font-semibold tracking-tight lg:text-3xl" section
+
+                match period with
+                | Some value ->
+                    p {
+                        _class "mb-0! mt-2! text-sm text-gray-600 dark:text-gray-400"
+                        text value
+                    }
+                | None -> ()
+
+                div {
+                    _class "min-w-0 [&>:last-child]:mb-0"
+                    for element in section.content do element
+                }
+            }
 
     let private contents (sections: Section list) = nav {
         _ariaLabel "On this page"
@@ -168,16 +213,7 @@ module ArticlePage =
                             element
 
                         for section in sections do
-                            h2 {
-                                _id section.id
-                                _tabindex -1
-                                _data ("article-section", "")
-                                _class "mt-10 scroll-mt-24"
-                                text section.title
-                            }
-
-                            for element in section.content do
-                                element
+                            renderSection section
                     }
                 }
 
