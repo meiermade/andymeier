@@ -22,6 +22,7 @@
       <Compile Include="Components/Badge.fs" />
       <Compile Include="Components/EmptyState.fs" />
       <Compile Include="Components/Popover.fs" />
+      <Compile Include="Components/Pagination.fs" />
       <None Include="fve.json" />
       <None Include="Components/Assets/heroicons-LICENSE.txt" />
       <None Include="Components/Assets/heroicons.2.2.0.provenance.json" />

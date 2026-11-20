@@ -2,6 +2,8 @@ module App.Articles.Posts.Bpc157
 
 open App.Articles
 open App.Articles.Shared
+open App.Common.View
+open App.Components
 open FSharp.ViewEngine
 open System
 open type Html
@@ -79,7 +81,82 @@ let private materialsTable = div {
     }
 }
 
-let private sections =
+let private firstDay = DateOnly(2026, 11, 9)
+
+let private logPages =
+    [ yield firstDay, "7:00 AM", "5 units · 250 mcg",
+            "First dose. Pain when attempting a palm-up curl while pressing down on that hand with my other hand."
+      yield DateOnly(2026, 11, 10), "7:00 AM", "5 units · 250 mcg",
+            "Still painful during a palm-up resisted curl. No noticeable side effects."
+      yield DateOnly(2026, 11, 11), "7:30 AM", "5 units · 250 mcg",
+            "Still painful during a palm-up curl. No noticeable side effects."
+      for day in 12 .. 19 do
+          let observation =
+              if day = 19 then "Noticeably less pain during a palm-up curl. No noticeable side effects."
+              else "Slight pain during a palm-up curl."
+
+          yield DateOnly(2026, 11, day), "7:30 AM", "5 units · 250 mcg", observation ]
+    |> List.sortByDescending (fun (date, _, _, _) -> date)
+    |> List.chunkBySize 10
+    |> List.toArray
+
+let private dailyLog requestedPage =
+    let pageCount = logPages.Length
+    let currentPage = Math.Clamp(requestedPage, 1, pageCount)
+    let pageUrl number =
+        let path = SiteUrl.article metadata.permalink
+        if number = 1 then $"{path}#daily-log" else $"{path}?logPage={number}#daily-log"
+
+    [ div {
+          _role "region"
+          _ariaLabel "Daily log table"
+          _tabindex 0
+          _class "h-[min(33rem,55svh)] overflow-auto rounded-sm [scrollbar-gutter:stable] focus-visible:outline-2 focus-visible:outline-emerald-600 lg:h-[min(33rem,70svh)]"
+          table {
+              _class "my-0 w-full whitespace-nowrap"
+              thead {
+                  _class "sticky top-0 bg-gray-100 dark:bg-gray-900"
+                  tr {
+                      th { _scope "col"; "Date" }
+                      th { _scope "col"; "Time" }
+                      th { _scope "col"; "Dose" }
+                      th { _scope "col"; "Observations" }
+                  }
+              }
+              tbody {
+                  for date, time, dose, observation in logPages[currentPage - 1] do
+                      let label = date.ToString("MMMM d, yyyy", Globalization.CultureInfo.InvariantCulture)
+                      let day = date.DayNumber - firstDay.DayNumber + 1
+                      tr {
+                          th { _scope "row"; _class "w-px"; $"{label} · Day {day}" }
+                          td { _class "w-px"; text time }
+                          td { _class "w-px"; text dose }
+                          td { _class "min-w-44 whitespace-normal"; text observation }
+                      }
+              }
+          }
+      }
+      if pageCount > 1 then
+          fvePagination {
+              _ariaLabel "Daily log pagination"
+              _class "not-prose border-t border-gray-300 py-3 dark:border-gray-700"
+              fvePaginationPrevious {
+                  if currentPage > 1 then _href (pageUrl (currentPage - 1))
+              }
+              fvePaginationContent {
+                  for number in 1 .. pageCount do
+                      fvePaginationItem {
+                          _page number
+                          if number = currentPage then _ariaCurrent "page"
+                          else _href (pageUrl number)
+                      }
+              }
+              fvePaginationNext {
+                  if currentPage < pageCount then _href (pageUrl (currentPage + 1))
+              }
+          } ]
+
+let private sections logPage =
     [ ArticlePage.section
           "overview"
           "Overview"
@@ -161,40 +238,8 @@ let private sections =
       ArticlePage.section
           "daily-log"
           "Daily log and findings"
-          [ div {
-                _class "overflow-x-auto"
-                table {
-                    _class "min-w-[44rem]"
-                    thead {
-                        tr {
-                            th { _scope "col"; "Date" }
-                            th { _scope "col"; "Time" }
-                            th { _scope "col"; "Dose" }
-                            th { _scope "col"; "Observations" }
-                        }
-                    }
-                    tbody {
-                        tr {
-                            th { _scope "row"; "November 9, 2026 · Day 1" }
-                            td { "7:00 AM" }
-                            td { "5 units · 250 mcg" }
-                            td { "First dose. Pain when attempting a palm-up curl while pressing down on that hand with my other hand." }
-                        }
-                        tr {
-                            th { _scope "row"; "November 10, 2026 · Day 2" }
-                            td { "7:00 AM" }
-                            td { "5 units · 250 mcg" }
-                            td { "Still painful during a palm-up resisted curl. No noticeable side effects." }
-                        }
-                        tr {
-                            th { _scope "row"; "November 11, 2026 · Day 3" }
-                            td { "7:30 AM" }
-                            td { "5 units · 250 mcg" }
-                            td { "Still painful during a palm-up curl. No noticeable side effects." }
-                        }
-                    }
-                }
-            } ] ]
+          (dailyLog logPage) ]
 
-let article =
-    Article.create metadata (ArticlePage.primary metadata [] sections)
+let page logPage = ArticlePage.primary metadata [] (sections logPage)
+
+let article = Article.create metadata (page 1)

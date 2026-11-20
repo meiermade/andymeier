@@ -13,7 +13,8 @@
     "color-mode",
     "badge",
     "empty-state",
-    "popover"
+    "popover",
+    "pagination"
   ],
   "files": [
     {
@@ -159,6 +160,12 @@
       "path": "Components/Popover.fs",
       "registryVersion": "2026.11.3",
       "registryChecksum": "65724780be0edd919394766471273678b9ebff1789eccf0a87f0b4c10cd1facd"
+    },
+    {
+      "component": "pagination",
+      "path": "Components/Pagination.fs",
+      "registryVersion": "2026.11.3",
+      "registryChecksum": "bf209fc6925c4c6e4360aa62aa3b11306b51fe8a6819a9c231b3a1299033be15"
     }
   ],
   "modules": [

@@ -91,7 +91,14 @@ let private getArticlePage (services:Services) (id:string) : HttpHandler =
         use _span = services.telemetry.startActiveSpan "app.articles.get_article_page"
         match Catalog.tryFind id with
         | Some article ->
-            let page = article.page
+            let page =
+                match optionalQueryValue ctx "logPage" with
+                | Some value when article.permalink = Posts.Bpc157.article.permalink ->
+                    match Int32.TryParse value with
+                    | true, logPage when logPage > 1 -> Posts.Bpc157.page logPage
+                    | _ -> article.page
+                | _ -> article.page
+
             let metadata = articleMetadata article
 
             if ctx.IsDatastar then
