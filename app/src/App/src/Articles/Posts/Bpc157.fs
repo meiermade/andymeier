@@ -128,7 +128,7 @@ let private dailyLog requestedPage =
                       let label = date.ToString("MMMM d, yyyy", Globalization.CultureInfo.InvariantCulture)
                       let day = date.DayNumber - firstDay.DayNumber + 1
                       tr {
-                          th { _scope "row"; _class "w-px"; $"{label} · Day {day}" }
+                          th { _scope "row"; _class "w-px py-3 align-baseline"; $"{label} · Day {day}" }
                           td { _class "w-px"; text time }
                           td { _class "w-px"; text dose }
                           td { _class "min-w-44 whitespace-normal"; text observation }
