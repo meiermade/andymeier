@@ -79,12 +79,10 @@ let tests =
                 Expect.stringContains html "data-filter-control=\"year\"" "Expected a year filter"
                 Expect.stringContains html "href=\"/articles?tag=Finance\"" "Expected canonical tag filter link"
                 Expect.stringContains html "href=\"/articles?year=2026\"" "Expected canonical year filter link"
-                Expect.isFalse (html.Contains "role=\"combobox\"") "Expected no emulated combobox"
-                Expect.isFalse (html.Contains "role=\"listbox\"") "Expected no emulated listbox"
-                Expect.isFalse (html.Contains "data-select-root") "Expected no custom select state machine"
+                Expect.stringContains html "<fve-select" "Expected the shared sort select"
+                Expect.stringContains html "data-fve-select-native" "Expected the shared select's native fallback"
+                Expect.stringContains html "role=\"combobox\"" "Expected the sort control to expose combobox semantics"
                 Expect.isFalse (html.Contains "<el-") "Expected no Tailwind Elements controls"
-                Expect.stringContains html "<select id=\"article-sort\" name=\"sort\"" "Expected a native sort select"
-                Expect.equal (html.Split("<select").Length - 1) 1 "Only sorting uses a native select"
             }
 
             test "encodes filter values as HTML attributes instead of JavaScript literals" {
@@ -197,7 +195,8 @@ let tests =
 
                 Expect.stringContains searchOnly "Clear search" "Expected a dedicated search clear action"
                 Expect.isFalse (searchOnly.Contains "Clear filters") "Expected filter clear action only after adding a filter"
-                Expect.isFalse (searchOnly.Contains "type=\"search\"") "Expected no browser-native search clear control"
+                let searchInput = System.Text.RegularExpressions.Regex.Match(searchOnly, "<input[^>]*id=\"article-search\"[^>]*>").Value
+                Expect.stringContains searchInput "type=\"text\"" "Expected the article search field not to add a browser-native clear control"
                 Expect.stringContains searchAndFilter "Clear filters" "Expected filters-only clear action"
                 Expect.stringContains searchAndFilter "href=\"/articles?search=engine\"" "Expected filter clearing to preserve search"
             }

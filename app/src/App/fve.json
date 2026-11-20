@@ -15,7 +15,8 @@
     "empty-state",
     "popover",
     "pagination",
-    "button-group"
+    "button-group",
+    "select"
   ],
   "files": [
     {
@@ -179,12 +180,31 @@
       "path": "Components/ButtonGroup.fs",
       "registryVersion": "2026.11.3",
       "registryChecksum": "1fd117a99bb714c503ca7c20886d5a7bedb7aea6bf8349fbbaa47c4f9febe352"
+    },
+    {
+      "component": "choice-selection",
+      "path": "Components/ChoiceSelection.fs",
+      "registryVersion": "2026.11.3",
+      "registryChecksum": "b6f1ee69ced3f164897b99fdd303d0dbc2a26e78674ef7417f0569a55b0550bc"
+    },
+    {
+      "component": "select",
+      "path": "Components/Select.fs",
+      "registryVersion": "2026.11.3",
+      "registryChecksum": "8bdc191c26e5f7baa9296a2e9143542c4370184c393ded214190c5d70b53533b"
+    },
+    {
+      "component": "select",
+      "path": "Components/Assets/select.js",
+      "registryVersion": "2026.11.3",
+      "registryChecksum": "893f683930a2ac49a948b04b6f9b293c62bd579b42b182e63a9114a95f6c831a"
     }
   ],
   "modules": [
     "Components/Assets/button.js",
     "Components/Assets/dropdown-menu.js",
     "Components/Assets/popover.js",
-    "Components/Assets/scroll-region.js"
+    "Components/Assets/scroll-region.js",
+    "Components/Assets/select.js"
   ]
 }

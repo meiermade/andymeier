@@ -159,18 +159,18 @@ let private articleIndex (state:ArticlesPageState) =
     let sortControl = fveButtonGroup {
         _ariaLabel "Article sorting"
         "Sort by"
-        Html.select {
+        label { _for "article-sort"; _class "sr-only"; "Sort by" }
+        fveSelect {
             _id "article-sort"
             _name "sort"
             _ariaLabel "Sort by"
-            _data ("fve-group-control", "outline")
-            _class "min-h-[var(--fve-control-min-height)] cursor-pointer rounded-[var(--fve-radius-control)] border border-[var(--fve-border)] bg-[var(--fve-surface)] py-0 pl-3 pr-8 text-[length:var(--fve-control-font-size)] text-[var(--fve-text)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--fve-brand-ring)]"
-            for sort, label in [ NewestPublished, "Published"; RecentlyUpdated, "Updated" ] do
-                option {
-                    _value (FilterState.sortValue sort |> Option.defaultValue "")
-                    _selected (filters.sort = sort)
-                    text label
-                }
+            _value (FilterState.sortValue filters.sort |> Option.defaultValue "published")
+            _nativeFallback true
+            _position SelectPosition.TriggerEnd
+            fveSelectContent {
+                fveSelectItem { _value "published"; "Published" }
+                fveSelectItem { _value "updated"; "Updated" }
+            }
         }
     }
 
@@ -229,7 +229,7 @@ let private articleIndex (state:ArticlesPageState) =
                     _action "/articles"
                     _class "border-b border-gray-300/60 py-4 dark:border-gray-700/60"
                     _dataOn ("input__debounce.200ms", "evt.target.id === 'article-search' && " + searchRequest)
-                    _dataOn ("change", "evt.target.id === 'article-sort' && " + searchRequest)
+                    _dataOn ("change", "evt.target.name === 'sort' && " + searchRequest)
                     _dataOn ("submit__prevent", searchRequest)
                     match filters.tag with
                     | Some tag -> input { _type "hidden"; _name "tag"; _value tag }
