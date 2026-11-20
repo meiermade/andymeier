@@ -13,13 +13,15 @@ let private link href (label: string) = a {
     text label
 }
 
+let private clubhouseImage = "https://athleneum.com/images/spaces-hero-0f3e793e.webp"
+
 let private metadata: ArticleMetadata =
     {
         permalink = "why-im-building-athleneum"
         title = "Why I’m building Athleneum"
         summary =
             "From playing two sports and studying physics at Rhodes to working in New York: why I want work, training, meals and recovery to fit into the same day."
-        cover = "https://athleneum.com/images/spaces-hero-0f3e793e.webp"
+        cover = clubhouseImage
         tags = [| "Athleneum"; "Work"; "Training"; "Design" |]
         createdAt = DateTimeOffset(2026, 11, 19, 0, 0, 0, TimeSpan.Zero)
     }
@@ -30,25 +32,12 @@ let private introduction =
             "In college, balancing two sports with a demanding academic workload required an efficient system. I’m building Athleneum to bring that same support to working life."
     ]
 
-let private campus = p {
-    link "https://www.rhodes.edu/campus-maps" "See the Rhodes College campus map"
-    "."
-}
-
 let private chapters =
     [
-        "A Division III student-athlete’s day",
-        "2007–2011 · Rhodes College",
-        [
-            "I played football and baseball at Rhodes College in Memphis while studying physics and math. Balancing those commitments meant I needed an efficient system for studying and training."
-            "I’d start with coffee and breakfast at the refectory, then walk next door to the library to work or head to the physics lab."
-            "When it was time to train, I’d go to the athletic facility, collect my clean laundry loop and change at my personal locker. I’d get stretched in the training room, then go to practice or work out. Afterward, I could shower, drop off my used loop and get something to eat in the athletic dining area. Then I’d go back to the library to finish working."
-            "Whether I was living on campus or biking in, I could spend the entire day there with just my backpack. Healthy meals and clean workout clothes were taken care of. I could walk between neighboring buildings and concentrate on studying and training, rather than cooking, doing gym laundry or carrying equipment around."
-        ]
         "Separate spaces. Separate trips.",
         "2013–2016 · A Big Four consulting firm",
         [
-            "My first job in New York was at a Big Four consulting firm. In the morning, I’d leave home with workout clothes and my own towel for Blink Fitness. It was inexpensive, but crowded. After training, I’d shower, put the sweaty clothes and towel back in my bag and bike to the office. Often, I was sweating again by the time I got there."
+            "My first job in New York was at a Big Four consulting firm. In the morning, I’d leave home with workout clothes and my own towel for Blink Fitness. It was inexpensive, but everyone was trying to squeeze in a workout before work, so it got crowded. After training, I’d shower, put the sweaty clothes and towel back in my bag and bike to the office. Often, I was sweating again by the time I got there."
             "At work, I could use an app or an iPad on the floor to reserve a desk. I liked this kind of hoteling: a cubicle for concentration, an office for a call, or a meeting room when I needed to work with other people. I could choose a space for the work I was doing rather than stay at the same desk all day."
             "Sharing desks also made sense for a consulting firm where people traveled frequently; the company didn’t need a dedicated desk for every person. That part of the day worked well. The gym trip and the bag of laundry were still mine to manage."
         ]
@@ -62,7 +51,7 @@ let private chapters =
         "Remote work, shared tables.",
         "From December 2022 · A Mexico-based fintech startup",
         [
-            "I joined a Mexico-based fintech startup and Equinox. When I started working remotely in December 2022, I’d head to a coworking space, open my laptop at a long shared table and try to settle into the day. Someone would be facing me or sitting right beside me, and people took calls at the table. I was back in headphones for much of the day."
+            "In December 2022, I started working remotely for a Mexico-based fintech startup and joined Equinox. I’d head to a coworking space, open my laptop at a long shared table and try to settle into the day. Someone would be facing me or sitting right beside me, and people took calls at the table. I was back in headphones for much of the day, but people moving around still broke my concentration."
             "When I went to the nearby Equinox for a workout, I had to pack up and bring my gym bag and laundry again. The gym was close, but the work setup was distracting and I was still carrying my training routine around with me."
         ]
         "The closest I came to Rhodes.",
@@ -81,25 +70,95 @@ let private chapters =
         ]
     ]
 
+let private eudaimoniaMachine = figure {
+    _class "not-prose my-8"
+
+    ol {
+        _ariaLabel "The five spaces of the Eudaimonia Machine in order"
+        _class "grid gap-5 md:grid-cols-5"
+
+        for index, (room, purpose) in
+            List.indexed
+                [ "Gallery", "Inspiration"
+                  "Salon", "Collaboration"
+                  "Library", "Investigation"
+                  "Office", "Routine work"
+                  "Chamber", "Deep work" ] do
+            li {
+                _class "relative grid min-w-0 gap-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-3 text-center dark:border-gray-700 dark:bg-gray-900"
+
+                span {
+                    _class "font-semibold text-gray-900 dark:text-gray-100"
+                    text room
+                }
+
+                span {
+                    _class "text-sm text-gray-600 dark:text-gray-400"
+                    text purpose
+                }
+
+                if index < 4 then
+                    span {
+                        _ariaHidden true
+                        _class "absolute -bottom-5 left-1/2 grid h-5 w-5 -translate-x-1/2 place-items-center leading-none text-emerald-800 dark:text-emerald-300 md:bottom-auto md:left-full md:top-1/2 md:translate-x-0 md:-translate-y-1/2 md:-rotate-90"
+                        "↓"
+                    }
+            }
+    }
+
+    figcaption {
+        _class "mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400"
+        "David Dewane’s Eudaimonia Machine, shown as a sequence from inspiration to deep work."
+    }
+}
+
+let private clubhouse = figure {
+    _class "not-prose my-8"
+
+    img {
+        _src clubhouseImage
+        _alt "Concept rendering of the limestone Athleneum clubhouse and its bicycle entrance"
+        _width "1536"
+        _height "1024"
+        _loading "lazy"
+        _class "h-auto w-full rounded-md"
+    }
+
+    figcaption {
+        _class "mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400"
+        "Athleneum clubhouse concept."
+    }
+}
+
 let private sections =
     [
+        ArticlePage.chapter
+            "chapter-1"
+            "A Division III student-athlete’s day"
+            (Some "2007–2011 · Rhodes College")
+            [
+                p {
+                    "I played football and baseball at "
+                    link "https://www.rhodes.edu/" "Rhodes College"
+                    " in Memphis while studying physics and math. Balancing those commitments meant I needed an efficient system for studying and training."
+                }
+                paragraph
+                    "I’d start with coffee and breakfast at the refectory, then walk next door to the library to work or head to the physics lab."
+                paragraph
+                    "When it was time to train, I’d go to the athletic facility, collect my clean laundry loop and change at my personal locker. I’d get stretched in the training room, then go to practice or work out. Afterward, I could shower, drop off my used laundry loop and get something to eat in the athletic dining area. Then I’d go back to the library to finish working."
+                paragraph
+                    "Whether I was living on campus or biking in, I could spend the entire day there with just my backpack. Healthy meals and clean workout clothes were taken care of. I could walk between neighboring buildings and concentrate on studying and training, rather than cooking, doing gym laundry or carrying equipment around."
+                p {
+                    link "https://www.rhodes.edu/campus-maps" "See the Rhodes College campus map"
+                    "."
+                }
+            ]
         for index, (heading, period, paragraphs) in List.indexed chapters do
-            ArticlePage.section
-                ("chapter-" + string (index + 1))
-                heading
-                [
-                    p {
-                        _class "text-sm text-gray-600 dark:text-gray-400"
-                        period
-                    }
-                    for value in paragraphs do
-                        paragraph value
-                    if index = 0 then
-                        campus
-                ]
-        ArticlePage.section
+            ArticlePage.chapter ("chapter-" + string (index + 2)) heading (Some period) (List.map paragraph paragraphs)
+        ArticlePage.chapter
             "workspaces"
             "Different spaces for different kinds of work."
+            None
             [
                 p {
                     "In "
@@ -111,6 +170,7 @@ let private sections =
                     em { "Deep Work" }
                     " introduced me to the Eudaimonia Machine, an architectural concept by David Dewane. Its sequence of five spaces supports different modes of thought, moving from interaction toward deeper concentration."
                 }
+                eudaimoniaMachine
                 paragraph
                     "That idea shaped Athleneum’s workspaces. I’m adapting the principle rather than copying the five-room sequence: different kinds of work need different surroundings."
                 dl {
@@ -136,9 +196,10 @@ let private sections =
                     "."
                 }
             ]
-        ArticlePage.section
+        ArticlePage.chapter
             "the-whole-day"
             "The whole day, under one roof."
+            None
             [
                 paragraph
                     "I’m building Athleneum for people who want to stay active and keep doing the activities they love throughout adult life. Maintaining muscle, strength and fitness takes consistent work, especially as we get older. I want a system that makes that consistency easier."
@@ -147,8 +208,9 @@ let private sections =
                 paragraph
                     "That makes it easier to spread training across the week. Five or more sessions could mean a mix of strength work, swimming and easy cardio, rather than squeezing everything into a few long gym visits. The point isn’t to train hard every day. It’s to make a routine you can sustain for years."
                 paragraph
-                    "Serious training, a pool and recovery belong alongside workspaces that respect both conversation and concentration. A permanent locker, with workout kit washed daily and returned to its own drawer. Practical meals and coffee. Somewhere to keep a bicycle and the gear that would otherwise travel back and forth. And a way to book a swim before leaving home."
+                    "Serious training and recovery belong alongside workspaces that respect both conversation and concentration. A permanent locker, with workout kit washed daily and returned to its own drawer. Practical meals and coffee. Somewhere to keep a bicycle and the gear that would otherwise travel back and forth. And a way to book the space you need before leaving home."
                 paragraph "That’s why Athleneum needs to exist."
+                clubhouse
                 p {
                     "The site is live at "
                     link "https://athleneum.com/" "athleneum.com"
