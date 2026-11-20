@@ -6,6 +6,7 @@ open App.Components
 open FSharp.ViewEngine
 open App.Common.View
 open System
+open type Datastar
 open type Html
 
 type FilterState =
@@ -89,7 +90,7 @@ module FilterControl =
             }
         }
 
-let articlesPage (state:ArticlesPageState) =
+let private articleIndex (state:ArticlesPageState) =
     let filters = state.filters
     let hasSearch = filters.search.IsSome
     let hasActiveFilters = filters.tag.IsSome || filters.publishedYear.IsSome
@@ -109,16 +110,99 @@ let articlesPage (state:ArticlesPageState) =
               url = FilterState.url { filters with publishedYear = Some year }
               selected = filters.publishedYear = Some year })
 
-    let sortLabel = function
-        | NewestPublished -> "Newest published"
-        | RecentlyUpdated -> "Recently updated"
+    let searchRequest =
+        "@get(el.action + '?' + new URLSearchParams(new FormData(el)), {headers: {'X-MeierMade-Article-Search': 'live'}, filterSignals: {include: /^$/}, requestCancellation: 'cleanup', retry: 'never'})"
 
-    let sortOptions =
-        [ NewestPublished; RecentlyUpdated ]
-        |> List.map (fun sort ->
-            { label = sortLabel sort
-              url = FilterState.url { filters with sort = sort }
-              selected = filters.sort = sort })
+    let clearSearch = span {
+        _id "article-clear-search"
+        if not hasSearch then _class "hidden"
+        fveLink {
+            _href clearSearchUrl
+            _ariaLabel "Clear search"
+            _variant LinkVariant.Ghost
+            _color Color.Neutral
+            fveIcon { _name IconName.XMark; _size Size.Small }
+        }
+    }
+
+    let controls = div {
+        _id "article-refinements"
+        _class "flex flex-wrap items-center gap-2 sm:justify-end"
+        if filters.tag.IsNone || filters.publishedYear.IsNone then
+            fvePopover {
+                _id "add-filter"
+                _alignment PopoverAlignment.End
+                fvePopoverTrigger {
+                    fveButton {
+                        fveIcon { _name IconName.Plus; _size Size.Small }
+                        "Add filter"
+                    }
+                }
+                fvePopoverContent {
+                    _class "grid gap-3"
+                    if filters.tag.IsNone then
+                        div {
+                            _class "grid gap-1"
+                            span { _class "text-sm font-medium"; "Tag" }
+                            FilterControl.menu "tag" "Tag filter" "Select tag" tagOptions
+                        }
+                    if filters.publishedYear.IsNone then
+                        div {
+                            _class "grid gap-1"
+                            span { _class "text-sm font-medium"; "Published" }
+                            FilterControl.menu "year" "Published year filter" "Select year" yearOptions
+                        }
+                }
+            }
+        fveButtonGroup {
+            _ariaLabel "Sort articles"
+            for sort, label in [ NewestPublished, "Published"; RecentlyUpdated, "Updated" ] do
+                fveLink {
+                    _href (FilterState.url { filters with sort = sort })
+                    _variant (if filters.sort = sort then LinkVariant.Soft else LinkVariant.Outline)
+                    _color (if filters.sort = sort then Color.Primary else Color.Neutral)
+                    if filters.sort = sort then _attr ("aria-current", "true")
+                    text label
+                }
+        }
+    }
+
+    let activeFilters = div {
+        _id "article-active-filters"
+        if hasActiveFilters then
+            _class "mt-3 flex flex-wrap items-center gap-2"
+            match filters.tag with
+            | Some tag ->
+                FilterControl.active
+                    "Tag"
+                    (FilterControl.menu "tag" "Tag filter" tag tagOptions)
+                    (FilterState.url { filters with tag = None })
+                    "Remove tag filter"
+            | None -> ()
+            match filters.publishedYear with
+            | Some year ->
+                FilterControl.active
+                    "Published"
+                    (FilterControl.menu "year" "Published year filter" (string year) yearOptions)
+                    (FilterState.url { filters with publishedYear = None })
+                    "Remove published year filter"
+            | None -> ()
+            fveLink { _href clearFiltersUrl; "Clear filters" }
+    }
+
+    let results = div {
+        _id "article-results"
+        if state.articles.IsEmpty then
+            _class "py-8"
+            fveEmptyState {
+                _label "No articles found"
+                _description (if hasCriteria then "Try changing or clearing your search and filters." else "Articles will appear here when they are published.")
+                fveEmptyStateIcon { fveIcon { _name IconName.MagnifyingGlass } }
+            }
+        else
+            _class "flex flex-col"
+            for article in state.articles do ArticleCard.summary article
+    }
 
     let content =
         div {
@@ -137,6 +221,8 @@ let articlesPage (state:ArticlesPageState) =
                     _method "get"
                     _action "/articles"
                     _class "border-b border-gray-300/60 py-4 dark:border-gray-700/60"
+                    _dataOn ("input__debounce.200ms", searchRequest)
+                    _dataOn ("submit__prevent", searchRequest)
                     match FilterState.sortValue filters.sort with
                     | Some value -> input { _type "hidden"; _name "sort"; _value value }
                     | None -> ()
@@ -156,6 +242,7 @@ let articlesPage (state:ArticlesPageState) =
                                     fveIcon { _name IconName.MagnifyingGlass; _size Size.Small }
                                 }
                                 fveInput {
+                                    _id "article-search"
                                     _type InputType.Text
                                     _role "searchbox"
                                     _name "search"
@@ -163,91 +250,26 @@ let articlesPage (state:ArticlesPageState) =
                                     _value (filters.search |> Option.defaultValue "")
                                     _placeholder "Search articles"
                                 }
-                                if hasSearch then
-                                    fveInputGroupAddon {
-                                        _position InputGroupPosition.InlineEnd
-                                        fveLink {
-                                            _href clearSearchUrl
-                                            _ariaLabel "Clear search"
-                                            _variant LinkVariant.Ghost
-                                            _color Color.Neutral
-                                            fveIcon { _name IconName.XMark; _size Size.Small }
-                                        }
-                                    }
-                            }
-                        }
-                        if filters.tag.IsNone || filters.publishedYear.IsNone then
-                            fvePopover {
-                                _id "add-filter"
-                                _alignment PopoverAlignment.End
-                                fvePopoverTrigger {
-                                    fveButton {
-                                        fveIcon { _name IconName.Plus; _size Size.Small }
-                                        "Add filter"
-                                    }
-                                }
-                                fvePopoverContent {
-                                    _class "grid gap-3"
-                                    if filters.tag.IsNone then
-                                        div {
-                                            _class "grid gap-1"
-                                            span { _class "text-sm font-medium"; "Tag" }
-                                            FilterControl.menu "tag" "Tag filter" "Select tag" tagOptions
-                                        }
-                                    if filters.publishedYear.IsNone then
-                                        div {
-                                            _class "grid gap-1"
-                                            span { _class "text-sm font-medium"; "Published" }
-                                            FilterControl.menu "year" "Published year filter" "Select year" yearOptions
-                                        }
+                                fveInputGroupAddon {
+                                    _position InputGroupPosition.InlineEnd
+                                    _class "has-[.hidden]:hidden"
+                                    clearSearch
                                 }
                             }
-                        fveButton { _type "submit"; "Search" }
-                    }
-                    if hasActiveFilters then
-                        div {
-                            _class "mt-3 flex flex-wrap items-center gap-2"
-                            match filters.tag with
-                            | Some tag ->
-                                FilterControl.active
-                                    "Tag"
-                                    (FilterControl.menu "tag" "Tag filter" tag tagOptions)
-                                    (FilterState.url { filters with tag = None })
-                                    "Remove tag filter"
-                            | None -> ()
-                            match filters.publishedYear with
-                            | Some year ->
-                                FilterControl.active
-                                    "Published"
-                                    (FilterControl.menu "year" "Published year filter" (string year) yearOptions)
-                                    (FilterState.url { filters with publishedYear = None })
-                                    "Remove published year filter"
-                            | None -> ()
-                            fveLink { _href clearFiltersUrl; "Clear filters" }
                         }
-                }
-                div {
-                    _class "mt-4 flex flex-wrap items-center gap-2 sm:justify-end"
-                    span { _class "text-sm text-gray-600 dark:text-gray-400"; "Sort by" }
-                    FilterControl.menu "sort" "Sort articles" (sortLabel filters.sort) sortOptions
-                }
-                if state.articles.IsEmpty then
-                    div {
-                        _class "py-8"
-                        fveEmptyState {
-                            _label "No articles found"
-                            _description (if hasCriteria then "Try changing or clearing your search and filters." else "Articles will appear here when they are published.")
-                            fveEmptyStateIcon { fveIcon { _name IconName.MagnifyingGlass } }
-                        }
+                        controls
                     }
-                else
-                    div {
-                        _class "flex flex-col"
-                        for article in state.articles do ArticleCard.summary article
-                    }
+                    activeFilters
+                }
+                results
             }
         }
-    Page.primary content
+
+    content, fragment { clearSearch; controls; activeFilters; results }
+
+let articlesPage state = articleIndex state |> fst |> Page.primary
+
+let articleSearchResults state = articleIndex state |> snd
 
 let notFoundPage =
     let content =

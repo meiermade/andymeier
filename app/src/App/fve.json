@@ -14,7 +14,8 @@
     "badge",
     "empty-state",
     "popover",
-    "pagination"
+    "pagination",
+    "button-group"
   ],
   "files": [
     {
@@ -166,11 +167,24 @@
       "path": "Components/Pagination.fs",
       "registryVersion": "2026.11.3",
       "registryChecksum": "bf209fc6925c4c6e4360aa62aa3b11306b51fe8a6819a9c231b3a1299033be15"
+    },
+    {
+      "component": "scroll-region",
+      "path": "Components/Assets/scroll-region.js",
+      "registryVersion": "2026.11.3",
+      "registryChecksum": "d52940eefc0247682b9a82f6c1bb4aa8a4f3b1d203388564bf340acea551adf5"
+    },
+    {
+      "component": "button-group",
+      "path": "Components/ButtonGroup.fs",
+      "registryVersion": "2026.11.3",
+      "registryChecksum": "1fd117a99bb714c503ca7c20886d5a7bedb7aea6bf8349fbbaa47c4f9febe352"
     }
   ],
   "modules": [
     "Components/Assets/button.js",
     "Components/Assets/dropdown-menu.js",
-    "Components/Assets/popover.js"
+    "Components/Assets/popover.js",
+    "Components/Assets/scroll-region.js"
   ]
 }

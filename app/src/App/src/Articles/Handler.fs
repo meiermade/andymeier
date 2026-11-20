@@ -10,6 +10,7 @@ open Giraffe
 open Microsoft.AspNetCore.Http
 open StarFederation.Datastar.DependencyInjection
 open System
+open System.Text.Json
 
 let private optionalQueryValue (ctx:HttpContext) name =
     match ctx.Request.Query.TryGetValue name with
@@ -71,20 +72,29 @@ let private getArticlesPage (services:Services) : HttpHandler =
             return! redirectTo false canonicalUrl next ctx
         else
             let allArticles = Catalog.all
-            let page =
+            let state =
                 { articles = filterArticles filters allArticles |> Article.sort filters.sort
                   filters = filters
                   tags = allArticles |> List.collect (fun article -> article.tags |> Array.toList) |> List.distinct |> List.sort
                   years = allArticles |> List.map (fun article -> article.createdAt.Year) |> List.distinct |> List.sortDescending }
-                |> articlesPage
 
             let metadata = articlesMetadata canonicalUrl
-            if ctx.IsDatastar then
+            if ctx.IsDatastar && string ctx.Request.Headers["X-MeierMade-Article-Search"] = "live" then
                 let ds = ctx.GetService<IDatastarService>()
-                do! patchPage ctx ds metadata page "nav-articles"
+                do! patchElement ds (articleSearchResults state)
+                for element in PageHead.patchableElements metadata do
+                    do! patchElement ds element
+
+                // Each query updates the current entry without moving focus or creating a history entry per keystroke.
+                let url = JsonSerializer.Serialize canonicalUrl
+                do! ds.ExecuteScriptAsync($"if (location.pathname === '/articles') {{ history.replaceState(history.state, '', {url}); window.meierMadeScrollUrl = location.pathname + location.search; }}")
+                return Some ctx
+            elif ctx.IsDatastar then
+                let ds = ctx.GetService<IDatastarService>()
+                do! patchPage ctx ds metadata (articlesPage state) "nav-articles"
                 return Some ctx
             else
-                return! renderPage services metadata page "nav-articles" next ctx
+                return! renderPage services metadata (articlesPage state) "nav-articles" next ctx
     }
 
 let private getArticlePage (services:Services) (id:string) : HttpHandler =
