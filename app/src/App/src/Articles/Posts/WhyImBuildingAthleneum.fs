@@ -244,12 +244,12 @@ let private sections =
             [
                 p {
                     "In "
-                    em { "Quiet" }
+                    em { link "https://susancain.net/book/quiet/" "Quiet" }
                     ", Susan Cain argues for workspaces where people can move between interaction and solitude. That was the choice I kept looking for: somewhere to talk, somewhere to concentrate, and the freedom to move between them."
                 }
                 p {
                     "Cal Newport’s "
-                    em { "Deep Work" }
+                    em { link "https://www.hachettebookgroup.com/titles/cal-newport/deep-work/9781455586691/" "Deep Work" }
                     " introduced me to the Eudaimonia Machine, an architectural concept by David Dewane. Its sequence of five spaces supports different modes of thought, moving from interaction toward deeper concentration."
                 }
                 eudaimoniaMachine
