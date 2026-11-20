@@ -12,7 +12,8 @@ let private metadata =
       summary = "How I set up a Mac for agent-driven software development and infrastructure work"
       cover = "https://assets.meiermade.com/andymeier/articles/shared/gradient-purple-4776537cdf89.webp"
       tags = [| "Programming"; "AI"; "macOS"; "Python"; ".NET"; "Infrastructure" |]
-      createdAt = DateTimeOffset(2026, 8, 11, 0, 0, 0, TimeSpan.Zero) }
+      createdAt = DateTimeOffset(2026, 8, 11, 0, 0, 0, TimeSpan.Zero)
+      updatedAt = Some(DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)) }
 
 let private subheading id' label = h3 {
     _class "mt-6 scroll-mt-24"

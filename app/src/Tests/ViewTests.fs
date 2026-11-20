@@ -2,6 +2,7 @@ module ViewTests
 
 open App.Articles
 open App.Articles.Shared
+open App.Articles.View
 open App.Common.View
 open Expecto
 open FSharp.ViewEngine
@@ -67,7 +68,7 @@ let tests =
                 let page =
                     App.Articles.View.articlesPage {
                         articles = []
-                        filters = { search = None; tag = None; publishedYear = None }
+                        filters = FilterState.empty
                         tags = [ "Finance" ]
                         years = [ 2026 ]
                     }
@@ -90,7 +91,7 @@ let tests =
                 let page =
                     App.Articles.View.articlesPage {
                         articles = []
-                        filters = { search = None; tag = None; publishedYear = None }
+                        filters = FilterState.empty
                         tags = [ unsafeValue ]
                         years = [ 2026 ]
                     }
@@ -117,6 +118,7 @@ let tests =
                       cover = "https://assets.meiermade.com/andymeier/articles/shared/cover.webp"
                       tags = [||]
                       createdAt = System.DateTimeOffset(2026, 2, 1, 0, 0, 0, System.TimeSpan.Zero)
+                      updatedAt = None
                       page = empty }
 
                 let html = ArticleCard.summary article |> Render.toHtmlDocString
@@ -139,7 +141,7 @@ let tests =
                 let page =
                     App.Articles.View.articlesPage {
                         articles = []
-                        filters = { search = None; tag = None; publishedYear = None }
+                        filters = FilterState.empty
                         tags = []
                         years = []
                     }
@@ -156,7 +158,8 @@ let tests =
                       summary = "Summary"
                       cover = "https://assets.meiermade.com/andymeier/articles/shared/cover.webp"
                       tags = [| "Engineering"; "Finance" |]
-                      createdAt = System.DateTimeOffset(2026, 2, 1, 0, 0, 0, System.TimeSpan.Zero) }
+                      createdAt = System.DateTimeOffset(2026, 2, 1, 0, 0, 0, System.TimeSpan.Zero)
+                      updatedAt = None }
 
                 let html = ArticlePage.primary metadata [] [] |> Render.toHtmlDocString
 
@@ -176,7 +179,7 @@ let tests =
                 let searchOnly =
                     App.Articles.View.articlesPage {
                         articles = []
-                        filters = { search = Some "engine"; tag = None; publishedYear = None }
+                        filters = { FilterState.empty with search = Some "engine" }
                         tags = [ "Engineering" ]
                         years = [ 2026 ]
                     }
@@ -185,7 +188,7 @@ let tests =
                 let searchAndFilter =
                     App.Articles.View.articlesPage {
                         articles = []
-                        filters = { search = Some "engine"; tag = Some "Engineering"; publishedYear = None }
+                        filters = { FilterState.empty with search = Some "engine"; tag = Some "Engineering" }
                         tags = [ "Engineering" ]
                         years = [ 2026 ]
                     }

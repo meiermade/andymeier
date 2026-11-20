@@ -9,7 +9,7 @@ let all: Article list =
       Posts.Bpc157.article
       Posts.GeneratingRealisticImages.article
       Posts.WhyImBuildingAthleneum.article ]
-    |> List.sortByDescending _.createdAt
+    |> Article.sort NewestPublished
 
 let tryFind permalink =
     all |> List.tryFind (fun article -> article.permalink = permalink)

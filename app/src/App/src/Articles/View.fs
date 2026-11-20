@@ -11,13 +11,21 @@ open type Html
 type FilterState =
     { search: string option
       tag: string option
-      publishedYear: int option }
+      publishedYear: int option
+      sort: ArticleSort }
 
 module FilterState =
+    let empty: FilterState = { search = None; tag = None; publishedYear = None; sort = NewestPublished }
+
+    let sortValue = function
+        | NewestPublished -> None
+        | RecentlyUpdated -> Some "updated"
+
     let url (filters:FilterState) =
         [ "search", filters.search
           "tag", filters.tag
-          "year", filters.publishedYear |> Option.map string ]
+          "year", filters.publishedYear |> Option.map string
+          "sort", sortValue filters.sort ]
         |> List.choose (fun (key, value) ->
             value
             |> Option.map _.Trim()
@@ -101,6 +109,17 @@ let articlesPage (state:ArticlesPageState) =
               url = FilterState.url { filters with publishedYear = Some year }
               selected = filters.publishedYear = Some year })
 
+    let sortLabel = function
+        | NewestPublished -> "Newest published"
+        | RecentlyUpdated -> "Recently updated"
+
+    let sortOptions =
+        [ NewestPublished; RecentlyUpdated ]
+        |> List.map (fun sort ->
+            { label = sortLabel sort
+              url = FilterState.url { filters with sort = sort }
+              selected = filters.sort = sort })
+
     let content =
         div {
             _class "mx-auto max-w-5xl px-4 py-10"
@@ -118,6 +137,9 @@ let articlesPage (state:ArticlesPageState) =
                     _method "get"
                     _action "/articles"
                     _class "border-b border-gray-300/60 py-4 dark:border-gray-700/60"
+                    match FilterState.sortValue filters.sort with
+                    | Some value -> input { _type "hidden"; _name "sort"; _value value }
+                    | None -> ()
                     match filters.tag with
                     | Some tag -> input { _type "hidden"; _name "tag"; _value tag }
                     | None -> ()
@@ -203,6 +225,11 @@ let articlesPage (state:ArticlesPageState) =
                             | None -> ()
                             fveLink { _href clearFiltersUrl; "Clear filters" }
                         }
+                }
+                div {
+                    _class "mt-4 flex flex-wrap items-center gap-2 sm:justify-end"
+                    span { _class "text-sm text-gray-600 dark:text-gray-400"; "Sort by" }
+                    FilterControl.menu "sort" "Sort articles" (sortLabel filters.sort) sortOptions
                 }
                 if state.articles.IsEmpty then
                     div {

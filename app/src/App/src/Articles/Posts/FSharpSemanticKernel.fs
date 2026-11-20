@@ -12,7 +12,8 @@ let private metadata =
       summary = "Create an AI assistant using F# and Microsoft’s Semantic Kernel"
       cover = "https://assets.meiermade.com/andymeier/articles/shared/gradient-purple-4776537cdf89.webp"
       tags = [| "AI"; "Programming"; "F#" |]
-      createdAt = DateTimeOffset(2024, 1, 23, 0, 0, 0, TimeSpan.Zero) }
+      createdAt = DateTimeOffset(2024, 1, 23, 0, 0, 0, TimeSpan.Zero)
+      updatedAt = None }
 
 let private introduction = []
 

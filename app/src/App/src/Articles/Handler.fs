@@ -18,6 +18,7 @@ let private optionalQueryValue (ctx:HttpContext) name =
 
 let private filtersFromRequest (ctx:HttpContext) =
     { FilterState.search = optionalQueryValue ctx "search"
+      sort = if optionalQueryValue ctx "sort" = Some "updated" then RecentlyUpdated else NewestPublished
       tag = optionalQueryValue ctx "tag"
       publishedYear = optionalQueryValue ctx "year" |> Option.bind (fun value ->
           match Int32.TryParse value with
@@ -71,7 +72,7 @@ let private getArticlesPage (services:Services) : HttpHandler =
         else
             let allArticles = Catalog.all
             let page =
-                { articles = filterArticles filters allArticles
+                { articles = filterArticles filters allArticles |> Article.sort filters.sort
                   filters = filters
                   tags = allArticles |> List.collect (fun article -> article.tags |> Array.toList) |> List.distinct |> List.sort
                   years = allArticles |> List.map (fun article -> article.createdAt.Year) |> List.distinct |> List.sortDescending }

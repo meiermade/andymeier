@@ -22,6 +22,7 @@ let private metadata: ArticleMetadata =
         cover = imageUrl finalImage
         tags = [| "Blender"; "OpenAI"; "Athleneum" |]
         createdAt = DateTimeOffset(2026, 11, 19, 0, 0, 0, TimeSpan.Zero)
+        updatedAt = None
     }
 
 let private paragraph (value: string) = p { text value }

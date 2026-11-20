@@ -4,8 +4,26 @@ open App.Articles
 open App.Common.View
 open App.Components
 open FSharp.ViewEngine
+open System
 open type Datastar
 open type Html
+
+let private date label (value: DateTimeOffset) = span {
+    _class "whitespace-nowrap"
+    text label
+    " "
+    time {
+        _datetime (value.ToString("yyyy-MM-dd"))
+        value.ToString("MMMM d, yyyy")
+    }
+}
+
+let private dates (createdAt: DateTimeOffset) (updatedAt: DateTimeOffset option) = fragment {
+    date "Published" createdAt
+    match updatedAt with
+    | Some value when value.Date > createdAt.Date -> date "Updated" value
+    | _ -> ()
+}
 
 module ArticleCard =
     let private tag (label: string) = fveBadge { label }
@@ -24,21 +42,8 @@ module ArticleCard =
             _class "py-6 border-b border-gray-300/60 dark:border-gray-700/60"
 
             div {
-                _class "flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400 dark:text-gray-500"
-
-                div {
-                    _class "inline-flex items-center whitespace-nowrap"
-
-                    span {
-                        _class "mr-1.5"
-                        fveIcon { _name IconName.CalendarDays; _size Size.Small }
-                    }
-
-                    time {
-                        _datetime (article'.createdAt.ToString("yyyy-MM-dd"))
-                        article'.createdAt.ToString("MMMM d, yyyy")
-                    }
-                }
+                _class "flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600 dark:text-gray-400"
+                dates article'.createdAt article'.updatedAt
             }
 
             h2 {
@@ -176,10 +181,9 @@ module ArticlePage =
                         div {
                             _class $"{contentWidth} flex flex-col items-start justify-end pt-28 pb-20 text-gray-50"
 
-                            time {
-                                _class "text-base text-gray-50 border-l border-gray-300 pl-2"
-                                _datetime (metadata.createdAt.ToString("yyyy-MM-dd"))
-                                metadata.createdAt.ToString("MMMM d, yyyy")
+                            div {
+                                _class "flex flex-wrap gap-x-4 gap-y-1 border-l border-gray-300 pl-2 text-base text-gray-50"
+                                dates metadata.createdAt metadata.updatedAt
                             }
 
                             h1 {

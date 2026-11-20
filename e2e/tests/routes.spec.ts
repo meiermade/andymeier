@@ -443,6 +443,47 @@ test('article filter menus support keyboard selection and preserve combined crit
   }
 })
 
+test('article sort preserves search and filters without changing publication dates', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/articles?year=2026')
+
+  const cards = page.getByRole('article')
+  const titles = cards.getByRole('heading', { level: 2 })
+  const sort = page.getByRole('button', { name: 'Sort articles' })
+  await expect(sort).toHaveText('Newest published')
+  await expect(titles.first()).toHaveText('Generating realistic images with Blender and OpenAI')
+
+  await sort.press('Enter')
+  await page.getByRole('menuitem', { name: 'Recently updated' }).click()
+  await expect(page).toHaveURL('/articles?year=2026&sort=updated')
+  await expect(sort).toHaveText('Recently updated')
+  await expect(titles.first()).toHaveText('Why I’m building Athleneum')
+  const updatedPost = cards.first()
+  await expect(updatedPost).toContainText('Published November 19, 2026')
+  await expect(updatedPost).toContainText('Updated November 20, 2026')
+
+  await page.getByRole('searchbox', { name: 'Search articles' }).fill('Athleneum')
+  await page.getByRole('button', { name: 'Search', exact: true }).click()
+  await expect(page).toHaveURL('/articles?search=Athleneum&year=2026&sort=updated')
+  await page.reload()
+  await expect(sort).toHaveText('Recently updated')
+  await page.getByRole('button', { name: 'Add filter' }).click()
+  await page.getByRole('button', { name: 'Tag filter' }).click()
+  await page.getByRole('menuitem', { name: 'Athleneum', exact: true }).click()
+  await expect(page).toHaveURL('/articles?search=Athleneum&tag=Athleneum&year=2026&sort=updated')
+  await page.getByRole('link', { name: 'Clear filters' }).click()
+  await expect(page).toHaveURL('/articles?search=Athleneum&sort=updated')
+
+  await sort.click()
+  await page.getByRole('menuitem', { name: 'Newest published' }).click()
+  await expect(page).toHaveURL('/articles?search=Athleneum')
+  await expect(titles.first()).toHaveText('Generating realistic images with Blender and OpenAI')
+  const originalPost = cards.first()
+  await expect(originalPost).toContainText('Published November 19, 2026')
+  await expect(originalPost).not.toContainText('Updated')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390)
+})
+
 test('shared navigation menus support keyboard focus and persistent theme selection', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
 
