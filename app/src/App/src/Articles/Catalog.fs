@@ -7,6 +7,7 @@ let all: Article list =
       Posts.PersonalInfrastructure.article
       Posts.DevelopmentEnvironment.article
       Posts.Bpc157.article
+      Posts.GeneratingRealisticImages.article
       Posts.WhyImBuildingAthleneum.article ]
     |> List.sortByDescending _.createdAt
 
