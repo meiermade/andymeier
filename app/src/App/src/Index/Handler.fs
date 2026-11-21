@@ -1,13 +1,11 @@
 module App.Index.Handler
 
-open App.Infrastructure
 open App.ServiceRegistry
 open App.Articles
 open App.Common.Handler
 open App.Index.View
 open Giraffe
 open Microsoft.AspNetCore.Http
-open StarFederation.Datastar.DependencyInjection
 
 let private getHomePage (services:Services) : HttpHandler =
     fun next ctx -> task {
@@ -15,23 +13,11 @@ let private getHomePage (services:Services) : HttpHandler =
         let recentArticles = Catalog.all |> List.truncate 3
         let page = homePage recentArticles
 
-        if ctx.IsDatastar then
-            let ds = ctx.GetService<IDatastarService>()
-            do! patchPage ctx ds metadata page "nav-home"
-            return Some ctx
-        else
-            return! renderPage services metadata page "nav-home" next ctx
+        return! renderPage services metadata page "nav-home" next ctx
     }
 
 let private getPrivacyPage (services:Services) : HttpHandler =
-    fun next ctx -> task {
-        if ctx.IsDatastar then
-            let ds = ctx.GetService<IDatastarService>()
-            do! patchPage ctx ds App.PrivacyPage.metadata App.PrivacyPage.page ""
-            return Some ctx
-        else
-            return! renderPage services App.PrivacyPage.metadata App.PrivacyPage.page "" next ctx
-    }
+    renderPage services App.PrivacyPage.metadata App.PrivacyPage.page ""
 
 let private privacyPolicyCheck expected : HttpHandler =
     fun _ ctx -> task {

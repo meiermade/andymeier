@@ -5,37 +5,8 @@ open App.Articles.Shared
 open App.Components
 open FSharp.ViewEngine
 open App.Common.View
-open System
 open type Datastar
 open type Html
-
-type FilterState =
-    { search: string option
-      tag: string option
-      publishedYear: int option
-      sort: ArticleSort }
-
-module FilterState =
-    let empty: FilterState = { search = None; tag = None; publishedYear = None; sort = NewestPublished }
-
-    let sortValue = function
-        | NewestPublished -> None
-        | RecentlyUpdated -> Some "updated"
-
-    let url (filters:FilterState) =
-        [ "search", filters.search
-          "tag", filters.tag
-          "year", filters.publishedYear |> Option.map string
-          "sort", sortValue filters.sort ]
-        |> List.choose (fun (key, value) ->
-            value
-            |> Option.map _.Trim()
-            |> Option.filter (String.IsNullOrWhiteSpace >> not)
-            |> Option.map (fun value -> $"{Uri.EscapeDataString key}={Uri.EscapeDataString value}"))
-        |> String.concat "&"
-        |> function
-            | "" -> "/articles"
-            | query -> $"/articles?{query}"
 
 type ArticlesPageState =
     { articles: Article list
@@ -49,18 +20,22 @@ type FilterOption =
       selected: bool }
 
 module FilterControl =
-    let menu (name:string) (label:string) (selectedLabel:string) (options:FilterOption list) =
-        div {
-            _data ("filter-control", name)
+    let chip (name:string) (label:string) (selected:string option) (options:FilterOption list) removeUrl =
+        fveButtonGroup {
+            _ariaLabel $"{label} filter"
+            label
             fveDropdownMenu {
                 _id $"filter-{name}"
+                _ariaLabel $"{label} filter values"
                 _class "[&>[role=menu]]:max-h-[min(16rem,calc(100dvh-2rem))] [&>[role=menu]]:overflow-y-auto"
                 _alignment DropdownMenuAlignment.Start
                 fveDropdownMenuTrigger {
+                    _variant ButtonVariant.Outline
+                    _data ("fve-group-control", "outline")
                     fveButton {
-                        _ariaLabel label
-                        _disabled options.IsEmpty
-                        span { _class "min-w-0 truncate"; selectedLabel }
+                        if selected.IsSome then
+                            _class "bg-[var(--fve-brand-subtle)] text-[var(--fve-brand-text)]"
+                        span { _class "max-w-[min(9rem,32vw)] truncate"; text (defaultArg selected "Any") }
                         fveIcon { _name IconName.ChevronDown; _size Size.Small }
                     }
                 }
@@ -69,24 +44,32 @@ module FilterControl =
                 for option in options do
                     fveDropdownMenuItem {
                         _href option.url
+                        _data ("article-filter", name)
                         option.label
                         if option.selected then
                             fveDropdownMenuItemTrailing { fveIcon { _name IconName.Check; _size Size.Small } }
                     }
             }
-        }
-
-    let active (label:string) (control:HtmlElement) (removeUrl:string) (removeLabel:string) =
-        div {
-            _class "flex min-w-0 items-center gap-1"
-            span { _class "text-sm text-[var(--fve-muted-text)]"; text label }
-            control
             fveLink {
                 _href removeUrl
-                _variant LinkVariant.Ghost
-                _color Color.Neutral
-                _ariaLabel removeLabel
+                _data ("article-filter", name)
+                _data ("remove-article-filter", "")
+                _variant LinkVariant.Outline
+                _ariaLabel $"Remove {label.ToLowerInvariant()} filter"
                 fveIcon { _name IconName.XMark; _size Size.Small }
+            }
+        }
+
+    let nativeSelect name label values selected =
+        Html.label {
+            _class "flex min-w-0 flex-col gap-1 text-sm"
+            text label
+            select {
+                _class "min-w-0 rounded-lg border border-[var(--fve-border)] bg-[var(--fve-surface)] px-2 py-1"
+                _name name
+                option { _value ""; "Any" }
+                for value in values do
+                    option { _value value; _selected ((selected = Some value)); text value }
             }
         }
 
@@ -103,6 +86,8 @@ let private articleIndex (state:ArticlesPageState) =
             { label = tag
               url = FilterState.url { filters with tag = Some tag }
               selected = filters.tag = Some tag })
+    let yearValues = state.years |> List.map string
+    let selectedYear = filters.publishedYear |> Option.map string
     let yearOptions =
         state.years
         |> List.map (fun year ->
@@ -111,13 +96,30 @@ let private articleIndex (state:ArticlesPageState) =
               selected = filters.publishedYear = Some year })
 
     let searchRequest =
-        "@get(el.action + '?' + new URLSearchParams(new FormData(el)), {headers: {'X-MeierMade-Article-Search': 'live'}, filterSignals: {include: /^$/}, requestCancellation: 'cleanup', retry: 'never'})"
+        "@get(el.action + '?' + new URLSearchParams([...new FormData(el), ['tag', el.querySelector('#article-tag').value], ['year', el.querySelector('#article-year').value]]), {headers: {'X-MeierMade-Article-Search': 'live'}, filterSignals: {include: /^$/}, requestCancellation: 'auto', retry: 'never'})"
+
+    let filterRequest =
+        ("""const link = evt.target.closest('a[data-article-filter]');
+if (link && evt.button === 0 && !evt.metaKey && !evt.ctrlKey && !evt.shiftKey && !evt.altKey) {
+    evt.preventDefault();
+    const query = new URL(link.href).searchParams;
+    const field = link.dataset.articleFilter;
+    if (link.hasAttribute('data-remove-article-filter')) {
+        if (field === 'tag') $article_tag_visible = false;
+        if (field === 'year') $article_year_visible = false;
+        requestAnimationFrame(() => el.querySelector('#add-filter-trigger').focus());
+    }
+    const input = field === 'search' ? el.elements.namedItem(field) : el.querySelector('#article-' + field);
+    input.value = query.get(field) ?? '';
+    if (field === 'search') input.focus();
+""" + searchRequest + ";\n}")
 
     let clearSearch = span {
         _id "article-clear-search"
         if not hasSearch then _class "hidden"
         fveLink {
             _href clearSearchUrl
+            _data ("article-filter", "search")
             _ariaLabel "Clear search"
             _variant LinkVariant.Ghost
             _color Color.Neutral
@@ -125,35 +127,27 @@ let private articleIndex (state:ArticlesPageState) =
         }
     }
 
-    let addFilter = div {
-        _id "article-add-filter"
-        if filters.tag.IsSome && filters.publishedYear.IsSome then _class "hidden"
-        if filters.tag.IsNone || filters.publishedYear.IsNone then
-            fvePopover {
-                _id "add-filter"
-                _alignment PopoverAlignment.End
-                fvePopoverTrigger {
-                    fveButton {
-                        fveIcon { _name IconName.Plus; _size Size.Small }
-                        "Add filter"
-                    }
-                }
-                fvePopoverContent {
-                    _class "grid gap-3"
-                    if filters.tag.IsNone then
-                        div {
-                            _class "grid gap-1"
-                            span { _class "text-sm font-medium"; "Tag" }
-                            FilterControl.menu "tag" "Tag filter" "Select tag" tagOptions
-                        }
-                    if filters.publishedYear.IsNone then
-                        div {
-                            _class "grid gap-1"
-                            span { _class "text-sm font-medium"; "Published" }
-                            FilterControl.menu "year" "Published year filter" "Select year" yearOptions
-                        }
-                }
+    let addFilter = fveDropdownMenu {
+        _id "add-filter"
+        _class "noscript:hidden"
+        fveDropdownMenuTrigger {
+            _variant ButtonVariant.Outline
+            _dataAttr ("disabled", "$article_tag_visible && $article_year_visible ? '' : null")
+            fveButton {
+                fveIcon { _name IconName.Plus; _size Size.Small }
+                "Add filter"
             }
+        }
+        fveDropdownMenuItem {
+            _class "group-data-[tag-visible]/article-filters:hidden"
+            _dataOn ("click", "$article_tag_visible = true; requestAnimationFrame(() => document.getElementById('filter-tag-trigger').click())")
+            "Tag"
+        }
+        fveDropdownMenuItem {
+            _class "group-data-[year-visible]/article-filters:hidden"
+            _dataOn ("click", "$article_year_visible = true; requestAnimationFrame(() => document.getElementById('filter-year-trigger').click())")
+            "Publication year"
+        }
     }
 
     let sortControl = fveButtonGroup {
@@ -176,25 +170,31 @@ let private articleIndex (state:ArticlesPageState) =
 
     let activeFilters = div {
         _id "article-active-filters"
-        if hasActiveFilters then
-            _class "mt-3 flex flex-wrap items-center gap-2"
-            match filters.tag with
-            | Some tag ->
-                FilterControl.active
-                    "Tag"
-                    (FilterControl.menu "tag" "Tag filter" tag tagOptions)
-                    (FilterState.url { filters with tag = None })
-                    "Remove tag filter"
-            | None -> ()
-            match filters.publishedYear with
-            | Some year ->
-                FilterControl.active
-                    "Published"
-                    (FilterControl.menu "year" "Published year filter" (string year) yearOptions)
-                    (FilterState.url { filters with publishedYear = None })
-                    "Remove published year filter"
-            | None -> ()
-            fveLink { _href clearFiltersUrl; "Clear filters" }
+        _class "hidden group-data-[tag-visible]/article-filters:flex group-data-[year-visible]/article-filters:flex noscript:hidden! mt-3 flex-wrap items-center gap-2"
+        div {
+            _class "hidden min-w-0 max-w-full group-data-[tag-visible]/article-filters:block"
+            FilterControl.chip "tag" "Tag" filters.tag tagOptions (FilterState.url { filters with tag = None })
+        }
+        div {
+            _class "hidden min-w-0 max-w-full group-data-[year-visible]/article-filters:block"
+            FilterControl.chip "year" "Publication year" selectedYear yearOptions (FilterState.url { filters with publishedYear = None })
+        }
+        fveButton {
+            _type "button"
+            _variant ButtonVariant.Ghost
+            _color Color.Neutral
+            _dataOn (
+                "click",
+                """const form = el.closest('form');
+form.querySelector('#article-tag').value = '';
+form.querySelector('#article-year').value = '';
+$article_tag_visible = false;
+$article_year_visible = false;
+requestAnimationFrame(() => form.querySelector('#add-filter-trigger').focus());
+form.requestSubmit();"""
+            )
+            "Clear filters"
+        }
     }
 
     let results = div {
@@ -227,16 +227,17 @@ let private articleIndex (state:ArticlesPageState) =
                 form {
                     _method "get"
                     _action "/articles"
-                    _class "border-b border-gray-300/60 py-4 dark:border-gray-700/60"
+                    _class "group/article-filters border-b border-gray-300/60 py-4 dark:border-gray-700/60"
+                    _dataSignals ("article_tag_visible", ["ifmissing"], if filters.tag.IsSome then "true" else "false")
+                    _dataSignals ("article_year_visible", ["ifmissing"], if selectedYear.IsSome then "true" else "false")
+                    _dataAttr ("data-tag-visible", "$article_tag_visible ? '' : null")
+                    _dataAttr ("data-year-visible", "$article_year_visible ? '' : null")
                     _dataOn ("input__debounce.200ms", "evt.target.id === 'article-search' && " + searchRequest)
                     _dataOn ("change", "evt.target.name === 'sort' && " + searchRequest)
                     _dataOn ("submit__prevent", searchRequest)
-                    match filters.tag with
-                    | Some tag -> input { _type "hidden"; _name "tag"; _value tag }
-                    | None -> ()
-                    match filters.publishedYear with
-                    | Some year -> input { _type "hidden"; _name "year"; _value (string year) }
-                    | None -> ()
+                    _dataOn ("click", filterRequest)
+                    input { _type "hidden"; _id "article-tag"; _value (defaultArg filters.tag "") }
+                    input { _type "hidden"; _id "article-year"; _value (defaultArg selectedYear "") }
                     div {
                         _class "flex flex-col gap-2 sm:flex-row sm:items-center"
                         div {
@@ -266,16 +267,24 @@ let private articleIndex (state:ArticlesPageState) =
                             _class "flex flex-wrap items-center gap-2 sm:justify-end"
                             addFilter
                             sortControl
-                            noscript { fveButton { _type "submit"; "Apply" } }
                         }
                     }
                     activeFilters
+                    noscript {
+                        div {
+                            _class "mt-3 flex flex-wrap items-end gap-2"
+                            FilterControl.nativeSelect "tag" "Tag" state.tags filters.tag
+                            FilterControl.nativeSelect "year" "Publication year" yearValues selectedYear
+                            button { _type "submit"; _class "rounded-lg border border-[var(--fve-border)] px-3 py-1"; "Apply" }
+                            if hasActiveFilters then fveLink { _href clearFiltersUrl; "Clear filters" }
+                        }
+                    }
                 }
                 results
             }
         }
 
-    content, fragment { clearSearch; addFilter; activeFilters; results }
+    content, fragment { clearSearch; activeFilters; results }
 
 let articlesPage state = articleIndex state |> fst |> Page.primary
 

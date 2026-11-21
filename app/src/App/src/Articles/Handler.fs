@@ -6,6 +6,7 @@ open App.Articles
 open App.Articles.View
 open App.Common.Handler
 open App.Common.View
+open FSharp.ViewEngine
 open Giraffe
 open Microsoft.AspNetCore.Http
 open StarFederation.Datastar.DependencyInjection
@@ -68,7 +69,9 @@ let private getArticlesPage (services:Services) : HttpHandler =
         let canonicalUrl = FilterState.url filters
         let requestedUrl = ctx.Request.Path.Value + ctx.Request.QueryString.ToString()
 
-        if not ctx.IsDatastar && requestedUrl <> canonicalUrl then
+        let isLive = ctx.IsDatastar && string ctx.Request.Headers["X-MeierMade-Article-Search"] = "live"
+
+        if not isLive && requestedUrl <> canonicalUrl then
             return! redirectTo false canonicalUrl next ctx
         else
             let allArticles = Catalog.all
@@ -79,19 +82,14 @@ let private getArticlesPage (services:Services) : HttpHandler =
                   years = allArticles |> List.map (fun article -> article.createdAt.Year) |> List.distinct |> List.sortDescending }
 
             let metadata = articlesMetadata canonicalUrl
-            if ctx.IsDatastar && string ctx.Request.Headers["X-MeierMade-Article-Search"] = "live" then
+            if isLive then
                 let ds = ctx.GetService<IDatastarService>()
-                do! patchElement ds (articleSearchResults state)
-                for element in PageHead.patchableElements metadata do
-                    do! patchElement ds element
+                do! ds.PatchElementsAsync(Render.toString (articleSearchResults state))
+                do! ds.PatchElementsAsync(Render.toString (PageHead.canonicalElement metadata))
 
-                // Each query updates the current entry without moving focus or creating a history entry per keystroke.
+                // Refine the current list entry without creating a history entry per keystroke.
                 let url = JsonSerializer.Serialize canonicalUrl
-                do! ds.ExecuteScriptAsync($"if (location.pathname === '/articles') {{ history.replaceState(history.state, '', {url}); window.meierMadeScrollUrl = location.pathname + location.search; }}")
-                return Some ctx
-            elif ctx.IsDatastar then
-                let ds = ctx.GetService<IDatastarService>()
-                do! patchPage ctx ds metadata (articlesPage state) "nav-articles"
+                do! ds.ExecuteScriptAsync($"history.replaceState(history.state, '', {url});")
                 return Some ctx
             else
                 return! renderPage services metadata (articlesPage state) "nav-articles" next ctx
@@ -110,23 +108,10 @@ let private getArticlePage (services:Services) (id:string) : HttpHandler =
                     | _ -> article.page
                 | _ -> article.page
 
-            let metadata = articleMetadata article
-
-            if ctx.IsDatastar then
-                let ds = ctx.GetService<IDatastarService>()
-                do! patchPage ctx ds metadata page "nav-articles"
-                return Some ctx
-            else
-                return! renderPage services metadata page "nav-articles" next ctx
+            return! renderPage services (articleMetadata article) page "nav-articles" next ctx
         | None ->
-            let page = notFoundPage
             let metadata = notFoundMetadata ctx.Request.Path.Value
-            if ctx.IsDatastar then
-                let ds = ctx.GetService<IDatastarService>()
-                do! patchPage ctx ds metadata page "nav-articles"
-                return Some ctx
-            else
-                return! renderPage services metadata page "nav-articles" next ctx
+            return! renderPage services metadata notFoundPage "nav-articles" next ctx
     }
 
 let handler (services:Services) : HttpHandler =

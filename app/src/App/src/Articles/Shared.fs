@@ -26,7 +26,11 @@ let private dates (createdAt: DateTimeOffset) (updatedAt: DateTimeOffset option)
 }
 
 module ArticleCard =
-    let private tag (label: string) = fveBadge { label }
+    let private tag (label: string) = a {
+        _href (FilterState.url { FilterState.empty with tag = Some label })
+        _class "inline-flex rounded-[var(--fve-radius-control)] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--fve-brand-ring)]"
+        fveBadge { label }
+    }
 
     let tags (tags: string[]) = div {
         _class "flex flex-wrap gap-2"
@@ -51,7 +55,6 @@ module ArticleCard =
 
                 a {
                     _href url
-                    _dataOn ("click", Navigation.action url)
                     _class "hover:text-emerald-600 dark:hover:text-emerald-400"
                     article'.title
                 }
@@ -159,7 +162,6 @@ module ArticlePage =
 
         let page = div {
             _data ("article-page", "")
-            _data ("article-url", SiteUrl.article metadata.permalink)
             _data ("telemetry-content-id", metadata.permalink)
             _dataOn ("scroll__window", "window.articleNavigation?.schedule()")
             _dataOn ("resize__window", "window.articleNavigation?.schedule()")
@@ -254,9 +256,8 @@ module ArticlePage =
             script {
                 js
                     """
-window.articleNavigation = window.articleNavigation || {
+window.articleNavigation = {
     frame: 0,
-    observer: null,
     schedule() {
         if (this.frame) return;
         this.frame = requestAnimationFrame(() => { this.frame = 0; this.update(); });
@@ -277,51 +278,18 @@ window.articleNavigation = window.articleNavigation || {
             else link.removeAttribute('aria-current');
         }
     },
-    save() {
-        history.replaceState({ ...history.state, meierMadeScrollX: scrollX, meierMadeScrollY: scrollY }, '', location.href);
-    },
     navigate(event) {
         if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        const link = event.currentTarget;
-        const target = document.getElementById(decodeURIComponent(link.hash.slice(1)));
-        if (!target) return;
-        event.preventDefault();
-        this.save();
-        const disclosure = link.closest('details');
+        const disclosure = event.currentTarget.closest('details');
         if (disclosure) disclosure.open = false;
-        if (location.hash !== link.hash) history.pushState(null, '', link.hash);
-        target.scrollIntoView({ block: 'start' });
-        target.focus({ preventScroll: true });
-        this.save();
-        this.schedule();
-    },
-    restore() {
-        const state = history.state;
-        if (typeof state?.meierMadeScrollY === 'number') {
-            window.scrollTo(state.meierMadeScrollX || 0, state.meierMadeScrollY);
-        } else if (location.hash) {
-            document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView({ block: 'start' });
-        }
-        this.schedule();
-    },
-    observe() {
-        this.observer?.disconnect();
-        this.observer = new ResizeObserver(() => this.schedule());
-        // The shared page container survives Datastar page morphs. Updates always query current content.
-        const content = document.getElementById('page-content');
-        if (content) this.observer.observe(content);
-        // The site's manual history restoration also disables native fragment restoration on reload.
-        if (document.readyState !== 'complete') {
-            window.addEventListener('load', () => this.restore(), { once: true });
-        }
-        this.schedule();
     }
 };
-window.articleNavigation.observe();
+new ResizeObserver(() => window.articleNavigation.schedule()).observe(document.getElementById('page-content'));
+window.addEventListener('hashchange', () => window.articleNavigation.schedule());
 """
             }
 
-            script { _src (Asset.fingerprinted "/scripts/prism.js") }
+            script { _src (Asset.fingerprinted "/js/prism.js") }
             script { js "function highlightCode(el){if(el?.querySelectorAll)Prism.highlightAllUnder(el)}" }
 
             script {

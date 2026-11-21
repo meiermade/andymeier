@@ -718,7 +718,7 @@ let private sections =
             paragraph
                 "The value is not just that I can deploy another application. It is that I and my agents can use the same APIs, scoped tools, and telemetry to understand what it is doing."
             script {
-                _src (Asset.fingerprinted "/scripts/mermaid.11.16.0.min.js")
+                _src (Asset.fingerprinted "/js/mermaid.11.16.0.min.js")
                 _onload "window.renderMermaid?.(document)"
             }
             script {

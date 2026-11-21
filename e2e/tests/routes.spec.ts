@@ -4,7 +4,7 @@ const isRemote = process.env.E2E_SCOPE === 'deployed'
 const siteBaseUrl = process.env.SITE_E2E_BASE_URL ?? (isRemote ? 'https://andymeier.dev' : 'http://127.0.0.1:5051')
 const otelEndpoint = isRemote ? 'https://otel.meiermade.com' : 'https://otel.test'
 const expectedAnalyticsMode = process.env.E2E_EXPECTED_ANALYTICS_MODE
-const isTelemetryScriptRequest = (url: string) => /^\/scripts\/telemetry(?:\.[a-f0-9]+)?\.js$/.test(new URL(url).pathname)
+const isTelemetryScriptRequest = (url: string) => /^\/js\/telemetry(?:\.[a-f0-9]+)?\.js$/.test(new URL(url).pathname)
 const testImage = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64')
 
 test.beforeEach(async ({ page }) => {
@@ -23,9 +23,9 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('recognizes local and fingerprinted telemetry script requests', () => {
-  expect(isTelemetryScriptRequest('https://andymeier.dev/scripts/telemetry.js')).toBe(true)
-  expect(isTelemetryScriptRequest('https://andymeier.dev/scripts/telemetry.033ef8688173.js')).toBe(true)
-  expect(isTelemetryScriptRequest('https://andymeier.dev/scripts/privacy.8683adb54986.js')).toBe(false)
+  expect(isTelemetryScriptRequest('https://andymeier.dev/js/telemetry.js')).toBe(true)
+  expect(isTelemetryScriptRequest('https://andymeier.dev/js/telemetry.033ef8688173.js')).toBe(true)
+  expect(isTelemetryScriptRequest('https://andymeier.dev/js/privacy.8683adb54986.js')).toBe(false)
 })
 
 test('homepage renders recent articles', async ({ page }) => {
@@ -48,90 +48,42 @@ test('homepage renders recent articles', async ({ page }) => {
   await expect(page.getByRole('progressbar', { name: 'Article reading progress' })).toBeHidden()
 })
 
-test('internal navigation preserves history and restores entry scroll positions', async ({ page }) => {
-  const datastarRequests: string[] = []
+test('native navigation restores the filtered article list and its scroll position', async ({ page }) => {
+  const documents: string[] = []
   page.on('request', request => {
-    if (request.headers()['datastar-request'] === 'true') datastarRequests.push(new URL(request.url()).pathname)
+    if (request.isNavigationRequest()) documents.push(new URL(request.url()).pathname)
   })
 
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
-  const documentMarker = await page.evaluate(() => {
-    const marker = crypto.randomUUID()
-    ;(window as Window & { documentMarker?: string }).documentMarker = marker
-    return marker
-  })
-
-  await page.evaluate(() => {
-    const style = document.createElement('style')
-    style.textContent = '#page-content { min-height: 3000px !important; }'
-    document.head.append(style)
-    document.documentElement.style.scrollBehavior = 'auto'
-    window.scrollTo(0, document.documentElement.scrollHeight)
-  })
-  const homeScrollY = await page.evaluate(() => window.scrollY)
-  expect(homeScrollY).toBeGreaterThan(0)
-
-  await expect(page.locator('#nav-articles')).toHaveAttribute('href', '/articles')
-  await page.getByRole('link', { name: 'Articles', exact: true }).last().click()
-  await expect(page).toHaveURL('/articles')
-  await expect(page.getByRole('heading', { name: 'Articles', exact: true })).toBeVisible()
-  await expect(page).toHaveTitle('Articles | Andy Meier')
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://andymeier.dev/articles')
-  await expect(page.locator('#page-content')).toBeFocused()
-  await expect(page.locator('#page-content')).toHaveCSS('outline-style', 'none')
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
-  expect(await page.evaluate(() => (window as Window & { documentMarker?: string }).documentMarker)).toBe(documentMarker)
-
-  const currentRouteHistoryLength = await page.evaluate(() => history.length)
+  await page.goto('/')
   await page.locator('#nav-articles').click()
-  await expect(page).toHaveURL('/articles')
-  await expect.poll(() => page.evaluate(() => history.length)).toBe(currentRouteHistoryLength)
+  await expect(page).toHaveTitle('Articles | Andy Meier')
+  await expect(page.locator('#nav-articles')).toHaveAttribute('aria-current', 'page')
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://andymeier.dev/articles')
+  await page.getByRole('combobox', { name: 'Sort by' }).and(page.locator('button')).click()
+  await page.getByRole('option', { name: 'Updated' }).click()
+  await expect(page).toHaveURL('/articles?sort=updated')
 
   const infrastructureLink = page.getByRole('link', { name: 'Personal Infrastructure', exact: true })
-  // Center the card before measuring so the subsequent click does not scroll it into view again.
-  await infrastructureLink.evaluate(el => el.scrollIntoView({ block: 'center' }))
-  const listScrollBeforeArticle = await page.evaluate(() => window.scrollY)
+  await infrastructureLink.evaluate(el => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  const listScrollY = await page.evaluate(() => scrollY)
+  expect(listScrollY).toBeGreaterThan(0)
   await infrastructureLink.click()
-  await expect(page).toHaveURL('/articles/personal-infrastructure')
-  await expect(page.getByRole('heading', { name: 'Personal Infrastructure', exact: true }).first()).toBeVisible()
   await expect(page).toHaveTitle('Personal Infrastructure | Andy Meier')
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://andymeier.dev/articles/personal-infrastructure')
+  expect(documents).toEqual(['/', '/articles', '/articles/personal-infrastructure'])
 
   await page.goBack()
-  await expect(page).toHaveURL('/articles')
-  await expect(page.getByRole('heading', { name: 'Articles', exact: true })).toBeVisible()
-  await expect(page).toHaveTitle('Articles | Andy Meier')
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(listScrollBeforeArticle)
-
+  await expect(page).toHaveURL('/articles?sort=updated')
+  await expect(page.getByRole('combobox', { name: 'Sort by' })).toHaveText('Updated')
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(listScrollY, 0)
   await page.goBack()
-  await expect(page).toHaveURL('/')
-  await expect(page.getByRole('heading', { name: 'Andy Meier', exact: true })).toBeVisible()
   await expect(page).toHaveTitle('Andy Meier')
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(homeScrollY)
-
   await page.goForward()
-  await expect(page).toHaveURL('/articles')
-  await expect(page.getByRole('heading', { name: 'Articles', exact: true })).toBeVisible()
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(listScrollBeforeArticle)
-
-  await page.evaluate(() => window.scrollTo(0, 1200))
-  const articlesScrollY = await page.evaluate(() => window.scrollY)
-  expect(articlesScrollY).toBeGreaterThan(0)
-  await expect.poll(() => page.evaluate(() => history.state?.meierMadeScrollY), { timeout: 2000 }).toBe(articlesScrollY)
-
-  await page.goBack()
-  await expect(page).toHaveURL('/')
-  await expect(page.getByRole('heading', { name: 'Andy Meier', exact: true })).toBeVisible()
-  await page.goForward()
-  await expect(page).toHaveURL('/articles')
-  await expect(page.getByRole('heading', { name: 'Articles', exact: true })).toBeVisible()
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(articlesScrollY)
-
-  expect(await page.evaluate(() => (window as Window & { documentMarker?: string }).documentMarker)).toBe(documentMarker)
-  expect(datastarRequests).toEqual(['/articles', '/articles/personal-infrastructure', '/articles', '/', '/articles', '/', '/articles'])
+  await expect(page).toHaveURL('/articles?sort=updated')
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(listScrollY, 0)
 })
 
-test('privacy navigation preserves the dark theme and synchronizes history', async ({ page }) => {
+test('privacy navigation preserves the dark theme through native history', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('theme', 'dark'))
   await page.goto('/articles/bpc-157-elbow-research')
   await expect(page.locator('html')).toHaveClass(/dark/)
@@ -143,8 +95,7 @@ test('privacy navigation preserves the dark theme and synchronizes history', asy
   await expect(page).toHaveTitle('Privacy | Andy Meier')
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://andymeier.dev/privacy')
   await expect(page.locator('html')).toHaveClass(/dark/)
-  await expect(page.locator('html')).toHaveAttribute('data-test-document', 'privacy-navigation')
-  await expect(page.locator('#page-content')).toBeFocused()
+  await expect(page.locator('html')).not.toHaveAttribute('data-test-document', 'privacy-navigation')
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
   await expect(page.getByRole('progressbar', { name: 'Article reading progress' })).toBeHidden()
 
@@ -158,7 +109,7 @@ test('privacy navigation preserves the dark theme and synchronizes history', asy
   await expect(page.getByRole('heading', { name: 'Privacy', exact: true })).toBeVisible()
   await expect(page).toHaveTitle('Privacy | Andy Meier')
   await expect(page.locator('html')).toHaveClass(/dark/)
-  await expect(page.locator('html')).toHaveAttribute('data-test-document', 'privacy-navigation')
+  await expect(page.locator('html')).not.toHaveAttribute('data-test-document', 'privacy-navigation')
 })
 
 test('modified internal-link clicks retain native new-tab behavior', async ({ page, context }) => {
@@ -176,7 +127,7 @@ test('modified internal-link clicks retain native new-tab behavior', async ({ pa
   await openedPage.close()
 })
 
-test('mobile navigation closes after enhanced navigation', async ({ page }) => {
+test('mobile navigation closes after opening the Articles page', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
   const menu = page.getByRole('menu', { name: 'Open navigation' })
@@ -187,7 +138,7 @@ test('mobile navigation closes after enhanced navigation', async ({ page }) => {
 
   await expect(page).toHaveURL('/articles')
   await expect(menu).toBeHidden()
-  await expect(page.locator('#page-content')).toBeFocused()
+  await expect(page.getByRole('heading', { name: 'Articles', exact: true })).toBeVisible()
 
   await page.getByRole('button', { name: 'Choose theme' }).click()
   await page.getByRole('menuitemradio', { name: 'Dark' }).click()
@@ -220,7 +171,24 @@ test('internal links retain a full-document fallback without JavaScript', async 
   await context.close()
 })
 
-test('personal infrastructure diagrams render after client-side navigation', async ({ page }) => {
+test('article search, sort and filters submit together without JavaScript', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false })
+  try {
+    const page = await context.newPage()
+    await page.goto(`${siteBaseUrl}/articles?search=bpc&sort=updated`)
+    await page.getByRole('combobox', { name: 'Tag', exact: true }).selectOption('Health')
+    await page.getByRole('combobox', { name: 'Publication year' }).selectOption('2026')
+    await page.getByRole('button', { name: 'Apply', exact: true }).click()
+    await expect(page).toHaveURL(/\/articles\?search=bpc&tag=Health&year=2026&sort=updated$/)
+    await expect(page.getByRole('heading', { name: 'BPC-157: Elbow Tendonitis Recovery', exact: true })).toBeVisible()
+    await page.getByRole('link', { name: 'Clear filters', exact: true }).click()
+    await expect(page).toHaveURL(/\/articles\?search=bpc&sort=updated$/)
+  } finally {
+    await context.close()
+  }
+})
+
+test('personal infrastructure diagrams render after following a link', async ({ page }) => {
   await page.goto('/articles', { waitUntil: 'domcontentloaded' })
   await page.getByRole('link', { name: 'Personal Infrastructure', exact: true }).click()
   await expect(page).toHaveURL('/articles/personal-infrastructure')
@@ -405,41 +373,60 @@ test('article search and source-controlled detail content are deterministic', as
   }
 })
 
-test('article filter menus support keyboard selection and preserve combined criteria', async ({ page }) => {
-  for (const filter of [
-    { name: 'tag', ariaLabel: 'Tag filter', value: 'Health' },
-    { name: 'year', ariaLabel: 'Published year filter', value: '2026' },
-  ]) {
-    await page.goto('/articles?search=bpc', { waitUntil: 'domcontentloaded' })
-    await page.getByRole('button', { name: 'Add filter', exact: true }).click()
+test('article tag badges open a fresh browse by tag from cards and details', async ({ page }) => {
+  const articles = '/articles'
+  const tagged = `${articles}?tag=Athleneum`
+  const blenderTitle = 'Generating realistic images with Blender and OpenAI'
+  await page.goto(`${articles}?search=Blender&year=2026&sort=updated`)
+  const card = page.getByRole('article').filter({ has: page.getByRole('heading', { name: blenderTitle }) })
+  await card.getByRole('link', { name: 'Athleneum', exact: true }).press('Enter')
+  await expect(page).toHaveURL(tagged)
+  await expect(page.getByRole('button', { name: 'Tag filter values' })).toHaveText('Athleneum')
+  await expect(page.getByRole('article')).toHaveCount(2)
 
-    const control = page.locator(`[data-filter-control="${filter.name}"]`)
-    const button = control.getByRole('button', { name: filter.ariaLabel })
-    const panel = control.getByRole('menu')
-    const option = control.getByRole('menuitem', { name: filter.value, exact: true })
+  await card.getByRole('link', { name: blenderTitle }).click()
+  await expect(page.getByRole('heading', { name: blenderTitle, exact: true })).toBeVisible()
+  await page.getByRole('banner').getByRole('link', { name: 'Athleneum', exact: true }).click()
+  await expect(page).toHaveURL(tagged)
+  await expect(page.getByRole('button', { name: 'Tag filter values' })).toHaveText('Athleneum')
+})
 
-    await button.focus()
-    await button.press('Enter')
-    await expect(panel).toBeVisible()
-    await expect(button).toHaveAttribute('aria-expanded', 'true')
-    await page.keyboard.type(filter.value)
-    await expect(option).toBeFocused()
+test('article filter chips open from Add filter and support keyboard selection', async ({ page }) => {
+  await page.goto('/articles?search=bpc')
+  const add = page.getByRole('button', { name: 'Add filter', exact: true })
+  await add.press('Enter')
+  await expect(page.getByRole('menuitem', { name: 'Tag', exact: true })).toBeFocused()
+  await page.keyboard.press('Enter')
 
-    await page.keyboard.press('Escape')
-    await expect(panel).toBeHidden()
-    await expect(button).toBeFocused()
+  const tag = page.getByRole('group', { name: 'Tag filter', exact: true })
+  const value = tag.getByRole('button', { name: 'Tag filter values' })
+  const health = tag.getByRole('menuitem', { name: 'Health', exact: true })
+  await expect(value).toHaveText('Any')
+  await expect(tag.getByRole('menu')).toBeVisible()
+  await expect(page).toHaveURL('/articles?search=bpc')
+  await page.keyboard.press('Escape')
+  await expect(tag.getByRole('menu')).toBeHidden()
+  await expect(value).toBeFocused()
+  await value.press('ArrowDown')
+  await page.keyboard.type('Health')
+  await expect(health).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL('/articles?search=bpc&tag=Health')
+  await expect(value).toHaveText('Health')
+  await expect(tag.getByRole('menu')).toBeHidden()
+  await expect(value).toBeFocused()
 
-    await button.press('Space')
-    await expect(panel).toBeVisible()
-    await page.keyboard.type(filter.value)
-    await expect(option).toBeFocused()
-    await page.keyboard.press('Enter')
-
-    await expect.poll(() => new URL(page.url()).searchParams.get(filter.name)).toBe(filter.value)
-    expect(new URL(page.url()).searchParams.get('search')).toBe('bpc')
-    expect(new URL(page.url()).searchParams.has('datastar')).toBe(false)
-    await expect(page.getByRole('heading', { name: 'BPC-157: Elbow Tendonitis Recovery', exact: true })).toBeVisible()
-  }
+  await add.click()
+  await expect(page.getByRole('menuitem', { name: 'Tag', exact: true })).toBeHidden()
+  await page.getByRole('menuitem', { name: 'Publication year', exact: true }).click()
+  await expect(add).toBeDisabled()
+  await page.getByRole('menuitem', { name: '2026', exact: true }).click()
+  await expect(page).toHaveURL('/articles?search=bpc&tag=Health&year=2026')
+  await expect(page.getByRole('heading', { name: 'BPC-157: Elbow Tendonitis Recovery', exact: true })).toBeVisible()
+  await tag.getByRole('link', { name: 'Remove tag filter' }).click()
+  await expect(page).toHaveURL('/articles?search=bpc&year=2026')
+  await expect(tag).toBeHidden()
+  await expect(add).toBeFocused()
 })
 
 test('article sort preserves search and filters without changing publication dates', async ({ page }) => {
@@ -472,17 +459,24 @@ test('article sort preserves search and filters without changing publication dat
   await search.fill('Athleneum')
   await expect(page).toHaveURL('/articles?search=Athleneum&year=2026&sort=updated')
   await expect(search).toBeFocused()
+  await expect(search).toHaveCSS('box-shadow', 'none')
+  const searchGroup = page.getByRole('group', { name: 'Article search', exact: true })
+  await expect(searchGroup).toHaveCSS('outline-style', 'solid')
   await expect(titles).toHaveCount(2)
   expect(await page.evaluate(() => history.length)).toBe(historyLength)
   await page.reload()
   await expect(search).toHaveValue('Athleneum')
   await expect(sort).toHaveText('Updated')
   await page.getByRole('button', { name: 'Add filter' }).click()
-  await page.getByRole('button', { name: 'Tag filter' }).click()
+  await page.getByRole('menuitem', { name: 'Tag', exact: true }).click()
   await page.getByRole('menuitem', { name: 'Athleneum', exact: true }).click()
   await expect(page).toHaveURL('/articles?search=Athleneum&tag=Athleneum&year=2026&sort=updated')
-  await page.getByRole('link', { name: 'Clear filters' }).click()
+  const clearFilters = page.getByRole('button', { name: 'Clear filters', exact: true })
+  await clearFilters.press('Enter')
   await expect(page).toHaveURL('/articles?search=Athleneum&sort=updated')
+  await expect(clearFilters).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Add filter', exact: true })).toBeFocused()
+  expect(await page.evaluate(() => history.length)).toBe(historyLength)
 
   await sort.click()
   await page.getByRole('option', { name: 'Published' }).click()
@@ -787,6 +781,10 @@ test('browser telemetry starts only after analytics consent', async ({ page }) =
   await expect(page).toHaveURL('/articles/personal-infrastructure')
   expect(otlpRequests).toEqual([])
 
+  // Before consent, attribution stays in the landing document and isn't persisted across pages.
+  await page.goBack()
+  await page.goBack()
+  await expect(page).toHaveURL(/utm_source=linkedin/)
   await page.getByRole('button', { name: 'Analytics settings' }).click()
   const consentResponse = page.waitForResponse(response =>
     response.url().endsWith('/privacy/consent') && response.request().method() === 'POST',
@@ -803,6 +801,10 @@ test('browser telemetry starts only after analytics consent', async ({ page }) =
 
   await expect.poll(() => telemetryScripts.length).toBeGreaterThan(0)
   await expect.poll(() => otlpRequests.length).toBeGreaterThan(0)
+  expect(otlpBodies.some(body => body.includes(Buffer.from('browser.web_vital')))).toBe(false)
+  await page.locator('#nav-articles').click()
+  await page.getByRole('link', { name: 'Personal Infrastructure', exact: true }).click()
+  await expect(page).toHaveURL('/articles/personal-infrastructure')
   await expect.poll(() =>
     otlpBodies.some(body => body.includes(Buffer.from('com.meiermade.content.article_opened'))),
   ).toBe(true)
@@ -810,13 +812,11 @@ test('browser telemetry starts only after analytics consent', async ({ page }) =
   expect(otlpBodies.some(body => body.includes(Buffer.from('linkedin')))).toBe(true)
   expect(otlpBodies.some(body => body.includes(Buffer.from('personal-infrastructure')))).toBe(true)
   expect(otlpBodies.some(body => body.includes(Buffer.from('private@example.com')))).toBe(false)
-  await page.waitForTimeout(1500)
-  expect(otlpBodies.some(body => body.includes(Buffer.from('browser.web_vital')))).toBe(false)
-
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
   await expect.poll(() =>
     otlpBodies.some(body => body.includes(Buffer.from('com.meiermade.content.article_completed'))),
   ).toBe(true)
+  expect(Buffer.concat(otlpBodies).toString().split('com.meiermade.content.article_opened')).toHaveLength(2)
   expect(otlpRequests.every(url => url === `${otelEndpoint}/v1/logs` || url === `${otelEndpoint}/v1/traces`)).toBe(true)
   expect(advertisingRequests).toEqual([])
   const firstSessionId = await page.evaluate(() => sessionStorage.getItem('opentelemetry-session-id'))

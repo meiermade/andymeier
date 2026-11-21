@@ -7,8 +7,8 @@ obj
 bin
 out
 compiled.css
-src/App/wwwroot/scripts/components.js
-src/App/wwwroot/scripts/prism.js
-src/App/wwwroot/scripts/privacy.js
-src/App/wwwroot/scripts/telemetry.js
+src/App/wwwroot/js/components.js
+src/App/wwwroot/js/prism.js
+src/App/wwwroot/js/privacy.js
+src/App/wwwroot/js/telemetry.js
 node_modules

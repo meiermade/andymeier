@@ -1,7 +1,6 @@
 module App.Index.View
 
 open FSharp.ViewEngine
-open App.Infrastructure
 open App.Articles
 open App.Articles.Shared
 open App.Common.View
@@ -62,7 +61,6 @@ let homePage (recentArticles:Article list) =
                     _class "mt-4"
                     fveLink {
                         _href "/articles"
-                        _dataOn ("click", Navigation.action "/articles")
                         "View all"
                     }
                 }

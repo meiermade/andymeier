@@ -70,7 +70,7 @@ test('desktop articles span the site frame with the cover and keep the body besi
   expect(contentsBox!.y).toBe(articleBox!.y)
 })
 
-test('section links, scroll tracking, and history work after enhanced navigation', async ({ page }) => {
+test('section links, scroll tracking, and history work with native navigation', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   const errors: string[] = []
   const requests: string[] = []
@@ -81,6 +81,7 @@ test('section links, scroll tracking, and history work after enhanced navigation
   await page.goto('/articles')
   await page.evaluate(() => document.documentElement.dataset.testDocument = 'preserved')
   await page.getByRole('link', { name: 'Personal Infrastructure', exact: true }).click()
+  await expect(page.locator('html')).not.toHaveAttribute('data-test-document', 'preserved')
   await expect(page.locator('[data-article-page] svg[id^="mermaid-"]')).toHaveCount(5)
   const nav = page.getByRole('navigation', { name: 'On this page', exact: true })
   const cloudflare = nav.getByRole('link', { name: 'Cloudflare for networking and access', exact: true })
@@ -121,7 +122,7 @@ test('section links, scroll tracking, and history work after enhanced navigation
   await expect(page).toHaveURL(/personal-infrastructure#observability$/)
   await expect(page.locator('[data-article-page] svg[id^="mermaid-"]')).toHaveCount(5)
   await expect(page.getByRole('navigation', { name: 'On this page', exact: true }).getByRole('link', { name: 'Intentional tradeoffs' })).toHaveAttribute('aria-current', 'location')
-  await expect(page.locator('html')).toHaveAttribute('data-test-document', 'preserved')
+  expect(requests).toEqual([])
   expect(errors).toEqual([])
 })
 
