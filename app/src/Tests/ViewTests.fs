@@ -2,6 +2,7 @@ module ViewTests
 
 open App.Articles
 open App.Articles.Shared
+open App.Articles.View
 open App.Common.View
 open Expecto
 open FSharp.ViewEngine
@@ -33,7 +34,7 @@ let tests =
 
         testList "Personal site separation" [
             test "links to Meier Made without retaining company services or projects" {
-                let navigation = Render.toHtmlDocString (TopNav.primary)
+                let navigation = Render.toHtmlDocString (TopNav.primary "nav-home")
                 let profile = Render.toHtmlDocString App.Index.View.aboutMe
 
                 Expect.stringContains navigation "https://meiermade.com" "Expected a Meier Made company link"
@@ -48,12 +49,11 @@ let tests =
                 Expect.stringContains profile "The opinions shared here are my own." "Expected personal-opinions disclaimer"
             }
 
-            test "keeps progressive navigation with accessible shared menus" {
-                let navigation = Render.toHtmlDocString TopNav.primary
+            test "uses native links with accessible shared menus" {
+                let navigation = Render.toHtmlDocString (TopNav.primary "nav-articles")
 
-                Expect.stringContains navigation "href=\"/articles\"" "Expected progressive navigation links"
-                Expect.stringContains navigation "!evt.ctrlKey" "Expected modified clicks to retain native anchor behavior"
-                Expect.isFalse (navigation.Contains "click__prevent") "Expected default navigation to be prevented only for eligible clicks"
+                Expect.stringContains navigation "href=\"/articles\"" "Expected native navigation links"
+                Expect.isFalse (navigation.Contains "@get(") "Expected no page-morph navigation requests"
                 Expect.stringContains navigation "aria-expanded" "Expected accessible menu triggers"
                 Expect.stringContains navigation "aria-controls" "Expected triggers to identify their panels"
                 Expect.stringContains navigation "role=\"menu\"" "Expected shared menu semantics"
@@ -67,22 +67,21 @@ let tests =
                 let page =
                     App.Articles.View.articlesPage {
                         articles = []
-                        filters = { search = None; tag = None; publishedYear = None }
+                        filters = FilterState.empty
                         tags = [ "Finance" ]
                         years = [ 2026 ]
                     }
 
                 let html = Render.toHtmlDocString page
 
-                Expect.stringContains html "data-filter-control=\"tag\"" "Expected a tag filter"
-                Expect.stringContains html "data-filter-control=\"year\"" "Expected a year filter"
+                Expect.stringContains html "aria-label=\"Tag filter\"" "Expected a labelled tag filter chip"
+                Expect.stringContains html "aria-label=\"Publication year filter\"" "Expected a labelled publication year filter chip"
                 Expect.stringContains html "href=\"/articles?tag=Finance\"" "Expected canonical tag filter link"
                 Expect.stringContains html "href=\"/articles?year=2026\"" "Expected canonical year filter link"
-                Expect.isFalse (html.Contains "role=\"combobox\"") "Expected no emulated combobox"
-                Expect.isFalse (html.Contains "role=\"listbox\"") "Expected no emulated listbox"
-                Expect.isFalse (html.Contains "data-select-root") "Expected no custom select state machine"
+                Expect.stringContains html "<fve-select" "Expected the shared sort select"
+                Expect.stringContains html "data-fve-select-native" "Expected the shared select's native fallback"
+                Expect.stringContains html "role=\"combobox\"" "Expected the sort control to expose combobox semantics"
                 Expect.isFalse (html.Contains "<el-") "Expected no Tailwind Elements controls"
-                Expect.isFalse (html.Contains "<select") "Expected article filters not to render native selects"
             }
 
             test "encodes filter values as HTML attributes instead of JavaScript literals" {
@@ -90,7 +89,7 @@ let tests =
                 let page =
                     App.Articles.View.articlesPage {
                         articles = []
-                        filters = { search = None; tag = None; publishedYear = None }
+                        filters = FilterState.empty
                         tags = [ unsafeValue ]
                         years = [ 2026 ]
                     }
@@ -117,6 +116,7 @@ let tests =
                       cover = "https://assets.meiermade.com/andymeier/articles/shared/cover.webp"
                       tags = [||]
                       createdAt = System.DateTimeOffset(2026, 2, 1, 0, 0, 0, System.TimeSpan.Zero)
+                      updatedAt = None
                       page = empty }
 
                 let html = ArticleCard.summary article |> Render.toHtmlDocString
@@ -139,7 +139,7 @@ let tests =
                 let page =
                     App.Articles.View.articlesPage {
                         articles = []
-                        filters = { search = None; tag = None; publishedYear = None }
+                        filters = FilterState.empty
                         tags = []
                         years = []
                     }
@@ -156,7 +156,8 @@ let tests =
                       summary = "Summary"
                       cover = "https://assets.meiermade.com/andymeier/articles/shared/cover.webp"
                       tags = [| "Engineering"; "Finance" |]
-                      createdAt = System.DateTimeOffset(2026, 2, 1, 0, 0, 0, System.TimeSpan.Zero) }
+                      createdAt = System.DateTimeOffset(2026, 2, 1, 0, 0, 0, System.TimeSpan.Zero)
+                      updatedAt = None }
 
                 let html = ArticlePage.primary metadata [] [] |> Render.toHtmlDocString
 
@@ -176,7 +177,7 @@ let tests =
                 let searchOnly =
                     App.Articles.View.articlesPage {
                         articles = []
-                        filters = { search = Some "engine"; tag = None; publishedYear = None }
+                        filters = { FilterState.empty with search = Some "engine" }
                         tags = [ "Engineering" ]
                         years = [ 2026 ]
                     }
@@ -185,27 +186,17 @@ let tests =
                 let searchAndFilter =
                     App.Articles.View.articlesPage {
                         articles = []
-                        filters = { search = Some "engine"; tag = Some "Engineering"; publishedYear = None }
+                        filters = { FilterState.empty with search = Some "engine"; tag = Some "Engineering" }
                         tags = [ "Engineering" ]
                         years = [ 2026 ]
                     }
                     |> Render.toHtmlDocString
 
                 Expect.stringContains searchOnly "Clear search" "Expected a dedicated search clear action"
-                Expect.isFalse (searchOnly.Contains "Clear filters") "Expected filter clear action only after adding a filter"
-                Expect.isFalse (searchOnly.Contains "type=\"search\"") "Expected no browser-native search clear control"
+                let searchInput = System.Text.RegularExpressions.Regex.Match(searchOnly, "<input[^>]*id=\"article-search\"[^>]*>").Value
+                Expect.stringContains searchInput "type=\"text\"" "Expected the article search field not to add a browser-native clear control"
                 Expect.stringContains searchAndFilter "Clear filters" "Expected filters-only clear action"
                 Expect.stringContains searchAndFilter "href=\"/articles?search=engine\"" "Expected filter clearing to preserve search"
-            }
-        ]
-
-        testList "Navigation" [
-            test "serializes pushed URLs as JavaScript data" {
-                let script = App.Common.Handler.historyScript "');alert(1)//"
-
-                Expect.isFalse (script.Contains "pushState(null, '', '');alert(1)//')") "Expected URL not to break out of the JavaScript string"
-                Expect.stringContains script "\\u0027);alert(1)//" "Expected the quote to be JavaScript encoded"
-                Expect.stringContains script "window.history.pushState" "Expected history update script"
             }
         ]
 
@@ -222,14 +213,14 @@ let tests =
                         |> Render.toHtmlDocString
                     Expect.isFalse (html.Contains "data-otel-endpoint") "no public endpoint"
                     Expect.isFalse (html.Contains "data-telemetry-src") "no telemetry module attribute"
-                    Expect.isFalse (html.Contains "/scripts/telemetry") "no eager or deferred telemetry source"
-                    Expect.stringContains html "src=\"/scripts/privacy.js\"" "consent controller remains"
+                    Expect.isFalse (html.Contains "/js/telemetry") "no eager or deferred telemetry source"
+                    Expect.stringContains html "src=\"/js/privacy.js\"" "consent controller remains"
                     Expect.stringContains html $"data-analytics-mode=\"{App.Privacy.analyticsModeValue policy}\"" "regional policy remains"
                     for control in [ "Analytics settings"; "Accept analytics"; "Decline analytics" ] do
                         Expect.stringContains html control "consent controls remain usable"
             }
 
-            test "includes patchable metadata, navigation, and delayed analytics loading" {
+            test "includes page metadata, native navigation, and delayed analytics loading" {
                 let metadata : PageMetadata =
                     { canonicalPath = "/"
                       description = "Personal notes by Andy Meier."
@@ -239,13 +230,9 @@ let tests =
 
                 let html = Render.toHtmlDocString doc
 
-                Expect.stringContains html "<title id=\"document-title\">Andy Meier</title>" "Expected patchable page title"
-                Expect.stringContains html "id=\"canonical-url\" rel=\"canonical\" href=\"https://andymeier.dev/\"" "Expected patchable canonical URL"
-                Expect.stringContains html "id=\"page-content\" tabindex=\"-1\"" "Expected a stable, focusable patch root"
-                Expect.stringContains html "data-on:popstate__window=" "Expected browser history restoration"
-                Expect.stringContains html "window.history.scrollRestoration = &#39;manual&#39;" "Expected application-controlled history scroll restoration"
-                Expect.stringContains html "data-on:scroll__window__throttle.100ms.trailing=" "Expected throttled per-entry scroll persistence"
-                Expect.stringContains html "selectedNav: &#39;nav-home&#39;" "Expected encoded nav signal to render"
+                Expect.stringContains html "<title id=\"document-title\">Andy Meier</title>" "Expected page title"
+                Expect.stringContains html "id=\"canonical-url\" rel=\"canonical\" href=\"https://andymeier.dev/\"" "Expected canonical URL"
+                Expect.stringContains html "aria-current=\"page\"" "Expected the current navigation link in server HTML"
                 Expect.stringContains html "cookie-consent-banner" "Expected consent banner"
                 Expect.stringContains html "analytics-consent-title" "Expected consent dialog title"
                 Expect.stringContains html "Optional analytics" "Expected strict-region consent heading"
@@ -261,9 +248,9 @@ let tests =
                 Expect.isFalse (html.Contains "googletagmanager.com") "Expected no Google tag loader"
                 Expect.isFalse (html.Contains "gtag(") "Expected no Google Analytics calls"
                 Expect.stringContains html "id=\"privacy-controls\"" "Expected the lightweight privacy module"
-                Expect.stringContains html "src=\"/scripts/privacy.js\"" "Expected the privacy controller asset"
+                Expect.stringContains html "src=\"/js/privacy.js\"" "Expected the privacy controller asset"
                 Expect.stringContains html "data-analytics-mode=\"opt-in\"" "Expected the server-owned regional policy"
-                Expect.stringContains html "data-telemetry-src=\"/scripts/telemetry.js\"" "Expected deferred telemetry asset metadata"
+                Expect.stringContains html "data-telemetry-src=\"/js/telemetry.js\"" "Expected deferred telemetry asset metadata"
                 Expect.stringContains html "data-otel-endpoint=\"https://otel.meiermade.com\"" "Expected the public OTLP endpoint"
                 Expect.isFalse (html.Contains "window.loadOpenTelemetry") "Expected no global telemetry lifecycle API"
                 Expect.isFalse (html.Contains "snowplow") "Expected Snowplow to be removed"

@@ -137,6 +137,10 @@ export function initializeConsent(policy: ConsentPolicy, lifecycle: AnalyticsLif
       void controller.setChoice('declined');
     });
     settings?.addEventListener('click', controller.showSettings);
+    // A restored document may have been cached before the visitor changed consent on another page.
+    window.addEventListener('pageshow', event => {
+      if (event.persisted) void controller.initialize();
+    });
     void controller.initialize();
   };
 

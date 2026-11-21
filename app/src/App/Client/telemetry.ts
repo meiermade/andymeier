@@ -137,10 +137,6 @@ function onDocumentClick(event: MouseEvent): void {
   );
 }
 
-function onPopState(): void {
-  window.setTimeout(trackPage, 0);
-}
-
 function flushWhenHidden(): void {
   if (document.visibilityState !== 'hidden') return;
   void Promise.allSettled([
@@ -229,7 +225,6 @@ export async function enableTelemetry(options: {
     clickHandler = onDocumentClick;
     document.addEventListener('click', clickHandler, true);
     window.addEventListener('scroll', trackArticleCompletion, { passive: true });
-    window.addEventListener('popstate', onPopState);
     document.addEventListener('visibilitychange', flushWhenHidden);
     trackPage();
   })().finally(() => {
@@ -243,7 +238,6 @@ async function stop(): Promise<void> {
   if (clickHandler) document.removeEventListener('click', clickHandler, true);
   clickHandler = undefined;
   window.removeEventListener('scroll', trackArticleCompletion);
-  window.removeEventListener('popstate', onPopState);
   document.removeEventListener('visibilitychange', flushWhenHidden);
   deregisterInstrumentations?.();
   deregisterInstrumentations = undefined;
@@ -269,16 +263,6 @@ export async function disableTelemetry(): Promise<void> {
   sessionStorage.removeItem(attributionKey);
 }
 
-declare global {
-  interface Window {
-    meiermadeTelemetry: {
-      emit: (eventName: string, attributes?: Attributes) => void;
-      trackPage: () => void;
-    };
-  }
-}
-
-window.meiermadeTelemetry = { emit, trackPage };
 window.addEventListener('pagehide', (event) => {
   if (!event.persisted) void stop();
 });

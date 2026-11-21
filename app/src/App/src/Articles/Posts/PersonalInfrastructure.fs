@@ -15,7 +15,8 @@ let private metadata =
         "How I run my personal and company websites and AI agents on a shared platform with GCP, Kubernetes, Cloudflare, Pulumi, and OpenTelemetry"
       cover = "https://assets.meiermade.com/andymeier/articles/personal-infrastructure/system-context-dec390cb7efb.webp"
       tags = [| "DevOps"; "Pulumi"; "GCP"; "Kubernetes"; "Cloudflare"; "TypeScript" |]
-      createdAt = DateTimeOffset(2026, 8, 11, 0, 0, 0, TimeSpan.Zero) }
+      createdAt = DateTimeOffset(2026, 8, 11, 0, 0, 0, TimeSpan.Zero)
+      updatedAt = Some(DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)) }
 
 let private subheading label = h3 {
     _class "mt-8"
@@ -717,7 +718,7 @@ let private sections =
             paragraph
                 "The value is not just that I can deploy another application. It is that I and my agents can use the same APIs, scoped tools, and telemetry to understand what it is doing."
             script {
-                _src (Asset.fingerprinted "/scripts/mermaid.11.16.0.min.js")
+                _src (Asset.fingerprinted "/js/mermaid.11.16.0.min.js")
                 _onload "window.renderMermaid?.(document)"
             }
             script {

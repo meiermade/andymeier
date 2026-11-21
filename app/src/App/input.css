@@ -1,12 +1,14 @@
 @import "tailwindcss";
 @source "./{src/**/*.fs,**/*.html}";
 @source "./Components/**/*.{fs,js}";
-@plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
 
-#page-content:focus {
-    outline: none;
+/* ColorMode restores the saved scheme before the first paint. */
+html, ::view-transition { background-color: Canvas; }
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+    @view-transition { navigation: auto; }
+    ::view-transition-group(root) { animation-duration: 140ms; }
 }
 
 .article-scroll-progress {

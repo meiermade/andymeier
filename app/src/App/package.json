@@ -5,8 +5,8 @@
   "scripts": {
     "build": "npm run build:css && npm run build:prism && npm run build:browser",
     "build:css": "tailwindcss --input input.css --output wwwroot/css/compiled.css --minify",
-    "build:prism": "esbuild Client/prism.ts --bundle --format=iife --minify --outfile=wwwroot/scripts/prism.js",
-    "build:browser": "esbuild Client/components.ts Client/privacy.ts Client/telemetry.ts --bundle --format=esm --minify --outdir=wwwroot/scripts",
+    "build:prism": "esbuild Client/prism.ts --bundle --format=iife --minify --outfile=wwwroot/js/prism.js",
+    "build:browser": "esbuild Client/components.ts Client/privacy.ts Client/telemetry.ts --bundle --format=esm --minify --outdir=wwwroot/js",
     "check": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -30,7 +30,6 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "4.3.3",
-    "@tailwindcss/forms": "0.5.11",
     "@tailwindcss/typography": "0.5.20",
     "@types/node": "24.10.1",
     "@types/prismjs": "1.26.6",

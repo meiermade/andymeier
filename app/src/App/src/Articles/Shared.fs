@@ -4,11 +4,33 @@ open App.Articles
 open App.Common.View
 open App.Components
 open FSharp.ViewEngine
+open System
 open type Datastar
 open type Html
 
+let private date label (value: DateTimeOffset) = span {
+    _class "whitespace-nowrap"
+    text label
+    " "
+    time {
+        _datetime (value.ToString("yyyy-MM-dd"))
+        value.ToString("MMMM d, yyyy")
+    }
+}
+
+let private dates (createdAt: DateTimeOffset) (updatedAt: DateTimeOffset option) = fragment {
+    date "Published" createdAt
+    match updatedAt with
+    | Some value when value.Date > createdAt.Date -> date "Updated" value
+    | _ -> ()
+}
+
 module ArticleCard =
-    let private tag (label: string) = fveBadge { label }
+    let private tag (label: string) = a {
+        _href (FilterState.url { FilterState.empty with tag = Some label })
+        _class "inline-flex rounded-[var(--fve-radius-control)] underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--fve-brand-ring)]"
+        fveBadge { label }
+    }
 
     let tags (tags: string[]) = div {
         _class "flex flex-wrap gap-2"
@@ -24,21 +46,8 @@ module ArticleCard =
             _class "py-6 border-b border-gray-300/60 dark:border-gray-700/60"
 
             div {
-                _class "flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400 dark:text-gray-500"
-
-                div {
-                    _class "inline-flex items-center whitespace-nowrap"
-
-                    span {
-                        _class "mr-1.5"
-                        fveIcon { _name IconName.CalendarDays; _size Size.Small }
-                    }
-
-                    time {
-                        _datetime (article'.createdAt.ToString("yyyy-MM-dd"))
-                        article'.createdAt.ToString("MMMM d, yyyy")
-                    }
-                }
+                _class "flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600 dark:text-gray-400"
+                dates article'.createdAt article'.updatedAt
             }
 
             h2 {
@@ -46,7 +55,6 @@ module ArticleCard =
 
                 a {
                     _href url
-                    _dataOn ("click", Navigation.action url)
                     _class "hover:text-emerald-600 dark:hover:text-emerald-400"
                     article'.title
                 }
@@ -154,7 +162,6 @@ module ArticlePage =
 
         let page = div {
             _data ("article-page", "")
-            _data ("article-url", SiteUrl.article metadata.permalink)
             _data ("telemetry-content-id", metadata.permalink)
             _dataOn ("scroll__window", "window.articleNavigation?.schedule()")
             _dataOn ("resize__window", "window.articleNavigation?.schedule()")
@@ -176,10 +183,9 @@ module ArticlePage =
                         div {
                             _class $"{contentWidth} flex flex-col items-start justify-end pt-28 pb-20 text-gray-50"
 
-                            time {
-                                _class "text-base text-gray-50 border-l border-gray-300 pl-2"
-                                _datetime (metadata.createdAt.ToString("yyyy-MM-dd"))
-                                metadata.createdAt.ToString("MMMM d, yyyy")
+                            div {
+                                _class "flex flex-wrap gap-x-4 gap-y-1 border-l border-gray-300 pl-2 text-base text-gray-50"
+                                dates metadata.createdAt metadata.updatedAt
                             }
 
                             h1 {
@@ -250,9 +256,8 @@ module ArticlePage =
             script {
                 js
                     """
-window.articleNavigation = window.articleNavigation || {
+window.articleNavigation = {
     frame: 0,
-    observer: null,
     schedule() {
         if (this.frame) return;
         this.frame = requestAnimationFrame(() => { this.frame = 0; this.update(); });
@@ -273,51 +278,18 @@ window.articleNavigation = window.articleNavigation || {
             else link.removeAttribute('aria-current');
         }
     },
-    save() {
-        history.replaceState({ ...history.state, meierMadeScrollX: scrollX, meierMadeScrollY: scrollY }, '', location.href);
-    },
     navigate(event) {
         if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-        const link = event.currentTarget;
-        const target = document.getElementById(decodeURIComponent(link.hash.slice(1)));
-        if (!target) return;
-        event.preventDefault();
-        this.save();
-        const disclosure = link.closest('details');
+        const disclosure = event.currentTarget.closest('details');
         if (disclosure) disclosure.open = false;
-        if (location.hash !== link.hash) history.pushState(null, '', link.hash);
-        target.scrollIntoView({ block: 'start' });
-        target.focus({ preventScroll: true });
-        this.save();
-        this.schedule();
-    },
-    restore() {
-        const state = history.state;
-        if (typeof state?.meierMadeScrollY === 'number') {
-            window.scrollTo(state.meierMadeScrollX || 0, state.meierMadeScrollY);
-        } else if (location.hash) {
-            document.getElementById(decodeURIComponent(location.hash.slice(1)))?.scrollIntoView({ block: 'start' });
-        }
-        this.schedule();
-    },
-    observe() {
-        this.observer?.disconnect();
-        this.observer = new ResizeObserver(() => this.schedule());
-        // The shared page container survives Datastar page morphs. Updates always query current content.
-        const content = document.getElementById('page-content');
-        if (content) this.observer.observe(content);
-        // The site's manual history restoration also disables native fragment restoration on reload.
-        if (document.readyState !== 'complete') {
-            window.addEventListener('load', () => this.restore(), { once: true });
-        }
-        this.schedule();
     }
 };
-window.articleNavigation.observe();
+new ResizeObserver(() => window.articleNavigation.schedule()).observe(document.getElementById('page-content'));
+window.addEventListener('hashchange', () => window.articleNavigation.schedule());
 """
             }
 
-            script { _src (Asset.fingerprinted "/scripts/prism.js") }
+            script { _src (Asset.fingerprinted "/js/prism.js") }
             script { js "function highlightCode(el){if(el?.querySelectorAll)Prism.highlightAllUnder(el)}" }
 
             script {

@@ -23,6 +23,9 @@
       <Compile Include="Components/EmptyState.fs" />
       <Compile Include="Components/Popover.fs" />
       <Compile Include="Components/Pagination.fs" />
+      <Compile Include="Components/ButtonGroup.fs" />
+      <Compile Include="Components/ChoiceSelection.fs" />
+      <Compile Include="Components/Select.fs" />
       <None Include="fve.json" />
       <None Include="Components/Assets/heroicons-LICENSE.txt" />
       <None Include="Components/Assets/heroicons.2.2.0.provenance.json" />
@@ -33,6 +36,8 @@
       <None Include="Components/Assets/button.js" />
       <None Include="Components/Assets/dropdown-menu.js" />
       <None Include="Components/Assets/popover.js" />
+      <None Include="Components/Assets/scroll-region.js" />
+      <None Include="Components/Assets/select.js" />
   </ItemGroup>
   <!-- fve:components:end -->
   <ItemGroup>

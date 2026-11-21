@@ -6,7 +6,7 @@ for (const country of ['DE', 'US', 'XX']) {
     const telemetryRequests: string[] = []
     page.on('request', request => {
       const url = new URL(request.url())
-      if (/^\/scripts\/telemetry(?:\.[a-f0-9]+)?\.js$/.test(url.pathname)
+      if (/^\/js\/telemetry(?:\.[a-f0-9]+)?\.js$/.test(url.pathname)
         || /^\/v1\/(logs|traces|metrics)$/.test(url.pathname)) {
         telemetryRequests.push(request.url())
       }

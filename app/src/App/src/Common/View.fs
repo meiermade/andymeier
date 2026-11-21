@@ -36,21 +36,6 @@ module Asset =
     let fingerprinted (path:string) =
         resolveWithManifest manifest.Value path
 
-module Navigation =
-    let initialize = "window.history.scrollRestoration = 'manual'; window.meierMadeScrollUrl = window.location.pathname + window.location.search"
-
-    // Popstate changes the URL before restored HTML arrives; late scroll events still belong to the outgoing page.
-    let saveScroll =
-        "window.meierMadeScrollUrl === window.location.pathname + window.location.search && window.history.replaceState(Object.assign({}, window.history.state || {}, {meierMadeScrollX: window.scrollX, meierMadeScrollY: window.scrollY}), '', window.location.href)"
-
-    let action (href:string) =
-        let url = JsonSerializer.Serialize href
-        let request = $"@get({url}, {{filterSignals: {{include: /^$/}}, headers: {{'X-MeierMade-Navigation': 'push'}}}})"
-        $"evt.button === 0 && !evt.ctrlKey && !evt.metaKey && !evt.shiftKey && !evt.altKey && !evt.currentTarget.hasAttribute('download') && (!evt.currentTarget.target || evt.currentTarget.target === '_self') && evt.currentTarget.origin === window.location.origin && (evt.preventDefault(), {url} === window.location.pathname + window.location.search || ({saveScroll}, {request}))"
-
-    let restoreAction =
-        "window.articleNavigation && document.querySelector('[data-article-url]')?.dataset.articleUrl === window.location.pathname + window.location.search ? window.articleNavigation.restore() : @get(window.location.pathname + window.location.search, {filterSignals: {include: /^$/}, headers: {'X-MeierMade-Navigation': 'restore'}})"
-
 module PageHead =
     let canonicalUrl (metadata:PageMetadata) =
         $"https://andymeier.dev{metadata.canonicalPath}"
@@ -72,14 +57,6 @@ module PageHead =
 
     let canonicalElement (metadata:PageMetadata) =
         link { _id "canonical-url"; _rel "canonical"; _href (canonicalUrl metadata) }
-
-    let patchableElements metadata =
-        [ titleElement metadata
-          descriptionElement metadata
-          openGraphTitleElement metadata
-          openGraphDescriptionElement metadata
-          openGraphUrlElement metadata
-          canonicalElement metadata ]
 
 module SafeOutput =
     let private imageSchemes = Set.ofList [ Uri.UriSchemeHttp; Uri.UriSchemeHttps ]
@@ -127,8 +104,8 @@ module Footer =
             div { _class "grow" }
             div {
                 _class "text-sm flex flex-col items-start space-y-1"
-                fveLink { _href "/articles"; _dataOn ("click", Navigation.action "/articles"); "Articles" }
-                fveLink { _href "/privacy"; _dataOn ("click", Navigation.action "/privacy"); "Privacy" }
+                fveLink { _href "/articles"; "Articles" }
+                fveLink { _href "/privacy"; "Privacy" }
                 fveLink { _href "https://meiermade.com"; _class "whitespace-nowrap"; "Meier Made" }
                 fveButton {
                     _id "analytics-settings"
@@ -143,16 +120,15 @@ module Footer =
         }
 
 module TopNav =
-    let private item (id:string, el:HtmlElement, href:string) =
+    let private item selectedNav (id:string, el:HtmlElement, href:string) =
         fveLink {
             _id id
             _href href
             _variant LinkVariant.Ghost
             _color Color.Neutral
             if id = "nav-home" then _ariaLabel "Home"
-            _dataAttr ("aria-current", $"$selectedNav == '{id}' ? 'page' : null")
+            if selectedNav = id then _ariaCurrent "page"
             _class "shadow-none! aria-[current=page]:text-[var(--fve-brand-text)]"
-            _dataOn ("click", Navigation.action href)
             el
         }
 
@@ -187,7 +163,7 @@ module TopNav =
             }
         }
 
-    let private mobileDropdown =
+    let private mobileDropdown selectedNav =
         div {
             _class "md:hidden"
             fveDropdownMenu {
@@ -204,9 +180,8 @@ module TopNav =
                 fveDropdownMenuItem {
                     _id "nav-articles-mobile"
                     _href "/articles"
-                    _dataAttr ("aria-current", "$selectedNav == 'nav-articles' ? 'page' : null")
+                    if selectedNav = "nav-articles" then _ariaCurrent "page"
                     _class "aria-[current=page]:font-semibold"
-                    _dataOn ("click", Navigation.action "/articles")
                     "Articles"
                 }
                 fveDropdownMenuItem {
@@ -217,17 +192,17 @@ module TopNav =
             }
         }
 
-    let primary =
+    let primary selectedNav =
         nav {
             _id "top-nav"
             _class "relative h-14 bg-gray-100/80 py-1.5 px-4 border-b border-gray-300/80 backdrop-blur-md dark:bg-gray-900/80 dark:border-gray-700/80"
             div {
                 _class "flex h-full items-center gap-4"
-                item("nav-home", div { _class "w-8 h-8 text-emerald-600 dark:text-emerald-400"; Brand.logo }, "/")
+                item selectedNav ("nav-home", div { _class "w-8 h-8 text-emerald-600 dark:text-emerald-400"; Brand.logo }, "/")
                 div { _class "grow" }
                 div {
                     _class "hidden md:flex items-center gap-4"
-                    item("nav-articles", text "Articles", "/articles")
+                    item selectedNav ("nav-articles", text "Articles", "/articles")
                     fveLink {
                         _href "https://meiermade.com"
                         _variant LinkVariant.Ghost
@@ -238,7 +213,7 @@ module TopNav =
                     }
                 }
                 themeToggle
-                mobileDropdown
+                mobileDropdown selectedNav
             }
             div {
                 _id "article-scroll-progress"
@@ -254,7 +229,7 @@ module TopNav =
 
 module Page =
     let primary (page:HtmlElement) =
-        div { _id "page-content"; _tabindex -1; _class "min-h-screen bg-gray-100 dark:bg-gray-900"; page }
+        div { _id "page-content"; _class "min-h-screen bg-gray-100 dark:bg-gray-900"; page }
 
 module Analytics =
     let banner (policy:App.Privacy.BrowserPolicy) =
@@ -323,27 +298,23 @@ type Document =
                 script {
                     _id "privacy-controls"
                     _type "module"
-                    _src (Asset.fingerprinted "/scripts/privacy.js")
+                    _src (Asset.fingerprinted "/js/privacy.js")
                     _data ("analytics-mode", App.Privacy.analyticsModeValue privacyPolicy)
                     match otelEndpoint with
                     | Some endpoint ->
                         _data ("otel-endpoint", endpoint)
-                        _data ("telemetry-src", Asset.fingerprinted "/scripts/telemetry.js")
+                        _data ("telemetry-src", Asset.fingerprinted "/js/telemetry.js")
                     | None -> ()
                 }
                 link { _href (Asset.fingerprinted "/css/compiled.css"); _rel "stylesheet" }
                 link { _href (Asset.fingerprinted "/css/prism.css"); _rel "stylesheet" }
-                script { _type "module"; _src (Asset.fingerprinted "/scripts/components.js") }
+                script { _type "module"; _src (Asset.fingerprinted "/js/components.js") }
             }
             body {
-                _dataInit Navigation.initialize
-                _dataOn ("scroll__window__throttle.100ms.trailing", Navigation.saveScroll)
-                _dataOn ("popstate__window", Navigation.restoreAction)
-                _dataSignals $"{{selectedNav: '{selectedNav}'}}"
                 _class "bg-gray-200 dark:bg-gray-950"
                 div {
                     _class "mx-auto max-w-7xl"
-                    TopNav.primary
+                    TopNav.primary selectedNav
                     page
                     Footer.primary
                 }

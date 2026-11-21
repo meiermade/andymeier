@@ -2,6 +2,8 @@
 import '../Components/Assets/button.js';
 import '../Components/Assets/dropdown-menu.js';
 import '../Components/Assets/popover.js';
+import '../Components/Assets/scroll-region.js';
+import '../Components/Assets/select.js';
 
 window.addEventListener('fve-color-mode', () => {
   const renderMermaid = (window as Window & { renderMermaid?: (root: Document) => Promise<void> }).renderMermaid;

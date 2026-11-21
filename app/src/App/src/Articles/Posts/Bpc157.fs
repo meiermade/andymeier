@@ -14,7 +14,8 @@ let private metadata =
       summary = "My elbow pain, recovery goals, materials, preparation, dosing, and observations using BPC-157."
       cover = "https://assets.meiermade.com/andymeier/articles/shared/gradient-purple-4776537cdf89.webp"
       tags = [| "Health"; "Peptides" |]
-      createdAt = DateTimeOffset(2026, 11, 8, 0, 0, 0, TimeSpan.Zero) }
+      createdAt = DateTimeOffset(2026, 11, 8, 0, 0, 0, TimeSpan.Zero)
+      updatedAt = Some(DateTimeOffset(2026, 11, 19, 0, 0, 0, TimeSpan.Zero)) }
 
 let private paragraph value = p { text value }
 

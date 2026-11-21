@@ -6,10 +6,12 @@ open App.Articles
 open App.Articles.View
 open App.Common.Handler
 open App.Common.View
+open FSharp.ViewEngine
 open Giraffe
 open Microsoft.AspNetCore.Http
 open StarFederation.Datastar.DependencyInjection
 open System
+open System.Text.Json
 
 let private optionalQueryValue (ctx:HttpContext) name =
     match ctx.Request.Query.TryGetValue name with
@@ -18,6 +20,7 @@ let private optionalQueryValue (ctx:HttpContext) name =
 
 let private filtersFromRequest (ctx:HttpContext) =
     { FilterState.search = optionalQueryValue ctx "search"
+      sort = if optionalQueryValue ctx "sort" = Some "updated" then RecentlyUpdated else NewestPublished
       tag = optionalQueryValue ctx "tag"
       publishedYear = optionalQueryValue ctx "year" |> Option.bind (fun value ->
           match Int32.TryParse value with
@@ -66,24 +69,30 @@ let private getArticlesPage (services:Services) : HttpHandler =
         let canonicalUrl = FilterState.url filters
         let requestedUrl = ctx.Request.Path.Value + ctx.Request.QueryString.ToString()
 
-        if not ctx.IsDatastar && requestedUrl <> canonicalUrl then
+        let isLive = ctx.IsDatastar && string ctx.Request.Headers["X-MeierMade-Article-Search"] = "live"
+
+        if not isLive && requestedUrl <> canonicalUrl then
             return! redirectTo false canonicalUrl next ctx
         else
             let allArticles = Catalog.all
-            let page =
-                { articles = filterArticles filters allArticles
+            let state =
+                { articles = filterArticles filters allArticles |> Article.sort filters.sort
                   filters = filters
                   tags = allArticles |> List.collect (fun article -> article.tags |> Array.toList) |> List.distinct |> List.sort
                   years = allArticles |> List.map (fun article -> article.createdAt.Year) |> List.distinct |> List.sortDescending }
-                |> articlesPage
 
             let metadata = articlesMetadata canonicalUrl
-            if ctx.IsDatastar then
+            if isLive then
                 let ds = ctx.GetService<IDatastarService>()
-                do! patchPage ctx ds metadata page "nav-articles"
+                do! ds.PatchElementsAsync(Render.toString (articleSearchResults state))
+                do! ds.PatchElementsAsync(Render.toString (PageHead.canonicalElement metadata))
+
+                // Refine the current list entry without creating a history entry per keystroke.
+                let url = JsonSerializer.Serialize canonicalUrl
+                do! ds.ExecuteScriptAsync($"history.replaceState(history.state, '', {url});")
                 return Some ctx
             else
-                return! renderPage services metadata page "nav-articles" next ctx
+                return! renderPage services metadata (articlesPage state) "nav-articles" next ctx
     }
 
 let private getArticlePage (services:Services) (id:string) : HttpHandler =
@@ -99,23 +108,10 @@ let private getArticlePage (services:Services) (id:string) : HttpHandler =
                     | _ -> article.page
                 | _ -> article.page
 
-            let metadata = articleMetadata article
-
-            if ctx.IsDatastar then
-                let ds = ctx.GetService<IDatastarService>()
-                do! patchPage ctx ds metadata page "nav-articles"
-                return Some ctx
-            else
-                return! renderPage services metadata page "nav-articles" next ctx
+            return! renderPage services (articleMetadata article) page "nav-articles" next ctx
         | None ->
-            let page = notFoundPage
             let metadata = notFoundMetadata ctx.Request.Path.Value
-            if ctx.IsDatastar then
-                let ds = ctx.GetService<IDatastarService>()
-                do! patchPage ctx ds metadata page "nav-articles"
-                return Some ctx
-            else
-                return! renderPage services metadata page "nav-articles" next ctx
+            return! renderPage services metadata notFoundPage "nav-articles" next ctx
     }
 
 let handler (services:Services) : HttpHandler =

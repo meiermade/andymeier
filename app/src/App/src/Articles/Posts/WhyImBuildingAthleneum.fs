@@ -24,6 +24,7 @@ let private metadata: ArticleMetadata =
         cover = clubhouseImage
         tags = [| "Athleneum"; "Work"; "Training"; "Design" |]
         createdAt = DateTimeOffset(2026, 11, 19, 0, 0, 0, TimeSpan.Zero)
+        updatedAt = Some(DateTimeOffset(2026, 11, 20, 0, 0, 0, TimeSpan.Zero))
     }
 
 let private introduction =
