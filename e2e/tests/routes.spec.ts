@@ -217,11 +217,22 @@ test('articles index renders and opens a source-controlled article', async ({ pa
   await expect(page.getByRole('button', { name: 'Copy' }).first()).toBeVisible()
 })
 
-test('development environment article presents the current setup', async ({ page }) => {
+test('development environment article shows its setup and only its publication date', async ({ page }) => {
+  await page.goto('/articles?sort=updated')
+  const card = page.getByRole('article').filter({
+    has: page.getByRole('heading', { name: 'Development Environment', exact: true }),
+  })
+  await expect(card.locator('time')).toHaveText(['August 11, 2026'])
+  await expect(card).toContainText('Published August 11, 2026')
+
   const response = await page.goto('/articles/dev-env', { waitUntil: 'domcontentloaded' })
 
   expect(response?.status()).toBe(200)
-  await expect(page.getByRole('heading', { name: 'Development Environment', exact: true })).toBeVisible()
+  const articleHeader = page.getByRole('banner').filter({
+    has: page.getByRole('heading', { name: 'Development Environment', exact: true }),
+  })
+  await expect(articleHeader.locator('time')).toHaveText(['August 11, 2026'])
+  await expect(articleHeader).toContainText('Published August 11, 2026')
   await expect(page.getByRole('heading', { name: 'Pi coding agent', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'JetBrains IDEs', exact: true })).toBeVisible()
   await expect(page.getByText('Windows Subsystem for Linux', { exact: false })).toHaveCount(0)

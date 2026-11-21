@@ -13,7 +13,7 @@ let private metadata =
       cover = "https://assets.meiermade.com/andymeier/articles/shared/gradient-purple-4776537cdf89.webp"
       tags = [| "Programming"; "AI"; "macOS"; "Python"; ".NET"; "Infrastructure" |]
       createdAt = DateTimeOffset(2026, 8, 11, 0, 0, 0, TimeSpan.Zero)
-      updatedAt = Some(DateTimeOffset(2026, 9, 18, 0, 0, 0, TimeSpan.Zero)) }
+      updatedAt = None }
 
 let private subheading id' label = h3 {
     _class "mt-6 scroll-mt-24"
