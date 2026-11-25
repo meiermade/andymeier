@@ -96,7 +96,13 @@ let private logPages =
               if day = 19 then "Noticeably less pain during a palm-up curl. No noticeable side effects."
               else "Slight pain during a palm-up curl."
 
-          yield DateOnly(2026, 11, day), "7:30 AM", "5 units · 250 mcg", observation ]
+          yield DateOnly(2026, 11, day), "7:30 AM", "5 units · 250 mcg", observation
+      for day in 20 .. 23 do
+          yield DateOnly(2026, 11, day), "Around 7:30 AM", "5 units · 250 mcg", ""
+      yield DateOnly(2026, 11, 24), "Around 7:00 PM", "5 units · 250 mcg",
+            "I missed my usual morning dose and took it that evening."
+      yield DateOnly(2026, 11, 25), "5:00 AM", "5 units · 250 mcg",
+            "About 10 hours after the previous dose." ]
     |> List.sortByDescending (fun (date, _, _, _) -> date)
     |> List.chunkBySize 10
     |> List.toArray
